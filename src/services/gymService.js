@@ -92,6 +92,139 @@ const memberClassBookingSelect = `
   )
 `;
 
+const exerciseLibrarySelect = `
+  id,
+  name,
+  muscle_group,
+  equipment,
+  movement_pattern,
+  difficulty,
+  instructions,
+  video_url,
+  is_active,
+  created_at,
+  updated_at
+`;
+
+const workoutProgramSelect = `
+  id,
+  name,
+  description,
+  goal,
+  difficulty,
+  duration_weeks,
+  sessions_per_week,
+  status,
+  created_by,
+  created_at,
+  updated_at,
+  days:workout_program_days (
+    id,
+    program_id,
+    day_index,
+    title,
+    focus_area,
+    notes,
+    target_duration_minutes,
+    created_at,
+    updated_at,
+    exercises:workout_program_day_exercises (
+      id,
+      program_day_id,
+      exercise_library_id,
+      order_index,
+      exercise_name,
+      prescribed_sets,
+      prescribed_reps,
+      prescribed_weight,
+      rest_seconds,
+      tempo,
+      trainer_notes,
+      is_optional,
+      created_at,
+      updated_at,
+      library_exercise:exercise_library (
+        id,
+        name,
+        muscle_group,
+        equipment,
+        movement_pattern,
+        difficulty
+      )
+    )
+  )
+`;
+
+const workoutAssignmentSelect = `
+  id,
+  member_id,
+  program_id,
+  assigned_by,
+  assignment_status,
+  start_date,
+  end_date,
+  focus_goal,
+  notes,
+  created_at,
+  updated_at,
+  member:profiles!member_workout_assignments_member_id_fkey (
+    id,
+    email,
+    full_name,
+    phone,
+    membership_status,
+    is_active,
+    role
+  ),
+  program:workout_programs (
+    id,
+    name,
+    description,
+    goal,
+    difficulty,
+    duration_weeks,
+    sessions_per_week,
+    status,
+    created_at,
+    updated_at,
+    days:workout_program_days (
+      id,
+      program_id,
+      day_index,
+      title,
+      focus_area,
+      notes,
+      target_duration_minutes,
+      created_at,
+      updated_at,
+      exercises:workout_program_day_exercises (
+        id,
+        program_day_id,
+        exercise_library_id,
+        order_index,
+        exercise_name,
+        prescribed_sets,
+        prescribed_reps,
+        prescribed_weight,
+        rest_seconds,
+        tempo,
+        trainer_notes,
+        is_optional,
+        created_at,
+        updated_at,
+        library_exercise:exercise_library (
+          id,
+          name,
+          muscle_group,
+          equipment,
+          movement_pattern,
+          difficulty
+        )
+      )
+    )
+  )
+`;
+
 const ensureSupabase = () => {
   if (!isSupabaseConfigured || !supabase) {
     throw missingConfigError();
@@ -188,6 +321,16 @@ const normaliseOptionalNumber = (value) => {
   return numericValue;
 };
 
+const normaliseOptionalInteger = (value) => {
+  const numericValue = normaliseOptionalNumber(value);
+
+  if (numericValue === undefined || numericValue === null) {
+    return numericValue;
+  }
+
+  return Math.round(numericValue);
+};
+
 const normaliseBoolean = (value) => {
   if (value === undefined) {
     return undefined;
@@ -197,6 +340,22 @@ const normaliseBoolean = (value) => {
 };
 
 const todayIsoDate = () => new Date().toISOString().slice(0, 10);
+
+const sortNestedWorkoutProgram = (program = {}) => ({
+  ...program,
+  days: [...(program.days || [])]
+    .sort((left, right) => Number(left?.day_index || 0) - Number(right?.day_index || 0))
+    .map((day) => ({
+      ...day,
+      exercises: [...(day.exercises || [])]
+        .sort((left, right) => Number(left?.order_index || 0) - Number(right?.order_index || 0)),
+    })),
+});
+
+const sortNestedWorkoutAssignment = (assignment = {}) => ({
+  ...assignment,
+  program: assignment.program ? sortNestedWorkoutProgram(assignment.program) : assignment.program,
+});
 
 const buildProfilePayload = (changes = {}, options = {}) => {
   const {
@@ -510,11 +669,14 @@ export const saveWorkout = async (userId, workout) => {
     workout_date: workout.workout_date,
     status: workout.status || 'completed',
     notes: workout.notes?.trim() || '',
+    program_assignment_id: workout.program_assignment_id || null,
+    program_day_id: workout.program_day_id || null,
+    completed_by_trainer: Boolean(workout.completed_by_trainer),
     entries: (workout.entries || []).map((entry) => ({
       exercise_name: entry.exercise_name?.trim(),
       sets: entry.sets === '' || entry.sets === null || entry.sets === undefined ? null : Number(entry.sets),
-      reps: entry.reps === '' || entry.reps === null || entry.reps === undefined ? null : Number(entry.reps),
-      weight: entry.weight === '' || entry.weight === null || entry.weight === undefined ? null : Number(entry.weight),
+      reps: entry.reps === '' || entry.reps === null || entry.reps === undefined ? null : String(entry.reps),
+      weight: entry.weight === '' || entry.weight === null || entry.weight === undefined ? null : String(entry.weight),
     })).filter((entry) => entry.exercise_name),
   };
 
@@ -560,6 +722,307 @@ export const deleteWorkout = async (workoutId) => {
     .eq('id', workoutId);
 
   unwrap(error, 'Unable to delete workout.');
+};
+
+export const fetchExerciseLibrary = async ({ includeInactive = true } = {}) => {
+  const client = ensureSupabase();
+  let query = client
+    .from('exercise_library')
+    .select(exerciseLibrarySelect)
+    .order('name', { ascending: true });
+
+  if (!includeInactive) {
+    query = query.eq('is_active', true);
+  }
+
+  const { data, error } = await query;
+
+  unwrap(error, 'Unable to load the exercise library.');
+  return data ?? [];
+};
+
+export const saveExerciseLibraryItem = async (item = {}) => {
+  const client = ensureSupabase();
+
+  const payload = {
+    name: String(item.name ?? '').trim(),
+    muscle_group: normaliseOptionalText(item.muscle_group),
+    equipment: normaliseOptionalText(item.equipment),
+    movement_pattern: normaliseOptionalText(item.movement_pattern),
+    difficulty: item.difficulty || 'all_levels',
+    instructions: normaliseOptionalText(item.instructions),
+    video_url: normaliseOptionalText(item.video_url),
+    is_active: item.is_active !== undefined ? Boolean(item.is_active) : true,
+  };
+
+  if (!payload.name) {
+    throw new Error('Exercise name is required.');
+  }
+
+  if (item.id) {
+    const { data, error } = await client
+      .from('exercise_library')
+      .update(payload)
+      .eq('id', item.id)
+      .select(exerciseLibrarySelect)
+      .single();
+
+    unwrap(error, 'Unable to update the exercise library item.');
+    return data;
+  }
+
+  const { data, error } = await client
+    .from('exercise_library')
+    .insert([payload])
+    .select(exerciseLibrarySelect)
+    .single();
+
+  unwrap(error, 'Unable to create the exercise library item.');
+  return data;
+};
+
+export const fetchWorkoutPrograms = async ({
+  includeArchived = true,
+  status = 'all',
+  limit = 60,
+} = {}) => {
+  const client = ensureSupabase();
+  let query = client
+    .from('workout_programs')
+    .select(workoutProgramSelect)
+    .order('updated_at', { ascending: false });
+
+  if (!includeArchived) {
+    query = query.neq('status', 'archived');
+  }
+
+  if (status && status !== 'all') {
+    query = query.eq('status', status);
+  }
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+
+  unwrap(error, 'Unable to load workout programs.');
+  return (data ?? []).map(sortNestedWorkoutProgram);
+};
+
+export const fetchWorkoutAssignments = async ({
+  memberId = null,
+  status = 'all',
+  limit = 80,
+} = {}) => {
+  const client = ensureSupabase();
+  let query = client
+    .from('member_workout_assignments')
+    .select(workoutAssignmentSelect)
+    .order('start_date', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (memberId) {
+    query = query.eq('member_id', memberId);
+  }
+
+  if (status && status !== 'all') {
+    query = query.eq('assignment_status', status);
+  }
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+
+  unwrap(error, 'Unable to load workout assignments.');
+  return (data ?? []).map(sortNestedWorkoutAssignment);
+};
+
+export const saveWorkoutProgram = async (program = {}, actorId = null) => {
+  const client = ensureSupabase();
+
+  const payload = {
+    name: String(program.name ?? '').trim(),
+    description: normaliseOptionalText(program.description),
+    goal: normaliseOptionalText(program.goal),
+    difficulty: program.difficulty || 'all_levels',
+    duration_weeks: Math.max(1, normaliseOptionalInteger(program.duration_weeks) || 4),
+    sessions_per_week: Math.max(1, normaliseOptionalInteger(program.sessions_per_week) || 3),
+    status: program.status || 'draft',
+  };
+
+  if (!payload.name) {
+    throw new Error('Program name is required.');
+  }
+
+  const programDays = (program.days || []).map((day, dayIndex) => {
+    const title = String(day.title ?? '').trim();
+
+    if (!title) {
+      throw new Error(`Day ${dayIndex + 1} needs a title.`);
+    }
+
+    const exercises = (day.exercises || []).map((exercise, exerciseIndex) => {
+      const exerciseName = String(exercise.exercise_name ?? '').trim();
+
+      if (!exerciseName) {
+        throw new Error(`Day ${dayIndex + 1}, exercise ${exerciseIndex + 1} needs a name.`);
+      }
+
+      return {
+        exercise_library_id: exercise.exercise_library_id || null,
+        order_index: exerciseIndex + 1,
+        exercise_name: exerciseName,
+        prescribed_sets: normaliseOptionalInteger(exercise.prescribed_sets),
+        prescribed_reps: normaliseOptionalText(exercise.prescribed_reps),
+        prescribed_weight: normaliseOptionalText(exercise.prescribed_weight),
+        rest_seconds: normaliseOptionalInteger(exercise.rest_seconds),
+        tempo: normaliseOptionalText(exercise.tempo),
+        trainer_notes: normaliseOptionalText(exercise.trainer_notes),
+        is_optional: Boolean(exercise.is_optional),
+      };
+    });
+
+    if (!exercises.length) {
+      throw new Error(`Day ${dayIndex + 1} needs at least one exercise prescription.`);
+    }
+
+    return {
+      day_index: dayIndex + 1,
+      title,
+      focus_area: normaliseOptionalText(day.focus_area),
+      notes: normaliseOptionalText(day.notes),
+      target_duration_minutes: normaliseOptionalInteger(day.target_duration_minutes),
+      exercises,
+    };
+  });
+
+  if (!programDays.length) {
+    throw new Error('Add at least one program day before saving.');
+  }
+
+  let programId = program.id || '';
+  let programRow = null;
+
+  if (programId) {
+    const { data, error } = await client
+      .from('workout_programs')
+      .update(payload)
+      .eq('id', programId)
+      .select(workoutProgramSelect)
+      .single();
+
+    unwrap(error, 'Unable to update the workout program.');
+    programRow = data;
+  } else {
+    const { data, error } = await client
+      .from('workout_programs')
+      .insert([{
+        ...payload,
+        created_by: actorId || null,
+      }])
+      .select(workoutProgramSelect)
+      .single();
+
+    unwrap(error, 'Unable to create the workout program.');
+    programRow = data;
+    programId = data.id;
+  }
+
+  const { error: deleteDaysError } = await client
+    .from('workout_program_days')
+    .delete()
+    .eq('program_id', programId);
+
+  unwrap(deleteDaysError, 'Unable to refresh the workout program days.');
+
+  const dayRows = await Promise.all(programDays.map(async (day) => {
+    const { data: dayRow, error: dayError } = await client
+      .from('workout_program_days')
+      .insert([{
+        program_id: programId,
+        day_index: day.day_index,
+        title: day.title,
+        focus_area: day.focus_area,
+        notes: day.notes,
+        target_duration_minutes: day.target_duration_minutes,
+      }])
+      .select('*')
+      .single();
+
+    unwrap(dayError, 'Unable to save one of the workout program days.');
+    return { day, dayRow };
+  }));
+
+  await Promise.all(dayRows.map(async ({ day, dayRow }) => {
+    const exerciseRows = day.exercises.map((exercise) => ({
+      ...exercise,
+      program_day_id: dayRow.id,
+    }));
+
+    const { error: exerciseError } = await client
+      .from('workout_program_day_exercises')
+      .insert(exerciseRows);
+
+    unwrap(exerciseError, 'Unable to save the exercise prescriptions for this day.');
+  }));
+
+  const { data: refreshedProgram, error: refreshedProgramError } = await client
+    .from('workout_programs')
+    .select(workoutProgramSelect)
+    .eq('id', programId)
+    .single();
+
+  unwrap(refreshedProgramError, 'Unable to reload the saved workout program.');
+  return sortNestedWorkoutProgram(refreshedProgram || programRow);
+};
+
+export const saveWorkoutAssignment = async (assignment = {}, actorId = null) => {
+  const client = ensureSupabase();
+
+  const payload = {
+    member_id: assignment.member_id || null,
+    program_id: assignment.program_id || null,
+    assignment_status: assignment.assignment_status || 'active',
+    start_date: assignment.start_date || todayIsoDate(),
+    end_date: assignment.end_date || null,
+    focus_goal: normaliseOptionalText(assignment.focus_goal),
+    notes: normaliseOptionalText(assignment.notes),
+  };
+
+  if (!payload.member_id) {
+    throw new Error('Choose a member before saving the assignment.');
+  }
+
+  if (!payload.program_id) {
+    throw new Error('Choose a workout program before saving the assignment.');
+  }
+
+  let data = null;
+  let error = null;
+
+  if (assignment.id) {
+    ({ data, error } = await client
+      .from('member_workout_assignments')
+      .update(payload)
+      .eq('id', assignment.id)
+      .select(workoutAssignmentSelect)
+      .single());
+  } else {
+    ({ data, error } = await client
+      .from('member_workout_assignments')
+      .insert([{
+        ...payload,
+        assigned_by: actorId || null,
+      }])
+      .select(workoutAssignmentSelect)
+      .single());
+  }
+
+  unwrap(error, 'Unable to save the workout assignment.');
+  return sortNestedWorkoutAssignment(data);
 };
 
 export const fetchProgressCheckpoints = async (userId) => {

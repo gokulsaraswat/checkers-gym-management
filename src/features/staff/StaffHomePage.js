@@ -21,6 +21,7 @@ import {
   CalendarMonth,
   DoorFront,
   EventAvailable,
+  FitnessCenter,
   Login,
   Logout,
   PersonSearch,
@@ -210,6 +211,15 @@ const StaffHomePage = () => {
             sx={{ borderRadius: 999, alignSelf: 'flex-start' }}
           >
             Manage bookings
+          </Button>
+          <Button
+            component={RouterLink}
+            to={PATHS.staffWorkouts}
+            variant="outlined"
+            startIcon={<FitnessCenter />}
+            sx={{ borderRadius: 999, alignSelf: 'flex-start' }}
+          >
+            Program workouts
           </Button>
         </Stack>
       </Stack>

@@ -21,6 +21,7 @@ const guestOnlyPaths = new Set([
 const authOnlyPaths = new Set([
   PATHS.dashboard,
   PATHS.attendance,
+  PATHS.workoutPlan,
   PATHS.schedule,
   PATHS.bookings,
   PATHS.membership,

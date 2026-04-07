@@ -35,6 +35,7 @@ import {
   deleteWorkout,
   fetchProgressCheckpoints,
   fetchUpcomingClassBookings,
+  fetchWorkoutAssignments,
   fetchWorkouts,
   saveProgressCheckpoint,
   saveWorkout,
@@ -68,6 +69,8 @@ const createEmptyWorkoutForm = () => ({
   workout_date: new Date().toISOString().slice(0, 10),
   status: 'completed',
   notes: '',
+  program_assignment_id: '',
+  program_day_id: '',
   entries: [
     {
       exercise_name: '',
@@ -88,6 +91,7 @@ const DashboardPage = () => {
   } = useAuth();
 
   const [workouts, setWorkouts] = useState([]);
+  const [workoutAssignments, setWorkoutAssignments] = useState([]);
   const [progressCheckpoints, setProgressCheckpoints] = useState([]);
   const [upcomingClasses, setUpcomingClasses] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
@@ -113,15 +117,18 @@ const DashboardPage = () => {
         workoutRows,
         progressRows,
         bookingRows,
+        assignmentRows,
       ] = await Promise.all([
         fetchWorkouts(user.id),
         fetchProgressCheckpoints(user.id),
         fetchUpcomingClassBookings(user.id),
+        fetchWorkoutAssignments({ memberId: user.id, limit: 12 }),
       ]);
 
       setWorkouts(sortWorkoutRows(workoutRows));
       setProgressCheckpoints(sortProgressRows(progressRows));
       setUpcomingClasses(buildUpcomingClassSummary(bookingRows).upcoming);
+      setWorkoutAssignments(assignmentRows);
     } catch (error) {
       setFeedback({ type: 'error', message: error.message || 'Unable to load your dashboard.' });
     } finally {
@@ -134,7 +141,7 @@ const DashboardPage = () => {
   }, [loadDashboardData]);
 
   const workoutStats = useMemo(() => buildWorkoutStats(workouts), [workouts]);
-  const workoutPlanSummary = useMemo(() => buildWorkoutPlanSummary(workouts), [workouts]);
+  const workoutPlanSummary = useMemo(() => buildWorkoutPlanSummary(workouts, workoutAssignments), [workouts, workoutAssignments]);
   const progressSummary = useMemo(() => buildProgressSummary(progressCheckpoints), [progressCheckpoints]);
   const classSummary = useMemo(() => buildUpcomingClassSummary(upcomingClasses), [upcomingClasses]);
   const profileCompleteness = useMemo(() => getProfileCompleteness(profile || {}), [profile]);
@@ -143,7 +150,8 @@ const DashboardPage = () => {
     workouts,
     checkpoints: progressCheckpoints,
     classBookings: upcomingClasses,
-  }), [profile, progressCheckpoints, upcomingClasses, workouts]);
+    assignments: workoutAssignments,
+  }), [profile, progressCheckpoints, upcomingClasses, workoutAssignments, workouts]);
 
   const updateFormField = (field) => (event) => {
     setForm((current) => ({
@@ -193,6 +201,8 @@ const DashboardPage = () => {
       workout_date: workout.workout_date,
       status: workout.status,
       notes: workout.notes || '',
+      program_assignment_id: workout.program_assignment_id || '',
+      program_day_id: workout.program_day_id || '',
       entries: workout.entries?.length
         ? workout.entries.map((entry) => ({
           exercise_name: entry.exercise_name || '',
@@ -610,10 +620,7 @@ const DashboardPage = () => {
                         }}
                       >
                         {(() => {
-                          if (savingWorkout) {
-                            return 'Saving...';
-                          }
-
+                          if (savingWorkout) return 'Saving...';
                           return form.id ? 'Update workout' : 'Save workout';
                         })()}
                       </Button>

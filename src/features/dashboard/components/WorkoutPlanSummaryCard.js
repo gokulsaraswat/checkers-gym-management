@@ -1,118 +1,108 @@
 import React from 'react';
-import {
-  Box,
-  Button,
-  Chip,
-  Divider,
-  Paper,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Button, Chip, Paper, Stack, Typography } from '@mui/material';
+import { CalendarMonth, FitnessCenter } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
 
 import { PATHS } from '../../../app/paths';
-import { formatDashboardDate } from '../dashboardHelpers';
+import {
+  formatProgramDateRange,
+  getWorkoutAssignmentStatusChipSx,
+  getWorkoutAssignmentStatusMeta,
+  getWorkoutProgramStatusChipSx,
+  getWorkoutProgramStatusMeta,
+} from '../../workouts/workoutProgrammingHelpers';
 
-const WorkoutPlanSummaryCard = ({ summary, profile }) => (
-  <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff', height: '100%' }}>
-    <Stack spacing={2}>
-      <Box>
-        <Typography color="#ff2625" fontWeight={700}>
-          Workout plan summary
-        </Typography>
-        <Typography variant="h6" fontWeight={800} mt={0.5}>
-          Stay on top of planned sessions
-        </Typography>
-      </Box>
+const WorkoutPlanSummaryCard = ({ summary, profile }) => {
+  const assignment = summary?.activeAssignment;
+  const program = assignment?.program;
 
-      <Typography color="text.secondary" lineHeight={1.8}>
-        Your dashboard combines planned workout rows, recent completions, and recurring exercise focus areas so you
-        can see whether training is moving forward without opening each log one by one.
-      </Typography>
+  return (
+    <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff', height: '100%' }}>
+      <Stack spacing={2.5}>
+        <Stack spacing={0.5}>
+          <Typography color="#ff2625" fontWeight={700}>
+            Workout plan
+          </Typography>
+          <Typography variant="h5" fontWeight={800}>
+            {program?.name || 'No structured plan yet'}
+          </Typography>
+          <Typography color="text.secondary">
+            {program?.goal || 'Trainer-assigned templates will appear here once staff start programming workouts.'}
+          </Typography>
+        </Stack>
 
-      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-        <Chip label={`${summary?.plannedWorkouts || 0} planned`} />
-        <Chip label={`${summary?.completedWorkouts || 0} completed`} />
-        <Chip label={`${summary?.distinctExercises || 0} unique exercises`} />
-      </Stack>
-
-      <Divider />
-
-      <Stack spacing={1.2}>
-        <Typography variant="body1">
-          <strong>Next planned workout:</strong>{' '}
-          {summary?.nextPlannedWorkout
-            ? `${summary.nextPlannedWorkout.title} • ${formatDashboardDate(summary.nextPlannedWorkout.workout_date)}`
-            : 'No planned workout yet'}
-        </Typography>
-        <Typography variant="body1">
-          <strong>Latest completed session:</strong>{' '}
-          {summary?.lastCompletedWorkout
-            ? `${summary.lastCompletedWorkout.title} • ${formatDashboardDate(summary.lastCompletedWorkout.workout_date)}`
-            : 'No completed session yet'}
-        </Typography>
-      </Stack>
-
-      {summary?.focusExercises?.length ? (
-        <>
-          <Divider />
-          <Stack spacing={1}>
-            <Typography fontWeight={700}>
-              Current focus exercises
-            </Typography>
+        {assignment && program ? (
+          <>
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              {summary.focusExercises.map((exercise) => (
-                <Chip key={exercise} label={exercise} sx={{ bgcolor: '#fff0f0', color: '#ff2625', fontWeight: 700 }} />
-              ))}
+              <Chip
+                label={getWorkoutProgramStatusMeta(program.status).label}
+                sx={getWorkoutProgramStatusChipSx(program.status)}
+              />
+              <Chip
+                label={getWorkoutAssignmentStatusMeta(assignment.assignment_status).label}
+                sx={getWorkoutAssignmentStatusChipSx(assignment.assignment_status)}
+              />
+              <Chip label={`${program.sessions_per_week || summary?.activeDayCount || 0} sessions/week`} />
             </Stack>
-          </Stack>
-        </>
-      ) : null}
 
-      {summary?.upcomingWorkouts?.length ? (
-        <>
-          <Divider />
-          <Stack spacing={1}>
-            <Typography fontWeight={700}>
-              Upcoming planned sessions
-            </Typography>
-            {summary.upcomingWorkouts.map((workout) => (
-              <Typography key={workout.id || `${workout.title}-${workout.workout_date}`} variant="body2" color="text.secondary">
-                {workout.title} • {formatDashboardDate(workout.workout_date)}
+            <Stack spacing={1.2}>
+              <Typography variant="body2" color="text.secondary">
+                {program.description || 'No additional program description was provided yet.'}
               </Typography>
-            ))}
+              <Typography variant="body1">
+                <strong>Schedule:</strong> {formatProgramDateRange(assignment.start_date, assignment.end_date)}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Template days:</strong> {summary?.activeDayCount || 0}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Exercise blocks:</strong> {summary?.activeExerciseCount || 0}
+              </Typography>
+              <Typography variant="body1">
+                <strong>Completed sessions logged:</strong> {summary?.completedPlanSessions || 0}
+              </Typography>
+            </Stack>
+
+            {assignment.focus_goal || profile?.fitness_goal ? (
+              <Typography color="text.secondary">
+                <strong>Focus:</strong> {assignment.focus_goal || profile?.fitness_goal}
+              </Typography>
+            ) : null}
+          </>
+        ) : (
+          <Stack spacing={1.25}>
+            <Typography fontWeight={700}>
+              Ask a coach to assign a program
+            </Typography>
+            <Typography color="text.secondary" lineHeight={1.75}>
+              Once a trainer assigns a workout template, you’ll see weekly sessions, target exercises, and completion tracking here.
+            </Typography>
           </Stack>
-        </>
-      ) : null}
+        )}
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} pt={0.5}>
-        <Button
-          component={RouterLink}
-          to={`${PATHS.dashboard}#workout-tracker`}
-          variant="contained"
-          sx={{
-            bgcolor: '#ff2625',
-            textTransform: 'none',
-            borderRadius: 999,
-            '&:hover': { bgcolor: '#df1d1d' },
-          }}
-        >
-          Open workout tracker
-        </Button>
-
-        {profile?.role === 'admin' ? (
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
           <Button
             component={RouterLink}
-            to={PATHS.admin}
+            to={PATHS.workoutPlan}
+            variant="contained"
+            startIcon={<FitnessCenter />}
+            sx={{ bgcolor: '#ff2625', textTransform: 'none', borderRadius: 999, '&:hover': { bgcolor: '#df1d1d' } }}
+          >
+            Open workout plan
+          </Button>
+          <Button
+            component={RouterLink}
+            to={PATHS.dashboard}
             variant="outlined"
+            startIcon={<CalendarMonth />}
             sx={{ textTransform: 'none', borderRadius: 999 }}
           >
-            Open admin panel
+            Stay on dashboard
           </Button>
-        ) : null}
+        </Stack>
       </Stack>
-    </Stack>
-  </Paper>
-);
+    </Paper>
+  );
+};
 
 export default WorkoutPlanSummaryCard;
