@@ -93,6 +93,7 @@ const Navbar = () => {
           {user ? (
             <>
               <NavLink to={PATHS.dashboard} style={linkStyle}>Dashboard</NavLink>
+              <NavLink to={PATHS.schedule} style={linkStyle}>Schedule</NavLink>
               <NavLink to={PATHS.membership} style={linkStyle}>Membership</NavLink>
               <NavLink to={PATHS.account} style={linkStyle}>Account</NavLink>
             </>

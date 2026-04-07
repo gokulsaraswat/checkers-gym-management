@@ -115,11 +115,20 @@ create table if not exists public.class_sessions (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   description text,
+  session_type text not null default 'group_class' check (session_type in ('group_class', 'personal_training', 'assessment', 'event', 'open_gym')),
   coach_name text,
+  trainer_id uuid references public.profiles on delete set null,
+  trainer_name text,
   room_name text,
+  branch_name text,
+  equipment_notes text,
   starts_at timestamp with time zone not null,
   ends_at timestamp with time zone,
   capacity integer not null default 20,
+  visibility text not null default 'members' check (visibility in ('members', 'staff_only')),
+  schedule_status text not null default 'scheduled' check (schedule_status in ('scheduled', 'cancelled', 'completed')),
+  recurrence_group_id uuid,
+  recurrence_rule text,
   is_active boolean not null default true,
   created_at timestamp with time zone not null default timezone('utc', now()),
   updated_at timestamp with time zone not null default timezone('utc', now()),
@@ -144,6 +153,8 @@ create index if not exists membership_status_history_profile_id_idx on public.me
 create index if not exists member_waivers_profile_id_idx on public.member_waivers (profile_id, accepted_at desc);
 create index if not exists progress_checkpoints_user_id_idx on public.progress_checkpoints (user_id, recorded_on desc, created_at desc);
 create index if not exists class_sessions_starts_at_idx on public.class_sessions (starts_at asc) where is_active = true;
+create index if not exists class_sessions_trainer_id_idx on public.class_sessions (trainer_id, starts_at asc);
+create index if not exists class_sessions_status_idx on public.class_sessions (schedule_status, starts_at asc);
 create index if not exists class_bookings_user_id_idx on public.class_bookings (user_id, created_at desc);
 create index if not exists class_bookings_session_id_idx on public.class_bookings (class_session_id, booking_status);
 
@@ -691,19 +702,28 @@ using (public.is_admin())
 with check (public.is_admin());
 
 drop policy if exists "Authenticated users can read active class sessions" on public.class_sessions;
-create policy "Authenticated users can read active class sessions"
+drop policy if exists "Authenticated users can read visible class sessions" on public.class_sessions;
+create policy "Authenticated users can read visible class sessions"
 on public.class_sessions
 for select
 to authenticated
-using (is_active = true or public.is_admin());
+using (
+  public.is_staff()
+  or (
+    is_active = true
+    and schedule_status = 'scheduled'
+    and visibility = 'members'
+  )
+);
 
 drop policy if exists "Admins can manage class sessions" on public.class_sessions;
-create policy "Admins can manage class sessions"
+drop policy if exists "Staff can manage class sessions" on public.class_sessions;
+create policy "Staff can manage class sessions"
 on public.class_sessions
 for all
 to authenticated
-using (public.is_admin())
-with check (public.is_admin());
+using (public.is_staff())
+with check (public.is_staff());
 
 drop policy if exists "Users can read own class bookings" on public.class_bookings;
 create policy "Users can read own class bookings"
@@ -1148,6 +1168,32 @@ $$;
 
 revoke all on function public.can_check_into_facility(uuid) from public;
 grant execute on function public.can_check_into_facility(uuid) to authenticated;
+
+create or replace function public.list_schedule_trainers()
+returns table (
+  id uuid,
+  full_name text,
+  email text,
+  role text
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select
+    profiles.id,
+    profiles.full_name,
+    profiles.email,
+    profiles.role
+  from public.profiles
+  where profiles.role in ('staff', 'admin')
+    and profiles.is_active = true
+  order by coalesce(nullif(btrim(profiles.full_name), ''), profiles.email);
+$$;
+
+revoke all on function public.list_schedule_trainers() from public;
+grant execute on function public.list_schedule_trainers() to authenticated;
 
 create or replace function public.record_self_check_in(
   p_location_label text default null,

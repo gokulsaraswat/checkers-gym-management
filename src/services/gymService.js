@@ -37,6 +37,29 @@ const profileSelect = `
   )
 `;
 
+const classSessionSelect = `
+  id,
+  title,
+  description,
+  session_type,
+  coach_name,
+  trainer_id,
+  trainer_name,
+  room_name,
+  branch_name,
+  equipment_notes,
+  starts_at,
+  ends_at,
+  capacity,
+  is_active,
+  visibility,
+  schedule_status,
+  recurrence_group_id,
+  recurrence_rule,
+  created_at,
+  updated_at
+`;
+
 const ensureSupabase = () => {
   if (!isSupabaseConfigured || !supabase) {
     throw missingConfigError();
@@ -80,6 +103,39 @@ const normaliseOptionalDate = (value) => {
   }
 
   return value || null;
+};
+
+const normaliseOptionalTimestamp = (value) => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (!value) {
+    return null;
+  }
+
+  const nextValue = new Date(value);
+
+  if (Number.isNaN(nextValue.getTime())) {
+    throw new Error('Invalid date/time value.');
+  }
+
+  return nextValue.toISOString();
+};
+
+const addDaysToIsoTimestamp = (value, days) => {
+  if (!value) {
+    return value;
+  }
+
+  const nextValue = new Date(value);
+
+  if (Number.isNaN(nextValue.getTime())) {
+    return value;
+  }
+
+  nextValue.setDate(nextValue.getDate() + Number(days || 0));
+  return nextValue.toISOString();
 };
 
 const normaliseOptionalNumber = (value) => {
@@ -560,12 +616,18 @@ export const fetchUpcomingClassBookings = async (userId) => {
         id,
         title,
         description,
+        session_type,
         coach_name,
+        trainer_name,
         room_name,
+        branch_name,
+        equipment_notes,
         starts_at,
         ends_at,
         capacity,
-        is_active
+        is_active,
+        visibility,
+        schedule_status
       )
     `)
     .eq('user_id', userId)
@@ -573,6 +635,185 @@ export const fetchUpcomingClassBookings = async (userId) => {
 
   unwrap(error, 'Unable to load upcoming class bookings.');
   return (data ?? []).filter((booking) => booking?.class_session);
+};
+
+export const fetchScheduleTrainers = async () => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('list_schedule_trainers');
+
+  unwrap(error, 'Unable to load the trainer roster.');
+  return data ?? [];
+};
+
+export const fetchClassSessions = async ({
+  startDate = todayIsoDate(),
+  endDate = null,
+  sessionType = 'all',
+  trainerId = 'all',
+  roomName = 'all',
+  status = 'scheduled',
+  visibility = 'all',
+  includeInactive = false,
+  limit = 120,
+} = {}) => {
+  const client = ensureSupabase();
+  let query = client
+    .from('class_sessions')
+    .select(classSessionSelect)
+    .order('starts_at', { ascending: true });
+
+  if (startDate) {
+    query = query.gte('starts_at', `${startDate}T00:00:00`);
+  }
+
+  if (endDate) {
+    query = query.lte('starts_at', `${endDate}T23:59:59.999`);
+  }
+
+  if (sessionType && sessionType !== 'all') {
+    query = query.eq('session_type', sessionType);
+  }
+
+  if (trainerId && trainerId !== 'all') {
+    query = query.eq('trainer_id', trainerId);
+  }
+
+  if (roomName && roomName !== 'all') {
+    query = query.eq('room_name', roomName);
+  }
+
+  if (status && status !== 'all') {
+    query = query.eq('schedule_status', status);
+  }
+
+  if (visibility && visibility !== 'all') {
+    query = query.eq('visibility', visibility);
+  }
+
+  if (!includeInactive) {
+    query = query.eq('is_active', true);
+  }
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+
+  unwrap(error, 'Unable to load class sessions.');
+  return data ?? [];
+};
+
+export const saveClassSession = async (session = {}) => {
+  const client = ensureSupabase();
+  const startsAt = normaliseOptionalTimestamp(pickFirstDefined(session, ['startsAt', 'starts_at']));
+  const endsAt = normaliseOptionalTimestamp(pickFirstDefined(session, ['endsAt', 'ends_at']));
+  const capacity = normaliseOptionalNumber(pickFirstDefined(session, ['capacity']));
+  const title = String(pickFirstDefined(session, ['title']) ?? '').trim();
+  const sessionType = pickFirstDefined(session, ['sessionType', 'session_type']) || 'group_class';
+  const scheduleStatus = pickFirstDefined(session, ['scheduleStatus', 'schedule_status']) || 'scheduled';
+  const visibility = pickFirstDefined(session, ['visibility']) || 'members';
+  const repeatWeeksValue = pickFirstDefined(session, ['repeatWeeks']);
+  const repeatWeeks = Math.max(0, Math.min(Number(repeatWeeksValue || 0), 12));
+
+  if (!title) {
+    throw new Error('Session title is required.');
+  }
+
+  if (!startsAt) {
+    throw new Error('Start date and time are required.');
+  }
+
+  if (endsAt && new Date(endsAt).getTime() <= new Date(startsAt).getTime()) {
+    throw new Error('End time must be after the start time.');
+  }
+
+  if (!capacity || capacity < 1) {
+    throw new Error('Capacity must be at least 1.');
+  }
+
+  const trainerName = normaliseOptionalText(pickFirstDefined(session, ['trainerName', 'trainer_name']));
+
+  const payload = {
+    title,
+    description: normaliseOptionalText(pickFirstDefined(session, ['description'])),
+    session_type: sessionType,
+    trainer_id: pickFirstDefined(session, ['trainerId', 'trainer_id']) || null,
+    trainer_name: trainerName,
+    coach_name: trainerName || null,
+    room_name: normaliseOptionalText(pickFirstDefined(session, ['roomName', 'room_name'])),
+    branch_name: normaliseOptionalText(pickFirstDefined(session, ['branchName', 'branch_name'])) || 'Main branch',
+    equipment_notes: normaliseOptionalText(pickFirstDefined(session, ['equipmentNotes', 'equipment_notes'])),
+    starts_at: startsAt,
+    ends_at: endsAt,
+    capacity,
+    visibility,
+    schedule_status: scheduleStatus,
+    is_active: normaliseBoolean(pickFirstDefined(session, ['isActive', 'is_active'])) ?? true,
+  };
+
+  if (session.id) {
+    const { data, error } = await client
+      .from('class_sessions')
+      .update(payload)
+      .eq('id', session.id)
+      .select(classSessionSelect)
+      .single();
+
+    unwrap(error, 'Unable to update the class session.');
+    return data ? [data] : [];
+  }
+
+  const occurrenceCount = repeatWeeks > 0 ? repeatWeeks + 1 : 1;
+  const recurrenceGroupId = occurrenceCount > 1 && globalThis.crypto?.randomUUID
+    ? globalThis.crypto.randomUUID()
+    : null;
+
+  const rows = Array.from({ length: occurrenceCount }, (_, index) => ({
+    ...payload,
+    starts_at: addDaysToIsoTimestamp(payload.starts_at, index * 7),
+    ends_at: addDaysToIsoTimestamp(payload.ends_at, index * 7),
+    recurrence_rule: occurrenceCount > 1 ? 'weekly' : null,
+    recurrence_group_id: recurrenceGroupId,
+  }));
+
+  const { data, error } = await client
+    .from('class_sessions')
+    .insert(rows)
+    .select(classSessionSelect);
+
+  unwrap(error, 'Unable to create the class session.');
+  return data ?? [];
+};
+
+export const updateClassSessionStatus = async (sessionId, changes = {}) => {
+  const client = ensureSupabase();
+  const payload = {};
+
+  const nextStatus = pickFirstDefined(changes, ['scheduleStatus', 'schedule_status']);
+  const nextActive = pickFirstDefined(changes, ['isActive', 'is_active']);
+
+  if (nextStatus !== undefined) {
+    payload.schedule_status = nextStatus;
+  }
+
+  if (nextActive !== undefined) {
+    payload.is_active = normaliseBoolean(nextActive);
+  }
+
+  if (!Object.keys(payload).length) {
+    throw new Error('No class session changes were provided.');
+  }
+
+  const { data, error } = await client
+    .from('class_sessions')
+    .update(payload)
+    .eq('id', sessionId)
+    .select(classSessionSelect)
+    .single();
+
+  unwrap(error, 'Unable to update class session status.');
+  return data;
 };
 
 export const fetchMemberNotes = async (memberId) => {

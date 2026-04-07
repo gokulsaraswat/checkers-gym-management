@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import {
   Badge,
+  CalendarMonth,
   DoorFront,
   Login,
   Logout,
@@ -25,6 +26,9 @@ import {
   Refresh,
 } from '@mui/icons-material';
 
+import { Link as RouterLink } from 'react-router-dom';
+
+import { PATHS } from '../../app/paths';
 import LoadingScreen from '../../components/common/LoadingScreen';
 import MetricCard from '../../components/common/MetricCard';
 import SetupNotice from '../../components/common/SetupNotice';
@@ -187,6 +191,17 @@ const StaffHomePage = () => {
           Staff and admin accounts can search members, assist with manual check-in or check-out,
           and monitor who is currently inside the gym. This is the operational attendance console for the floor.
         </Typography>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+          <Button
+            component={RouterLink}
+            to={PATHS.staffSchedule}
+            variant="contained"
+            startIcon={<CalendarMonth />}
+            sx={{ bgcolor: '#ff2625', borderRadius: 999, alignSelf: 'flex-start', '&:hover': { bgcolor: '#df1d1d' } }}
+          >
+            Manage class schedule
+          </Button>
+        </Stack>
       </Stack>
 
       {feedback.message ? (

@@ -21,6 +21,7 @@ const guestOnlyPaths = new Set([
 const authOnlyPaths = new Set([
   PATHS.dashboard,
   PATHS.attendance,
+  PATHS.schedule,
   PATHS.membership,
   PATHS.account,
 ]);

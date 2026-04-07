@@ -24,17 +24,20 @@ This project upgrades the original Checkers Gym React site into a **Gym Manageme
 - Login / signup page
 - Forgot password and reset password flow
 - Protected member dashboard
+- Member class schedule page
 - Account settings page
 - Membership profile page
-- Protected staff-ready route foundation
+- Protected staff workspace and schedule manager
 - Protected admin page
 - Admin member detail lifecycle editor
 - Workout tracking UI
+- Class and timetable management UI for staff/admins
 - Exercise explorer with graceful fallback sample data
 
 ### Supabase assets
 - `supabase/schema.sql` for database tables, RLS policies, and triggers
 - `supabase/functions/admin-members/index.ts` for secure admin add/remove member actions
+- `supabase/migrations/20260407000700_class_and_schedule_management.sql` for the class schedule expansion
 
 ## 1) Install dependencies
 
@@ -59,6 +62,8 @@ This creates:
 - `workouts`
 - `membership_status_history`
 - `member_waivers`
+- `class_sessions`
+- `class_bookings`
 
 It also enables Row Level Security and creates the trigger that inserts a profile row whenever a new auth user is created.
 
