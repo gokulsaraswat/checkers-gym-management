@@ -9,6 +9,7 @@ import ForgotPasswordPage from '../features/auth/ForgotPasswordPage';
 import ResetPasswordPage from '../features/auth/ResetPasswordPage';
 import DashboardPage from '../features/dashboard/DashboardPage';
 import ProgressTrackingPage from '../features/progress/ProgressTrackingPage';
+import NutritionPage from '../features/nutrition/NutritionPage';
 import AttendancePage from '../features/attendance/AttendancePage';
 import MemberWorkoutPlanPage from '../features/workouts/MemberWorkoutPlanPage';
 import ClassSchedulePage from '../features/classes/ClassSchedulePage';
@@ -18,6 +19,7 @@ import MemberDetailPage from '../features/members/MemberDetailPage';
 import AccountPage from '../features/account/AccountPage';
 import StaffHomePage from '../features/staff/StaffHomePage';
 import StaffProgressPage from '../features/progress/StaffProgressPage';
+import StaffNutritionPage from '../features/nutrition/StaffNutritionPage';
 import StaffSchedulePage from '../features/classes/StaffSchedulePage';
 import StaffBookingsPage from '../features/bookings/StaffBookingsPage';
 import StaffWorkoutProgramsPage from '../features/workouts/StaffWorkoutProgramsPage';
@@ -45,6 +47,7 @@ const AppRouter = () => (
       <Route element={<ProtectedRoute />}>
         <Route path={PATHS.dashboard} element={<DashboardPage />} />
         <Route path={PATHS.progress} element={<ProgressTrackingPage />} />
+        <Route path={PATHS.nutrition} element={<NutritionPage />} />
         <Route path={PATHS.attendance} element={<AttendancePage />} />
         <Route path={PATHS.workoutPlan} element={<MemberWorkoutPlanPage />} />
         <Route path={PATHS.schedule} element={<ClassSchedulePage />} />
@@ -56,6 +59,7 @@ const AppRouter = () => (
       <Route element={<StaffRoute />}>
         <Route path={PATHS.staff} element={<StaffHomePage />} />
         <Route path={PATHS.staffProgress} element={<StaffProgressPage />} />
+        <Route path={PATHS.staffNutrition} element={<StaffNutritionPage />} />
         <Route path={PATHS.staffSchedule} element={<StaffSchedulePage />} />
         <Route path={PATHS.staffBookings} element={<StaffBookingsPage />} />
         <Route path={PATHS.staffWorkouts} element={<StaffWorkoutProgramsPage />} />

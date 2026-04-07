@@ -94,6 +94,7 @@ const Navbar = () => {
             <>
               <NavLink to={PATHS.dashboard} style={linkStyle}>Dashboard</NavLink>
               <NavLink to={PATHS.progress} style={linkStyle}>Progress</NavLink>
+              <NavLink to={PATHS.nutrition} style={linkStyle}>Nutrition</NavLink>
               <NavLink to={PATHS.workoutPlan} style={linkStyle}>Workout plan</NavLink>
               <NavLink to={PATHS.schedule} style={linkStyle}>Schedule</NavLink>
               <NavLink to={PATHS.bookings} style={linkStyle}>Bookings</NavLink>

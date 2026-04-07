@@ -6,6 +6,7 @@ export const PATHS = {
   resetPassword: '/reset-password',
   dashboard: '/dashboard',
   progress: '/progress',
+  nutrition: '/nutrition',
   attendance: '/attendance',
   workoutPlan: '/workout-plan',
   schedule: '/schedule',
@@ -14,6 +15,7 @@ export const PATHS = {
   account: '/account',
   staff: '/staff',
   staffProgress: '/staff/progress',
+  staffNutrition: '/staff/nutrition',
   staffSchedule: '/staff/schedule',
   staffBookings: '/staff/bookings',
   staffWorkouts: '/staff/workouts',
@@ -30,4 +32,8 @@ export const getStaffBookingPath = (sessionId = '') => (
 
 export const getStaffProgressPath = (memberId = '') => (
   memberId ? `/staff/progress?memberId=${encodeURIComponent(memberId)}` : '/staff/progress'
+);
+
+export const getStaffNutritionPath = (memberId = '') => (
+  memberId ? `/staff/nutrition?memberId=${encodeURIComponent(memberId)}` : '/staff/nutrition'
 );

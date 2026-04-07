@@ -22,6 +22,7 @@ import {
   DoorFront,
   EventAvailable,
   FitnessCenter,
+  RestaurantMenu,
   Login,
   Logout,
   PersonSearch,
@@ -221,6 +222,15 @@ const StaffHomePage = () => {
             sx={{ borderRadius: 999, alignSelf: 'flex-start' }}
           >
             Track progress
+          </Button>
+          <Button
+            component={RouterLink}
+            to={PATHS.staffNutrition}
+            variant="outlined"
+            startIcon={<RestaurantMenu />}
+            sx={{ borderRadius: 999, alignSelf: 'flex-start' }}
+          >
+            Program nutrition
           </Button>
           <Button
             component={RouterLink}

@@ -225,6 +225,96 @@ const workoutAssignmentSelect = `
   )
 `;
 
+const nutritionTemplateSelect = `
+  id,
+  name,
+  description,
+  goal,
+  status,
+  default_calories,
+  default_protein_g,
+  default_carbs_g,
+  default_fat_g,
+  default_fiber_g,
+  hydration_target_liters,
+  created_by,
+  created_at,
+  updated_at,
+  days:nutrition_template_days (
+    id,
+    template_id,
+    day_index,
+    title,
+    meal_guidance,
+    calorie_target,
+    protein_target_g,
+    carbs_target_g,
+    fat_target_g,
+    fiber_target_g,
+    hydration_target_liters,
+    created_at,
+    updated_at
+  )
+`;
+
+const nutritionAssignmentSelect = `
+  id,
+  member_id,
+  template_id,
+  assigned_by,
+  assignment_status,
+  start_date,
+  end_date,
+  goal_note,
+  coach_notes,
+  calorie_target_override,
+  protein_target_override,
+  carbs_target_override,
+  fat_target_override,
+  fiber_target_override,
+  hydration_target_override,
+  created_at,
+  updated_at,
+  member:profiles!member_nutrition_assignments_member_id_fkey (
+    id,
+    email,
+    full_name,
+    phone,
+    membership_status,
+    is_active,
+    role
+  ),
+  template:nutrition_templates (
+    id,
+    name,
+    description,
+    goal,
+    status,
+    default_calories,
+    default_protein_g,
+    default_carbs_g,
+    default_fat_g,
+    default_fiber_g,
+    hydration_target_liters,
+    created_at,
+    updated_at,
+    days:nutrition_template_days (
+      id,
+      template_id,
+      day_index,
+      title,
+      meal_guidance,
+      calorie_target,
+      protein_target_g,
+      carbs_target_g,
+      fat_target_g,
+      fiber_target_g,
+      hydration_target_liters,
+      created_at,
+      updated_at
+    )
+  )
+`;
 const ensureSupabase = () => {
   if (!isSupabaseConfigured || !supabase) {
     throw missingConfigError();
@@ -355,6 +445,17 @@ const sortNestedWorkoutProgram = (program = {}) => ({
 const sortNestedWorkoutAssignment = (assignment = {}) => ({
   ...assignment,
   program: assignment.program ? sortNestedWorkoutProgram(assignment.program) : assignment.program,
+});
+
+const sortNestedNutritionTemplate = (template = {}) => ({
+  ...template,
+  days: [...(template.days || [])]
+    .sort((left, right) => Number(left?.day_index || 0) - Number(right?.day_index || 0)),
+});
+
+const sortNestedNutritionAssignment = (assignment = {}) => ({
+  ...assignment,
+  template: assignment.template ? sortNestedNutritionTemplate(assignment.template) : assignment.template,
 });
 
 const buildProfilePayload = (changes = {}, options = {}) => {
@@ -1023,6 +1124,369 @@ export const saveWorkoutAssignment = async (assignment = {}, actorId = null) => 
 
   unwrap(error, 'Unable to save the workout assignment.');
   return sortNestedWorkoutAssignment(data);
+};
+
+export const fetchNutritionTemplates = async ({
+  includeArchived = true,
+  status = 'all',
+  limit = 60,
+} = {}) => {
+  const client = ensureSupabase();
+  let query = client
+    .from('nutrition_templates')
+    .select(nutritionTemplateSelect)
+    .order('updated_at', { ascending: false });
+
+  if (!includeArchived) {
+    query = query.neq('status', 'archived');
+  }
+
+  if (status && status !== 'all') {
+    query = query.eq('status', status);
+  }
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+
+  unwrap(error, 'Unable to load nutrition templates.');
+  return (data ?? []).map(sortNestedNutritionTemplate);
+};
+
+export const fetchNutritionAssignments = async ({
+  memberId = null,
+  status = 'all',
+  limit = 80,
+} = {}) => {
+  const client = ensureSupabase();
+  let query = client
+    .from('member_nutrition_assignments')
+    .select(nutritionAssignmentSelect)
+    .order('start_date', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (memberId) {
+    query = query.eq('member_id', memberId);
+  }
+
+  if (status && status !== 'all') {
+    query = query.eq('assignment_status', status);
+  }
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+
+  unwrap(error, 'Unable to load nutrition assignments.');
+  return (data ?? []).map(sortNestedNutritionAssignment);
+};
+
+export const saveNutritionTemplate = async (template = {}, actorId = null) => {
+  const client = ensureSupabase();
+
+  const payload = {
+    name: String(template.name ?? '').trim(),
+    description: normaliseOptionalText(template.description),
+    goal: normaliseOptionalText(template.goal),
+    status: template.status || 'draft',
+    default_calories: normaliseOptionalInteger(template.default_calories),
+    default_protein_g: normaliseOptionalNumber(template.default_protein_g),
+    default_carbs_g: normaliseOptionalNumber(template.default_carbs_g),
+    default_fat_g: normaliseOptionalNumber(template.default_fat_g),
+    default_fiber_g: normaliseOptionalNumber(template.default_fiber_g),
+    hydration_target_liters: normaliseOptionalNumber(template.hydration_target_liters),
+  };
+
+  if (!payload.name) {
+    throw new Error('Template name is required.');
+  }
+
+  const templateDays = (template.days || []).map((day, index) => {
+    const title = String(day.title ?? '').trim();
+
+    if (!title) {
+      throw new Error(`Day ${index + 1} needs a title.`);
+    }
+
+    return {
+      day_index: index + 1,
+      title,
+      meal_guidance: normaliseOptionalText(day.meal_guidance),
+      calorie_target: normaliseOptionalInteger(day.calorie_target),
+      protein_target_g: normaliseOptionalNumber(day.protein_target_g),
+      carbs_target_g: normaliseOptionalNumber(day.carbs_target_g),
+      fat_target_g: normaliseOptionalNumber(day.fat_target_g),
+      fiber_target_g: normaliseOptionalNumber(day.fiber_target_g),
+      hydration_target_liters: normaliseOptionalNumber(day.hydration_target_liters),
+    };
+  });
+
+  if (!templateDays.length) {
+    throw new Error('Add at least one day to the nutrition template.');
+  }
+
+  let templateId = template.id || '';
+  let templateRow = null;
+
+  if (templateId) {
+    const { data, error } = await client
+      .from('nutrition_templates')
+      .update(payload)
+      .eq('id', templateId)
+      .select()
+      .single();
+
+    unwrap(error, 'Unable to update the nutrition template.');
+    templateRow = data;
+  } else {
+    const { data, error } = await client
+      .from('nutrition_templates')
+      .insert([{
+        ...payload,
+        created_by: actorId || null,
+      }])
+      .select()
+      .single();
+
+    unwrap(error, 'Unable to create the nutrition template.');
+    templateRow = data;
+    templateId = data.id;
+  }
+
+  const { error: deleteDaysError } = await client
+    .from('nutrition_template_days')
+    .delete()
+    .eq('template_id', templateId);
+
+  unwrap(deleteDaysError, 'Unable to replace nutrition day rows.');
+
+  const { error: insertDaysError } = await client
+    .from('nutrition_template_days')
+    .insert(templateDays.map((day) => ({
+      ...day,
+      template_id: templateId,
+    })));
+
+  unwrap(insertDaysError, 'Unable to save nutrition day rows.');
+
+  const { data, error } = await client
+    .from('nutrition_templates')
+    .select(nutritionTemplateSelect)
+    .eq('id', templateId)
+    .single();
+
+  unwrap(error, 'Unable to reload the nutrition template.');
+  return sortNestedNutritionTemplate(data || templateRow);
+};
+
+export const saveNutritionAssignment = async (assignment = {}, actorId = null) => {
+  const client = ensureSupabase();
+
+  const payload = {
+    member_id: assignment.member_id || null,
+    template_id: assignment.template_id || null,
+    assignment_status: assignment.assignment_status || 'active',
+    start_date: assignment.start_date || todayIsoDate(),
+    end_date: assignment.end_date || null,
+    goal_note: normaliseOptionalText(assignment.goal_note),
+    coach_notes: normaliseOptionalText(assignment.coach_notes),
+    calorie_target_override: normaliseOptionalInteger(assignment.calorie_target_override),
+    protein_target_override: normaliseOptionalNumber(assignment.protein_target_override),
+    carbs_target_override: normaliseOptionalNumber(assignment.carbs_target_override),
+    fat_target_override: normaliseOptionalNumber(assignment.fat_target_override),
+    fiber_target_override: normaliseOptionalNumber(assignment.fiber_target_override),
+    hydration_target_override: normaliseOptionalNumber(assignment.hydration_target_override),
+  };
+
+  if (!payload.member_id) {
+    throw new Error('Choose a member before saving the nutrition assignment.');
+  }
+
+  if (!payload.template_id) {
+    throw new Error('Choose a nutrition template before saving the assignment.');
+  }
+
+  let data = null;
+  let error = null;
+
+  if (assignment.id) {
+    ({ data, error } = await client
+      .from('member_nutrition_assignments')
+      .update(payload)
+      .eq('id', assignment.id)
+      .select(nutritionAssignmentSelect)
+      .single());
+  } else {
+    ({ data, error } = await client
+      .from('member_nutrition_assignments')
+      .insert([{
+        ...payload,
+        assigned_by: actorId || null,
+      }])
+      .select(nutritionAssignmentSelect)
+      .single());
+  }
+
+  unwrap(error, 'Unable to save the nutrition assignment.');
+  return sortNestedNutritionAssignment(data);
+};
+
+export const fetchMealLogs = async (userId, { assignmentId = null, limit = 60 } = {}) => {
+  const client = ensureSupabase();
+  let query = client
+    .from('meal_logs')
+    .select('*')
+    .eq('user_id', userId)
+    .order('logged_on', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (assignmentId) {
+    query = query.eq('assignment_id', assignmentId);
+  }
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+
+  unwrap(error, 'Unable to load meal logs.');
+  return data ?? [];
+};
+
+export const saveMealLog = async (userId, entry = {}, options = {}) => {
+  const client = ensureSupabase();
+
+  const payload = {
+    user_id: userId,
+    assignment_id: entry.assignment_id || null,
+    template_day_id: entry.template_day_id || null,
+    logged_on: entry.logged_on || todayIsoDate(),
+    meal_slot: entry.meal_slot || 'breakfast',
+    meal_title: normaliseOptionalText(entry.meal_title) ?? null,
+    calories: normaliseOptionalInteger(entry.calories),
+    protein_g: normaliseOptionalNumber(entry.protein_g),
+    carbs_g: normaliseOptionalNumber(entry.carbs_g),
+    fat_g: normaliseOptionalNumber(entry.fat_g),
+    fiber_g: normaliseOptionalNumber(entry.fiber_g),
+    water_liters: normaliseOptionalNumber(entry.water_liters),
+    adherence_score: normaliseOptionalInteger(entry.adherence_score),
+    hunger_score: normaliseOptionalInteger(entry.hunger_score),
+    energy_score: normaliseOptionalInteger(entry.energy_score),
+    notes: normaliseOptionalText(entry.notes) ?? null,
+    logged_at: normaliseOptionalTimestamp(entry.logged_at) ?? null,
+    recorded_by: options.recordedBy || null,
+    entry_source: options.entrySource || 'member_app',
+  };
+
+  if (!payload.meal_title) {
+    payload.meal_title = payload.meal_slot.replaceAll('_', ' ');
+  }
+
+  if (entry.id) {
+    const { data, error } = await client
+      .from('meal_logs')
+      .update(payload)
+      .eq('id', entry.id)
+      .select()
+      .single();
+
+    unwrap(error, 'Unable to update the meal log.');
+    return data;
+  }
+
+  const { data, error } = await client
+    .from('meal_logs')
+    .insert([payload])
+    .select()
+    .single();
+
+  unwrap(error, 'Unable to save the meal log.');
+  return data;
+};
+
+export const deleteMealLog = async (entryId) => {
+  const client = ensureSupabase();
+  const { error } = await client
+    .from('meal_logs')
+    .delete()
+    .eq('id', entryId);
+
+  unwrap(error, 'Unable to delete the meal log.');
+};
+
+export const fetchNutritionCheckins = async (userId, limit = 20) => {
+  const client = ensureSupabase();
+  let query = client
+    .from('nutrition_checkins')
+    .select('*')
+    .eq('user_id', userId)
+    .order('checked_in_on', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+
+  unwrap(error, 'Unable to load nutrition check-ins.');
+  return data ?? [];
+};
+
+export const saveNutritionCheckin = async (userId, entry = {}, options = {}) => {
+  const client = ensureSupabase();
+
+  const payload = {
+    user_id: userId,
+    assignment_id: entry.assignment_id || null,
+    checked_in_on: entry.checked_in_on || todayIsoDate(),
+    body_weight: normaliseOptionalNumber(entry.body_weight),
+    adherence_score: normaliseOptionalInteger(entry.adherence_score),
+    hunger_score: normaliseOptionalInteger(entry.hunger_score),
+    energy_score: normaliseOptionalInteger(entry.energy_score),
+    digestion_notes: normaliseOptionalText(entry.digestion_notes) ?? null,
+    coach_feedback: normaliseOptionalText(entry.coach_feedback) ?? null,
+    next_focus: normaliseOptionalText(entry.next_focus) ?? null,
+    notes: normaliseOptionalText(entry.notes) ?? null,
+    recorded_by: options.recordedBy || null,
+    entry_source: options.entrySource || 'member_app',
+  };
+
+  if (entry.id) {
+    const { data, error } = await client
+      .from('nutrition_checkins')
+      .update(payload)
+      .eq('id', entry.id)
+      .select()
+      .single();
+
+    unwrap(error, 'Unable to update the nutrition check-in.');
+    return data;
+  }
+
+  const { data, error } = await client
+    .from('nutrition_checkins')
+    .insert([payload])
+    .select()
+    .single();
+
+  unwrap(error, 'Unable to save the nutrition check-in.');
+  return data;
+};
+
+export const deleteNutritionCheckin = async (entryId) => {
+  const client = ensureSupabase();
+  const { error } = await client
+    .from('nutrition_checkins')
+    .delete()
+    .eq('id', entryId);
+
+  unwrap(error, 'Unable to delete the nutrition check-in.');
 };
 
 export const fetchProgressCheckpoints = async (userId) => {

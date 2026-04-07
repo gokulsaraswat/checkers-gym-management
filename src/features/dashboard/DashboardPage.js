@@ -33,6 +33,9 @@ import { useAuth } from '../../context/AuthContext';
 import {
   deleteProgressCheckpoint,
   deleteWorkout,
+  fetchMealLogs,
+  fetchNutritionAssignments,
+  fetchNutritionCheckins,
   fetchProgressCheckpoints,
   fetchUpcomingClassBookings,
   fetchWorkoutAssignments,
@@ -50,6 +53,7 @@ import DashboardAlertsCard from './components/DashboardAlertsCard';
 import ProgressSnapshotCard from './components/ProgressSnapshotCard';
 import UpcomingClassesCard from './components/UpcomingClassesCard';
 import WorkoutPlanSummaryCard from './components/WorkoutPlanSummaryCard';
+import NutritionSummaryCard from './components/NutritionSummaryCard';
 import {
   buildDashboardAlerts,
   buildProgressSummary,
@@ -62,6 +66,7 @@ import {
   sortProgressRows,
   sortWorkoutRows,
 } from './dashboardHelpers';
+import { buildNutritionAssignmentSummary, sortMealLogs, sortNutritionAssignments, sortNutritionCheckins } from '../nutrition/nutritionHelpers';
 
 const createEmptyWorkoutForm = () => ({
   id: '',
@@ -93,6 +98,9 @@ const DashboardPage = () => {
   const [workouts, setWorkouts] = useState([]);
   const [workoutAssignments, setWorkoutAssignments] = useState([]);
   const [progressCheckpoints, setProgressCheckpoints] = useState([]);
+  const [nutritionAssignments, setNutritionAssignments] = useState([]);
+  const [nutritionMealLogs, setNutritionMealLogs] = useState([]);
+  const [nutritionCheckins, setNutritionCheckins] = useState([]);
   const [upcomingClasses, setUpcomingClasses] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [savingWorkout, setSavingWorkout] = useState(false);
@@ -118,17 +126,26 @@ const DashboardPage = () => {
         progressRows,
         bookingRows,
         assignmentRows,
+        nutritionAssignmentRows,
+        nutritionMealRows,
+        nutritionCheckinRows,
       ] = await Promise.all([
         fetchWorkouts(user.id),
         fetchProgressCheckpoints(user.id),
         fetchUpcomingClassBookings(user.id),
         fetchWorkoutAssignments({ memberId: user.id, limit: 12 }),
+        fetchNutritionAssignments({ memberId: user.id, limit: 12 }),
+        fetchMealLogs(user.id, { limit: 40 }),
+        fetchNutritionCheckins(user.id, 12),
       ]);
 
       setWorkouts(sortWorkoutRows(workoutRows));
       setProgressCheckpoints(sortProgressRows(progressRows));
       setUpcomingClasses(buildUpcomingClassSummary(bookingRows).upcoming);
       setWorkoutAssignments(assignmentRows);
+      setNutritionAssignments(sortNutritionAssignments(nutritionAssignmentRows));
+      setNutritionMealLogs(sortMealLogs(nutritionMealRows));
+      setNutritionCheckins(sortNutritionCheckins(nutritionCheckinRows));
     } catch (error) {
       setFeedback({ type: 'error', message: error.message || 'Unable to load your dashboard.' });
     } finally {
@@ -144,6 +161,13 @@ const DashboardPage = () => {
   const workoutPlanSummary = useMemo(() => buildWorkoutPlanSummary(workouts, workoutAssignments), [workouts, workoutAssignments]);
   const progressSummary = useMemo(() => buildProgressSummary(progressCheckpoints), [progressCheckpoints]);
   const classSummary = useMemo(() => buildUpcomingClassSummary(upcomingClasses), [upcomingClasses]);
+  const nutritionSummary = useMemo(() => {
+    const activeAssignment = nutritionAssignments.find((assignment) => assignment.assignment_status === 'active')
+      || nutritionAssignments[0]
+      || null;
+
+    return buildNutritionAssignmentSummary(activeAssignment, nutritionMealLogs, nutritionCheckins);
+  }, [nutritionAssignments, nutritionCheckins, nutritionMealLogs]);
   const profileCompleteness = useMemo(() => getProfileCompleteness(profile || {}), [profile]);
   const dashboardAlerts = useMemo(() => buildDashboardAlerts({
     profile,
@@ -341,7 +365,7 @@ const DashboardPage = () => {
               Welcome back, {profile.full_name || profile.email}
             </Typography>
             <Typography color="text.secondary" maxWidth="920px">
-              See your membership status, progress snapshots, upcoming classes, and training summary from one place.
+              See your membership status, progress snapshots, nutrition plan, upcoming classes, and training summary from one place.
             </Typography>
           </Stack>
 
@@ -465,6 +489,10 @@ const DashboardPage = () => {
             </Grid>
 
             <Grid item xs={12} lg={4}>
+              <NutritionSummaryCard summary={nutritionSummary} />
+            </Grid>
+
+            <Grid item xs={12}>
               <DashboardAlertsCard alerts={dashboardAlerts} />
             </Grid>
 
