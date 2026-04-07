@@ -7,10 +7,12 @@ export const PATHS = {
   dashboard: '/dashboard',
   attendance: '/attendance',
   schedule: '/schedule',
+  bookings: '/bookings',
   membership: '/membership',
   account: '/account',
   staff: '/staff',
   staffSchedule: '/staff/schedule',
+  staffBookings: '/staff/bookings',
   admin: '/admin',
   memberDetail: '/admin/members/:memberId',
   exerciseDetail: '/exercise/:id',
@@ -18,3 +20,6 @@ export const PATHS = {
 
 export const getExerciseDetailPath = (id) => `/exercise/${id}`;
 export const getAdminMemberDetailPath = (memberId) => `/admin/members/${memberId}`;
+export const getStaffBookingPath = (sessionId = '') => (
+  sessionId ? `/staff/bookings?sessionId=${encodeURIComponent(sessionId)}` : '/staff/bookings'
+);

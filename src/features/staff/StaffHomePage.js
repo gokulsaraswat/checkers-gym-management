@@ -20,6 +20,7 @@ import {
   Badge,
   CalendarMonth,
   DoorFront,
+  EventAvailable,
   Login,
   Logout,
   PersonSearch,
@@ -200,6 +201,15 @@ const StaffHomePage = () => {
             sx={{ bgcolor: '#ff2625', borderRadius: 999, alignSelf: 'flex-start', '&:hover': { bgcolor: '#df1d1d' } }}
           >
             Manage class schedule
+          </Button>
+          <Button
+            component={RouterLink}
+            to={PATHS.staffBookings}
+            variant="outlined"
+            startIcon={<EventAvailable />}
+            sx={{ borderRadius: 999, alignSelf: 'flex-start' }}
+          >
+            Manage bookings
           </Button>
         </Stack>
       </Stack>

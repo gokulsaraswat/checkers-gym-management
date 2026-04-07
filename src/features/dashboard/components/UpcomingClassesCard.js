@@ -95,6 +95,12 @@ const UpcomingClassesCard = ({ bookings = [] }) => (
                   ) : null}
                 </Stack>
 
+                {booking.booking_status === 'waitlist' && booking.waitlist_position ? (
+                  <Typography variant="body2" color="text.secondary">
+                    Waitlist position: #{booking.waitlist_position}
+                  </Typography>
+                ) : null}
+
                 {booking.notes ? (
                   <Typography variant="body2" color="text.secondary">
                     {booking.notes}

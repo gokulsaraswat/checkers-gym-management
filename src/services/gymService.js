@@ -60,6 +60,38 @@ const classSessionSelect = `
   updated_at
 `;
 
+const memberClassBookingSelect = `
+  id,
+  class_session_id,
+  user_id,
+  booking_status,
+  waitlist_position,
+  booking_source,
+  notes,
+  cancel_reason,
+  cancelled_at,
+  status_changed_at,
+  created_at,
+  updated_at,
+  class_session:class_sessions (
+    id,
+    title,
+    description,
+    session_type,
+    coach_name,
+    trainer_name,
+    room_name,
+    branch_name,
+    equipment_notes,
+    starts_at,
+    ends_at,
+    capacity,
+    is_active,
+    visibility,
+    schedule_status
+  )
+`;
+
 const ensureSupabase = () => {
   if (!isSupabaseConfigured || !supabase) {
     throw missingConfigError();
@@ -603,45 +635,53 @@ export const deleteProgressCheckpoint = async (checkpointId) => {
   unwrap(error, 'Unable to delete progress snapshot.');
 };
 
-export const fetchUpcomingClassBookings = async (userId) => {
+export const fetchMemberClassBookings = async (userId) => {
   const client = ensureSupabase();
   const { data, error } = await client
     .from('class_bookings')
-    .select(`
-      id,
-      booking_status,
-      notes,
-      created_at,
-      class_session:class_sessions (
-        id,
-        title,
-        description,
-        session_type,
-        coach_name,
-        trainer_name,
-        room_name,
-        branch_name,
-        equipment_notes,
-        starts_at,
-        ends_at,
-        capacity,
-        is_active,
-        visibility,
-        schedule_status
-      )
-    `)
+    .select(memberClassBookingSelect)
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
-  unwrap(error, 'Unable to load upcoming class bookings.');
+  unwrap(error, 'Unable to load class bookings.');
   return (data ?? []).filter((booking) => booking?.class_session);
 };
+
+export const fetchUpcomingClassBookings = async (userId) => fetchMemberClassBookings(userId);
 
 export const fetchScheduleTrainers = async () => {
   const client = ensureSupabase();
   const { data, error } = await client.rpc('list_schedule_trainers');
 
   unwrap(error, 'Unable to load the trainer roster.');
+  return data ?? [];
+};
+
+export const fetchBookableClassSessions = async ({
+  startDate = todayIsoDate(),
+  endDate = null,
+  sessionType = 'all',
+  trainerId = 'all',
+  roomName = 'all',
+  status = 'scheduled',
+  visibility = 'members',
+  includeInactive = false,
+  limit = 120,
+} = {}) => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('list_bookable_class_sessions', {
+    p_start_date: startDate || null,
+    p_end_date: endDate || null,
+    p_session_type: sessionType && sessionType !== 'all' ? sessionType : null,
+    p_trainer_id: trainerId && trainerId !== 'all' ? trainerId : null,
+    p_room_name: roomName && roomName !== 'all' ? roomName : null,
+    p_status: status && status !== 'all' ? status : null,
+    p_visibility: visibility && visibility !== 'all' ? visibility : null,
+    p_include_inactive: Boolean(includeInactive),
+    p_limit: Number(limit || 120),
+  });
+
+  unwrap(error, 'Unable to load bookable class sessions.');
   return data ?? [];
 };
 
@@ -813,6 +853,68 @@ export const updateClassSessionStatus = async (sessionId, changes = {}) => {
     .single();
 
   unwrap(error, 'Unable to update class session status.');
+  return data;
+};
+
+export const bookClassSession = async (sessionId, options = {}) => {
+  const client = ensureSupabase();
+
+  const { data, error } = await client.rpc('book_class_session', {
+    p_session_id: sessionId,
+    p_notes: normaliseOptionalText(options.notes) ?? null,
+    p_source: options.source || 'member_app',
+  });
+
+  unwrap(error, 'Unable to book the class session.');
+  return data;
+};
+
+export const cancelClassBooking = async (sessionId, options = {}) => {
+  const client = ensureSupabase();
+
+  const { data, error } = await client.rpc('cancel_class_booking', {
+    p_session_id: sessionId,
+    p_reason: normaliseOptionalText(options.reason) ?? null,
+    p_promote_waitlist: options.promoteWaitlist !== undefined ? Boolean(options.promoteWaitlist) : true,
+  });
+
+  unwrap(error, 'Unable to cancel the class booking.');
+  return data;
+};
+
+export const fetchSessionBookingRoster = async (sessionId) => {
+  const client = ensureSupabase();
+
+  const { data, error } = await client.rpc('list_session_booking_roster', {
+    p_session_id: sessionId,
+  });
+
+  unwrap(error, 'Unable to load the class roster.');
+  return data ?? [];
+};
+
+export const staffPromoteNextWaitlistedBooking = async (sessionId) => {
+  const client = ensureSupabase();
+
+  const { data, error } = await client.rpc('staff_promote_next_waitlisted_booking', {
+    p_session_id: sessionId,
+  });
+
+  unwrap(error, 'Unable to promote the next waitlisted booking.');
+  return data;
+};
+
+export const staffUpdateClassBooking = async (bookingId, changes = {}) => {
+  const client = ensureSupabase();
+
+  const { data, error } = await client.rpc('staff_update_class_booking', {
+    p_booking_id: bookingId,
+    p_booking_status: changes.bookingStatus || changes.booking_status,
+    p_notes: normaliseOptionalText(changes.notes) ?? null,
+    p_cancel_reason: normaliseOptionalText(changes.cancelReason || changes.cancel_reason) ?? null,
+  });
+
+  unwrap(error, 'Unable to update the class booking.');
   return data;
 };
 

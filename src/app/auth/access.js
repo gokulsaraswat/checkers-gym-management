@@ -22,6 +22,7 @@ const authOnlyPaths = new Set([
   PATHS.dashboard,
   PATHS.attendance,
   PATHS.schedule,
+  PATHS.bookings,
   PATHS.membership,
   PATHS.account,
 ]);

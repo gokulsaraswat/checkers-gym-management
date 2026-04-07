@@ -10,11 +10,13 @@ import ResetPasswordPage from '../features/auth/ResetPasswordPage';
 import DashboardPage from '../features/dashboard/DashboardPage';
 import AttendancePage from '../features/attendance/AttendancePage';
 import ClassSchedulePage from '../features/classes/ClassSchedulePage';
+import BookingsPage from '../features/bookings/BookingsPage';
 import MembershipProfilePage from '../features/members/MemberProfilePage';
 import MemberDetailPage from '../features/members/MemberDetailPage';
 import AccountPage from '../features/account/AccountPage';
 import StaffHomePage from '../features/staff/StaffHomePage';
 import StaffSchedulePage from '../features/classes/StaffSchedulePage';
+import StaffBookingsPage from '../features/bookings/StaffBookingsPage';
 import AdminPage from '../features/admin/AdminPage';
 import GuestRoute from '../routes/GuestRoute';
 import ProtectedRoute from '../routes/ProtectedRoute';
@@ -40,6 +42,7 @@ const AppRouter = () => (
         <Route path={PATHS.dashboard} element={<DashboardPage />} />
         <Route path={PATHS.attendance} element={<AttendancePage />} />
         <Route path={PATHS.schedule} element={<ClassSchedulePage />} />
+        <Route path={PATHS.bookings} element={<BookingsPage />} />
         <Route path={PATHS.membership} element={<MembershipProfilePage />} />
         <Route path={PATHS.account} element={<AccountPage />} />
       </Route>
@@ -47,6 +50,7 @@ const AppRouter = () => (
       <Route element={<StaffRoute />}>
         <Route path={PATHS.staff} element={<StaffHomePage />} />
         <Route path={PATHS.staffSchedule} element={<StaffSchedulePage />} />
+        <Route path={PATHS.staffBookings} element={<StaffBookingsPage />} />
       </Route>
 
       <Route element={<AdminRoute />}>
