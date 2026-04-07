@@ -26,6 +26,7 @@ import {
   Logout,
   PersonSearch,
   Refresh,
+  TrendingUp,
 } from '@mui/icons-material';
 
 import { Link as RouterLink } from 'react-router-dom';
@@ -211,6 +212,15 @@ const StaffHomePage = () => {
             sx={{ borderRadius: 999, alignSelf: 'flex-start' }}
           >
             Manage bookings
+          </Button>
+          <Button
+            component={RouterLink}
+            to={PATHS.staffProgress}
+            variant="outlined"
+            startIcon={<TrendingUp />}
+            sx={{ borderRadius: 999, alignSelf: 'flex-start' }}
+          >
+            Track progress
           </Button>
           <Button
             component={RouterLink}

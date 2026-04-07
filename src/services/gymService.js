@@ -1038,7 +1038,7 @@ export const fetchProgressCheckpoints = async (userId) => {
   return data ?? [];
 };
 
-export const saveProgressCheckpoint = async (userId, checkpoint = {}) => {
+export const saveProgressCheckpoint = async (userId, checkpoint = {}, options = {}) => {
   const client = ensureSupabase();
 
   const payload = {
@@ -1052,6 +1052,8 @@ export const saveProgressCheckpoint = async (userId, checkpoint = {}) => {
       return value === null || value === undefined ? value : Math.round(value);
     })(),
     notes: normaliseOptionalText(checkpoint.notes) ?? null,
+    recorded_by: options.recordedBy || null,
+    entry_source: options.entrySource || 'member_app',
   };
 
   const hasUsefulValue = [
@@ -1096,6 +1098,155 @@ export const deleteProgressCheckpoint = async (checkpointId) => {
     .eq('id', checkpointId);
 
   unwrap(error, 'Unable to delete progress snapshot.');
+};
+
+export const fetchBodyMeasurements = async (userId) => {
+  const client = ensureSupabase();
+  const { data, error } = await client
+    .from('body_measurements')
+    .select('*')
+    .eq('user_id', userId)
+    .order('recorded_on', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  unwrap(error, 'Unable to load body measurements.');
+  return data ?? [];
+};
+
+export const saveBodyMeasurement = async (userId, measurement = {}, options = {}) => {
+  const client = ensureSupabase();
+
+  const payload = {
+    user_id: userId,
+    recorded_on: measurement.recorded_on || todayIsoDate(),
+    height_cm: normaliseOptionalNumber(measurement.height_cm),
+    chest_cm: normaliseOptionalNumber(measurement.chest_cm),
+    waist_cm: normaliseOptionalNumber(measurement.waist_cm),
+    hips_cm: normaliseOptionalNumber(measurement.hips_cm),
+    left_arm_cm: normaliseOptionalNumber(measurement.left_arm_cm),
+    right_arm_cm: normaliseOptionalNumber(measurement.right_arm_cm),
+    left_thigh_cm: normaliseOptionalNumber(measurement.left_thigh_cm),
+    right_thigh_cm: normaliseOptionalNumber(measurement.right_thigh_cm),
+    notes: normaliseOptionalText(measurement.notes) ?? null,
+    recorded_by: options.recordedBy || null,
+    entry_source: options.entrySource || 'member_app',
+  };
+
+  const hasUsefulValue = [
+    payload.height_cm,
+    payload.chest_cm,
+    payload.waist_cm,
+    payload.hips_cm,
+    payload.left_arm_cm,
+    payload.right_arm_cm,
+    payload.left_thigh_cm,
+    payload.right_thigh_cm,
+    payload.notes,
+  ].some((value) => value !== null && value !== undefined);
+
+  if (!hasUsefulValue) {
+    throw new Error('Add at least one body measurement or note before saving.');
+  }
+
+  if (measurement.id) {
+    const { data, error } = await client
+      .from('body_measurements')
+      .update(payload)
+      .eq('id', measurement.id)
+      .select()
+      .single();
+
+    unwrap(error, 'Unable to update the body measurement.');
+    return data;
+  }
+
+  const { data, error } = await client
+    .from('body_measurements')
+    .insert([payload])
+    .select()
+    .single();
+
+  unwrap(error, 'Unable to save the body measurement.');
+  return data;
+};
+
+export const deleteBodyMeasurement = async (measurementId) => {
+  const client = ensureSupabase();
+  const { error } = await client
+    .from('body_measurements')
+    .delete()
+    .eq('id', measurementId);
+
+  unwrap(error, 'Unable to delete the body measurement.');
+};
+
+export const fetchPersonalRecords = async (userId) => {
+  const client = ensureSupabase();
+  const { data, error } = await client
+    .from('personal_records')
+    .select('*')
+    .eq('user_id', userId)
+    .order('achieved_on', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  unwrap(error, 'Unable to load personal records.');
+  return data ?? [];
+};
+
+export const savePersonalRecord = async (userId, record = {}, options = {}) => {
+  const client = ensureSupabase();
+
+  const payload = {
+    user_id: userId,
+    exercise_name: String(record.exercise_name ?? '').trim(),
+    record_type: record.record_type || 'weight',
+    record_value: normaliseOptionalNumber(record.record_value),
+    unit: normaliseOptionalText(record.unit) ?? 'units',
+    achieved_on: record.achieved_on || todayIsoDate(),
+    notes: normaliseOptionalText(record.notes) ?? null,
+    related_workout_id: record.related_workout_id || null,
+    recorded_by: options.recordedBy || null,
+    entry_source: options.entrySource || 'member_app',
+  };
+
+  if (!payload.exercise_name) {
+    throw new Error('Exercise or event name is required.');
+  }
+
+  if (payload.record_value === null || payload.record_value === undefined) {
+    throw new Error('A numeric record value is required.');
+  }
+
+  if (record.id) {
+    const { data, error } = await client
+      .from('personal_records')
+      .update(payload)
+      .eq('id', record.id)
+      .select()
+      .single();
+
+    unwrap(error, 'Unable to update the personal record.');
+    return data;
+  }
+
+  const { data, error } = await client
+    .from('personal_records')
+    .insert([payload])
+    .select()
+    .single();
+
+  unwrap(error, 'Unable to save the personal record.');
+  return data;
+};
+
+export const deletePersonalRecord = async (recordId) => {
+  const client = ensureSupabase();
+  const { error } = await client
+    .from('personal_records')
+    .delete()
+    .eq('id', recordId);
+
+  unwrap(error, 'Unable to delete the personal record.');
 };
 
 export const fetchMemberClassBookings = async (userId) => {

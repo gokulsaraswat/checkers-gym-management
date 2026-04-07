@@ -13,38 +13,37 @@ import {
 import {
   DeleteOutline,
   EditOutlined,
-  MonitorHeartOutlined,
+  FitnessCenter,
   MonitorWeight,
   TrendingUp,
 } from '@mui/icons-material';
 
-import { formatDashboardDate } from '../dashboardHelpers';
+import {
+  formatDeltaLabel,
+  formatMetric,
+  formatProgressDate,
+} from '../progressHelpers';
 
-const metricLabel = (value, suffix, fallback = '—') => (
-  value !== null && value !== undefined && value !== '' ? `${value}${suffix}` : fallback
-);
-
-const ProgressSnapshotCard = ({
-  sectionLabel = 'Progress snapshots',
-  heading = 'Track body metrics over time',
-  description = 'Capture regular measurements so you and your trainer can compare trends week over week.',
+const BodyMeasurementsCard = ({
+  sectionLabel = 'Body measurements',
+  heading = 'Log circumference and size changes',
+  description = 'Track waist, chest, hips, arms, and legs so your progress reflects more than scale weight alone.',
   summary,
-  checkpoints = [],
+  measurements = [],
   form,
   feedback,
   saving,
   onFieldChange,
   onSubmit,
-  onDelete = null,
   onEdit = null,
+  onDelete = null,
   onResetForm = null,
   disableActions = false,
-  submitLabel = null,
-  emptyStateText = 'No progress snapshots yet. Add your first check-in above.',
   entryLimit = 6,
+  emptyStateText = 'No body measurements yet. Add your first tape-measure check-in above.',
 }) => (
   <Paper
-    id="progress-snapshots"
+    id="body-measurements"
     className="surface-card"
     sx={{ p: 3, borderRadius: 4, background: '#fff', height: '100%' }}
   >
@@ -67,10 +66,23 @@ const ProgressSnapshotCard = ({
             <MonitorWeight sx={{ color: '#ff2625' }} />
             <Box>
               <Typography fontWeight={800}>
-                {metricLabel(summary?.latest?.weight_kg, ' kg')}
+                {formatMetric(summary?.latest?.waist_cm, ' cm')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Latest weight
+                Latest waist
+              </Typography>
+            </Box>
+          </Stack>
+        </Paper>
+        <Paper variant="outlined" sx={{ flex: 1, p: 2, borderRadius: 3, boxShadow: 'none' }}>
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <FitnessCenter sx={{ color: '#ff2625' }} />
+            <Box>
+              <Typography fontWeight={800}>
+                {formatMetric(summary?.latest?.chest_cm, ' cm')}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Latest chest
               </Typography>
             </Box>
           </Stack>
@@ -80,25 +92,10 @@ const ProgressSnapshotCard = ({
             <TrendingUp sx={{ color: '#ff2625' }} />
             <Box>
               <Typography fontWeight={800}>
-                {summary?.weightDelta === null || summary?.weightDelta === undefined
-                  ? '—'
-                  : `${summary.weightDelta > 0 ? '+' : ''}${summary.weightDelta.toFixed(1)} kg`}
+                {formatDeltaLabel(summary?.waistDelta, ' cm')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Weight change vs previous
-              </Typography>
-            </Box>
-          </Stack>
-        </Paper>
-        <Paper variant="outlined" sx={{ flex: 1, p: 2, borderRadius: 3, boxShadow: 'none' }}>
-          <Stack direction="row" spacing={1.5} alignItems="center">
-            <MonitorHeartOutlined sx={{ color: '#ff2625' }} />
-            <Box>
-              <Typography fontWeight={800}>
-                {metricLabel(summary?.latest?.resting_heart_rate, ' bpm')}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Resting heart rate
+                Waist change vs previous
               </Typography>
             </Box>
           </Stack>
@@ -123,38 +120,73 @@ const ProgressSnapshotCard = ({
               fullWidth
             />
             <TextField
-              label="Weight (kg)"
+              label="Height (cm)"
               type="number"
               inputProps={{ step: '0.1' }}
-              value={form.weight_kg}
-              onChange={onFieldChange('weight_kg')}
+              value={form.height_cm}
+              onChange={onFieldChange('height_cm')}
               fullWidth
             />
             <TextField
-              label="Body fat %"
+              label="Chest (cm)"
               type="number"
               inputProps={{ step: '0.1' }}
-              value={form.body_fat_percent}
-              onChange={onFieldChange('body_fat_percent')}
+              value={form.chest_cm}
+              onChange={onFieldChange('chest_cm')}
+              fullWidth
+            />
+            <TextField
+              label="Waist (cm)"
+              type="number"
+              inputProps={{ step: '0.1' }}
+              value={form.waist_cm}
+              onChange={onFieldChange('waist_cm')}
               fullWidth
             />
           </Stack>
 
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
             <TextField
-              label="Skeletal muscle %"
+              label="Hips (cm)"
               type="number"
               inputProps={{ step: '0.1' }}
-              value={form.skeletal_muscle_percent}
-              onChange={onFieldChange('skeletal_muscle_percent')}
+              value={form.hips_cm}
+              onChange={onFieldChange('hips_cm')}
               fullWidth
             />
             <TextField
-              label="Resting heart rate"
+              label="Left arm (cm)"
               type="number"
-              inputProps={{ step: '1' }}
-              value={form.resting_heart_rate}
-              onChange={onFieldChange('resting_heart_rate')}
+              inputProps={{ step: '0.1' }}
+              value={form.left_arm_cm}
+              onChange={onFieldChange('left_arm_cm')}
+              fullWidth
+            />
+            <TextField
+              label="Right arm (cm)"
+              type="number"
+              inputProps={{ step: '0.1' }}
+              value={form.right_arm_cm}
+              onChange={onFieldChange('right_arm_cm')}
+              fullWidth
+            />
+          </Stack>
+
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+            <TextField
+              label="Left thigh (cm)"
+              type="number"
+              inputProps={{ step: '0.1' }}
+              value={form.left_thigh_cm}
+              onChange={onFieldChange('left_thigh_cm')}
+              fullWidth
+            />
+            <TextField
+              label="Right thigh (cm)"
+              type="number"
+              inputProps={{ step: '0.1' }}
+              value={form.right_thigh_cm}
+              onChange={onFieldChange('right_thigh_cm')}
               fullWidth
             />
           </Stack>
@@ -166,7 +198,7 @@ const ProgressSnapshotCard = ({
             fullWidth
             multiline
             minRows={3}
-            placeholder="Recovery notes, sleep quality, soreness, performance observations..."
+            placeholder="Any posture cues, asymmetry notes, or measurement context..."
           />
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
@@ -176,9 +208,11 @@ const ProgressSnapshotCard = ({
               disabled={saving || disableActions}
               sx={{ alignSelf: 'flex-start', bgcolor: '#ff2625', borderRadius: 999, textTransform: 'none', '&:hover': { bgcolor: '#df1d1d' } }}
             >
-              {saving
-                ? 'Saving snapshot...'
-                : submitLabel || (form.id ? 'Update progress snapshot' : 'Save progress snapshot')}
+              {(() => {
+                if (saving) return 'Saving measurement...';
+                if (form.id) return 'Update measurement';
+                return 'Save measurement';
+              })()}
             </Button>
             {form.id && onResetForm ? (
               <Button
@@ -198,28 +232,28 @@ const ProgressSnapshotCard = ({
 
       <Stack spacing={1.5}>
         <Typography variant="h6" fontWeight={800}>
-          Recent entries
+          Recent measurement entries
         </Typography>
 
-        {!checkpoints.length ? (
+        {!measurements.length ? (
           <Typography color="text.secondary">
             {emptyStateText}
           </Typography>
         ) : (
-          checkpoints.slice(0, entryLimit).map((checkpoint) => (
-            <Paper key={checkpoint.id} variant="outlined" sx={{ p: 2, borderRadius: 3, boxShadow: 'none' }}>
+          measurements.slice(0, entryLimit).map((measurement) => (
+            <Paper key={measurement.id} variant="outlined" sx={{ p: 2, borderRadius: 3, boxShadow: 'none' }}>
               <Stack spacing={1.25}>
                 <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2}>
                   <Box>
                     <Typography fontWeight={800}>
-                      {formatDashboardDate(checkpoint.recorded_on)}
+                      {formatProgressDate(measurement.recorded_on)}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       {[
-                        metricLabel(checkpoint.weight_kg, ' kg'),
-                        metricLabel(checkpoint.body_fat_percent, '%'),
-                        metricLabel(checkpoint.skeletal_muscle_percent, '%'),
-                      ].filter((value) => value !== '—').join(' • ') || 'No measurement values'}
+                        measurement.waist_cm != null ? `Waist ${formatMetric(measurement.waist_cm, ' cm')}` : null,
+                        measurement.chest_cm != null ? `Chest ${formatMetric(measurement.chest_cm, ' cm')}` : null,
+                        measurement.hips_cm != null ? `Hips ${formatMetric(measurement.hips_cm, ' cm')}` : null,
+                      ].filter(Boolean).join(' • ') || 'Measurements saved'}
                     </Typography>
                   </Box>
 
@@ -228,7 +262,7 @@ const ProgressSnapshotCard = ({
                       <IconButton
                         size="small"
                         color="primary"
-                        onClick={() => onEdit(checkpoint)}
+                        onClick={() => onEdit(measurement)}
                         disabled={disableActions}
                       >
                         <EditOutlined fontSize="small" />
@@ -238,7 +272,7 @@ const ProgressSnapshotCard = ({
                       <IconButton
                         size="small"
                         color="error"
-                        onClick={() => onDelete(checkpoint.id)}
+                        onClick={() => onDelete(measurement.id)}
                         disabled={disableActions}
                       >
                         <DeleteOutline fontSize="small" />
@@ -247,9 +281,9 @@ const ProgressSnapshotCard = ({
                   </Stack>
                 </Stack>
 
-                {checkpoint.notes ? (
+                {measurement.notes ? (
                   <Typography color="text.secondary">
-                    {checkpoint.notes}
+                    {measurement.notes}
                   </Typography>
                 ) : null}
               </Stack>
@@ -261,4 +295,4 @@ const ProgressSnapshotCard = ({
   </Paper>
 );
 
-export default ProgressSnapshotCard;
+export default BodyMeasurementsCard;

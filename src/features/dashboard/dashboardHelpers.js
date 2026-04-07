@@ -240,8 +240,8 @@ export const buildDashboardAlerts = ({
       id: 'no-progress',
       title: 'Capture a progress snapshot',
       description: 'Save weight, body fat, or notes weekly so both you and your trainer can see momentum.',
-      actionLabel: 'Stay on dashboard',
-      actionTo: PATHS.dashboard,
+      actionLabel: 'Open progress hub',
+      actionTo: PATHS.progress,
     }));
   }
 
