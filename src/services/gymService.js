@@ -315,6 +315,128 @@ const nutritionAssignmentSelect = `
     )
   )
 `;
+
+const billingProfileSelect = `
+  user_id,
+  preferred_payment_method,
+  autopay_enabled,
+  wallet_provider,
+  billing_email,
+  billing_phone,
+  tax_id,
+  billing_notes,
+  currency_code,
+  created_at,
+  updated_at
+`;
+
+const billingInvoiceSelect = `
+  id,
+  member_id,
+  plan_id,
+  invoice_number,
+  invoice_type,
+  status,
+  issue_date,
+  due_date,
+  billing_period_start,
+  billing_period_end,
+  currency_code,
+  subtotal_amount,
+  tax_amount,
+  discount_amount,
+  total_amount,
+  amount_paid,
+  balance_due,
+  notes,
+  created_by,
+  created_at,
+  updated_at,
+  member:profiles!billing_invoices_member_id_fkey (
+    id,
+    email,
+    full_name,
+    phone,
+    membership_status,
+    next_billing_date,
+    is_active,
+    role,
+    plan_id
+  ),
+  plan:membership_plans (
+    id,
+    name,
+    price,
+    billing_cycle,
+    duration_weeks,
+    is_active
+  ),
+  items:billing_invoice_items (
+    id,
+    invoice_id,
+    line_index,
+    item_type,
+    description,
+    quantity,
+    unit_price,
+    line_total,
+    linked_plan_name,
+    created_at,
+    updated_at
+  ),
+  payments:billing_payments (
+    id,
+    invoice_id,
+    member_id,
+    payment_date,
+    payment_method,
+    payment_status,
+    amount,
+    reference_code,
+    processor_name,
+    notes,
+    recorded_by,
+    created_at,
+    updated_at
+  )
+`;
+
+const billingPaymentSelect = `
+  id,
+  invoice_id,
+  member_id,
+  payment_date,
+  payment_method,
+  payment_status,
+  amount,
+  reference_code,
+  processor_name,
+  notes,
+  recorded_by,
+  created_at,
+  updated_at,
+  member:profiles!billing_payments_member_id_fkey (
+    id,
+    email,
+    full_name,
+    phone,
+    membership_status,
+    next_billing_date,
+    is_active,
+    role
+  ),
+  invoice:billing_invoices (
+    id,
+    invoice_number,
+    invoice_type,
+    status,
+    due_date,
+    currency_code,
+    total_amount,
+    balance_due
+  )
+`;
+
 const ensureSupabase = () => {
   if (!isSupabaseConfigured || !supabase) {
     throw missingConfigError();
@@ -2129,6 +2251,278 @@ export const recordStaffCheckOut = async (memberId, options = {}) => {
 
   unwrap(error, 'Unable to check this member out.');
   return data;
+};
+
+export const fetchBillingProfile = async (userId) => {
+  const client = ensureSupabase();
+  const { data, error } = await client
+    .from('billing_profiles')
+    .select(billingProfileSelect)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  unwrap(error, 'Unable to load billing preferences.');
+  return data ?? null;
+};
+
+export const saveBillingProfile = async (userId, profile = {}) => {
+  const client = ensureSupabase();
+  const payload = {
+    user_id: userId,
+    preferred_payment_method: profile.preferred_payment_method || 'upi',
+    autopay_enabled: normaliseBoolean(profile.autopay_enabled) ?? false,
+    wallet_provider: normaliseOptionalText(profile.wallet_provider),
+    billing_email: normaliseOptionalText(profile.billing_email),
+    billing_phone: normaliseOptionalText(profile.billing_phone),
+    tax_id: normaliseOptionalText(profile.tax_id),
+    billing_notes: normaliseOptionalText(profile.billing_notes),
+    currency_code: normaliseOptionalText(profile.currency_code) || 'INR',
+  };
+
+  const { data, error } = await client
+    .from('billing_profiles')
+    .upsert([payload], { onConflict: 'user_id' })
+    .select(billingProfileSelect)
+    .single();
+
+  unwrap(error, 'Unable to update billing preferences.');
+  return data;
+};
+
+export const fetchBillingInvoices = async ({
+  memberId = null,
+  status = 'all',
+  invoiceType = 'all',
+  limit = 80,
+} = {}) => {
+  const client = ensureSupabase();
+  let query = client
+    .from('billing_invoices')
+    .select(billingInvoiceSelect)
+    .order('due_date', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (memberId) {
+    query = query.eq('member_id', memberId);
+  }
+
+  if (status && status !== 'all') {
+    query = query.eq('status', status);
+  }
+
+  if (invoiceType && invoiceType !== 'all') {
+    query = query.eq('invoice_type', invoiceType);
+  }
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+
+  unwrap(error, 'Unable to load invoices.');
+  return data ?? [];
+};
+
+export const saveBillingInvoice = async (invoice = {}, actorId = null) => {
+  const client = ensureSupabase();
+
+  const memberId = pickFirstDefined(invoice, ['member_id', 'memberId']);
+
+  if (!memberId) {
+    throw new Error('Select a member before saving the invoice.');
+  }
+
+  const lineItems = (invoice.items || []).map((item, index) => {
+    const description = String(item.description ?? '').trim();
+
+    if (!description) {
+      throw new Error(`Line item ${index + 1} needs a description.`);
+    }
+
+    const quantity = normaliseOptionalNumber(item.quantity);
+    const unitPrice = normaliseOptionalNumber(item.unit_price);
+
+    if (!quantity || quantity <= 0) {
+      throw new Error(`Line item ${index + 1} needs a quantity greater than 0.`);
+    }
+
+    if (unitPrice === null || unitPrice === undefined) {
+      throw new Error(`Line item ${index + 1} needs a valid unit price.`);
+    }
+
+    return {
+      line_index: index + 1,
+      item_type: item.item_type || 'membership',
+      description,
+      quantity,
+      unit_price: unitPrice,
+      line_total: Number((quantity * unitPrice).toFixed(2)),
+      linked_plan_name: normaliseOptionalText(item.linked_plan_name),
+    };
+  });
+
+  if (!lineItems.length) {
+    throw new Error('Add at least one invoice line item.');
+  }
+
+  const subtotalAmount = Number(lineItems.reduce((sum, item) => sum + Number(item.line_total || 0), 0).toFixed(2));
+  const taxAmount = normaliseOptionalNumber(pickFirstDefined(invoice, ['tax_amount', 'taxAmount'])) || 0;
+  const discountAmount = normaliseOptionalNumber(pickFirstDefined(invoice, ['discount_amount', 'discountAmount'])) || 0;
+  const amountPaid = Math.max(0, normaliseOptionalNumber(pickFirstDefined(invoice, ['amount_paid', 'amountPaid'])) || 0);
+  const totalAmount = Math.max(0, Number((subtotalAmount + taxAmount - discountAmount).toFixed(2)));
+  const balanceDue = Math.max(0, Number((totalAmount - amountPaid).toFixed(2)));
+
+  const requestedStatus = pickFirstDefined(invoice, ['status']) || 'open';
+  const resolvedStatus = (() => {
+    if (requestedStatus === 'void' || requestedStatus === 'refunded' || requestedStatus === 'draft') {
+      return requestedStatus;
+    }
+
+    if (amountPaid >= totalAmount && totalAmount > 0) {
+      return 'paid';
+    }
+
+    if (amountPaid > 0 && amountPaid < totalAmount) {
+      return 'partial';
+    }
+
+    const dueDate = pickFirstDefined(invoice, ['due_date', 'dueDate']);
+    if (dueDate && dueDate < todayIsoDate()) {
+      return requestedStatus === 'draft' ? 'draft' : 'overdue';
+    }
+
+    return requestedStatus || 'open';
+  })();
+
+  const payload = {
+    member_id: memberId,
+    plan_id: pickFirstDefined(invoice, ['plan_id', 'planId']) || null,
+    invoice_type: pickFirstDefined(invoice, ['invoice_type', 'invoiceType']) || 'membership_renewal',
+    status: resolvedStatus,
+    issue_date: normaliseOptionalDate(pickFirstDefined(invoice, ['issue_date', 'issueDate'])) || todayIsoDate(),
+    due_date: normaliseOptionalDate(pickFirstDefined(invoice, ['due_date', 'dueDate'])) || todayIsoDate(),
+    billing_period_start: normaliseOptionalDate(pickFirstDefined(invoice, ['billing_period_start', 'billingPeriodStart'])),
+    billing_period_end: normaliseOptionalDate(pickFirstDefined(invoice, ['billing_period_end', 'billingPeriodEnd'])),
+    currency_code: normaliseOptionalText(pickFirstDefined(invoice, ['currency_code', 'currencyCode'])) || 'INR',
+    subtotal_amount: subtotalAmount,
+    tax_amount: taxAmount,
+    discount_amount: discountAmount,
+    total_amount: totalAmount,
+    amount_paid: amountPaid,
+    balance_due: balanceDue,
+    notes: normaliseOptionalText(invoice.notes),
+  };
+
+  let invoiceId = invoice.id || '';
+
+  if (invoiceId) {
+    const { error: updateError } = await client
+      .from('billing_invoices')
+      .update(payload)
+      .eq('id', invoiceId);
+
+    unwrap(updateError, 'Unable to update the invoice.');
+  } else {
+    const { data, error } = await client
+      .from('billing_invoices')
+      .insert([{
+        ...payload,
+        created_by: actorId || null,
+      }])
+      .select('id')
+      .single();
+
+    unwrap(error, 'Unable to create the invoice.');
+    invoiceId = data.id;
+  }
+
+  const { error: deleteError } = await client
+    .from('billing_invoice_items')
+    .delete()
+    .eq('invoice_id', invoiceId);
+
+  unwrap(deleteError, 'Unable to refresh invoice items.');
+
+  const { error: insertItemsError } = await client
+    .from('billing_invoice_items')
+    .insert(lineItems.map((item) => ({
+      ...item,
+      invoice_id: invoiceId,
+    })));
+
+  unwrap(insertItemsError, 'Unable to save invoice items.');
+
+  const { data: refreshedInvoice, error: refreshedError } = await client
+    .from('billing_invoices')
+    .select(billingInvoiceSelect)
+    .eq('id', invoiceId)
+    .single();
+
+  unwrap(refreshedError, 'Unable to load the saved invoice.');
+  return refreshedInvoice;
+};
+
+export const fetchBillingPayments = async ({
+  memberId = null,
+  invoiceId = null,
+  limit = 80,
+} = {}) => {
+  const client = ensureSupabase();
+  let query = client
+    .from('billing_payments')
+    .select(billingPaymentSelect)
+    .order('payment_date', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (memberId) {
+    query = query.eq('member_id', memberId);
+  }
+
+  if (invoiceId) {
+    query = query.eq('invoice_id', invoiceId);
+  }
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+
+  unwrap(error, 'Unable to load payments.');
+  return data ?? [];
+};
+
+export const recordBillingPayment = async (invoiceId, payment = {}) => {
+  if (!invoiceId) {
+    throw new Error('Select an invoice before recording a payment.');
+  }
+
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('record_billing_payment', {
+    p_invoice_id: invoiceId,
+    p_amount: normaliseOptionalNumber(payment.amount),
+    p_payment_method: payment.payment_method || 'upi',
+    p_payment_status: payment.payment_status || 'completed',
+    p_payment_date: normaliseOptionalDate(payment.payment_date) || todayIsoDate(),
+    p_reference_code: normaliseOptionalText(payment.reference_code),
+    p_processor_name: normaliseOptionalText(payment.processor_name),
+    p_notes: normaliseOptionalText(payment.notes),
+  });
+
+  unwrap(error, 'Unable to record the payment.');
+  return data;
+};
+
+export const generateDueMembershipInvoices = async ({ dueDate = todayIsoDate(), memberId = null } = {}) => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('generate_due_membership_invoices', {
+    p_due_date: dueDate,
+    p_member_id: memberId,
+  });
+
+  unwrap(error, 'Unable to generate renewal invoices.');
+  return data ?? [];
 };
 
 export const fetchAdminActivity = async ({ memberId = null, limit = 12 } = {}) => {

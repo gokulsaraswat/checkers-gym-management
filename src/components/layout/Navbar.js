@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   AppBar,
@@ -98,6 +97,7 @@ const Navbar = () => {
               <NavLink to={PATHS.workoutPlan} style={linkStyle}>Workout plan</NavLink>
               <NavLink to={PATHS.schedule} style={linkStyle}>Schedule</NavLink>
               <NavLink to={PATHS.bookings} style={linkStyle}>Bookings</NavLink>
+              <NavLink to={PATHS.billing} style={linkStyle}>Billing</NavLink>
               <NavLink to={PATHS.membership} style={linkStyle}>Membership</NavLink>
               <NavLink to={PATHS.account} style={linkStyle}>Account</NavLink>
             </>
@@ -138,7 +138,7 @@ const Navbar = () => {
                 '&:hover': { bgcolor: '#df1d1d' },
               }}
             >
-              Login / Signup
+              Join now
             </Button>
           )}
         </Stack>

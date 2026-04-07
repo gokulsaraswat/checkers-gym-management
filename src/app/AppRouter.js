@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
@@ -14,6 +13,7 @@ import AttendancePage from '../features/attendance/AttendancePage';
 import MemberWorkoutPlanPage from '../features/workouts/MemberWorkoutPlanPage';
 import ClassSchedulePage from '../features/classes/ClassSchedulePage';
 import BookingsPage from '../features/bookings/BookingsPage';
+import BillingPage from '../features/billing/BillingPage';
 import MembershipProfilePage from '../features/members/MemberProfilePage';
 import MemberDetailPage from '../features/members/MemberDetailPage';
 import AccountPage from '../features/account/AccountPage';
@@ -23,6 +23,7 @@ import StaffNutritionPage from '../features/nutrition/StaffNutritionPage';
 import StaffSchedulePage from '../features/classes/StaffSchedulePage';
 import StaffBookingsPage from '../features/bookings/StaffBookingsPage';
 import StaffWorkoutProgramsPage from '../features/workouts/StaffWorkoutProgramsPage';
+import StaffBillingPage from '../features/billing/StaffBillingPage';
 import AdminPage from '../features/admin/AdminPage';
 import GuestRoute from '../routes/GuestRoute';
 import ProtectedRoute from '../routes/ProtectedRoute';
@@ -52,6 +53,7 @@ const AppRouter = () => (
         <Route path={PATHS.workoutPlan} element={<MemberWorkoutPlanPage />} />
         <Route path={PATHS.schedule} element={<ClassSchedulePage />} />
         <Route path={PATHS.bookings} element={<BookingsPage />} />
+        <Route path={PATHS.billing} element={<BillingPage />} />
         <Route path={PATHS.membership} element={<MembershipProfilePage />} />
         <Route path={PATHS.account} element={<AccountPage />} />
       </Route>
@@ -63,6 +65,7 @@ const AppRouter = () => (
         <Route path={PATHS.staffSchedule} element={<StaffSchedulePage />} />
         <Route path={PATHS.staffBookings} element={<StaffBookingsPage />} />
         <Route path={PATHS.staffWorkouts} element={<StaffWorkoutProgramsPage />} />
+        <Route path={PATHS.staffBilling} element={<StaffBillingPage />} />
       </Route>
 
       <Route element={<AdminRoute />}>

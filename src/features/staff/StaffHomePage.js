@@ -27,6 +27,7 @@ import {
   Logout,
   PersonSearch,
   Refresh,
+  ReceiptLong,
   TrendingUp,
 } from '@mui/icons-material';
 
@@ -240,6 +241,15 @@ const StaffHomePage = () => {
             sx={{ borderRadius: 999, alignSelf: 'flex-start' }}
           >
             Program workouts
+          </Button>
+          <Button
+            component={RouterLink}
+            to={PATHS.staffBilling}
+            variant="outlined"
+            startIcon={<ReceiptLong />}
+            sx={{ borderRadius: 999, alignSelf: 'flex-start' }}
+          >
+            Manage billing
           </Button>
         </Stack>
       </Stack>

@@ -33,6 +33,9 @@ import { useAuth } from '../../context/AuthContext';
 import {
   deleteProgressCheckpoint,
   deleteWorkout,
+  fetchBillingInvoices,
+  fetchBillingPayments,
+  fetchBillingProfile,
   fetchMealLogs,
   fetchNutritionAssignments,
   fetchNutritionCheckins,
@@ -54,6 +57,7 @@ import ProgressSnapshotCard from './components/ProgressSnapshotCard';
 import UpcomingClassesCard from './components/UpcomingClassesCard';
 import WorkoutPlanSummaryCard from './components/WorkoutPlanSummaryCard';
 import NutritionSummaryCard from './components/NutritionSummaryCard';
+import BillingSummaryCard from './components/BillingSummaryCard';
 import {
   buildDashboardAlerts,
   buildProgressSummary,
@@ -67,6 +71,7 @@ import {
   sortWorkoutRows,
 } from './dashboardHelpers';
 import { buildNutritionAssignmentSummary, sortMealLogs, sortNutritionAssignments, sortNutritionCheckins } from '../nutrition/nutritionHelpers';
+import { buildBillingSummary, sortBillingInvoices, sortBillingPayments } from '../billing/billingHelpers';
 
 const createEmptyWorkoutForm = () => ({
   id: '',
@@ -101,6 +106,9 @@ const DashboardPage = () => {
   const [nutritionAssignments, setNutritionAssignments] = useState([]);
   const [nutritionMealLogs, setNutritionMealLogs] = useState([]);
   const [nutritionCheckins, setNutritionCheckins] = useState([]);
+  const [billingProfile, setBillingProfile] = useState(null);
+  const [billingInvoices, setBillingInvoices] = useState([]);
+  const [billingPayments, setBillingPayments] = useState([]);
   const [upcomingClasses, setUpcomingClasses] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [savingWorkout, setSavingWorkout] = useState(false);
@@ -129,6 +137,9 @@ const DashboardPage = () => {
         nutritionAssignmentRows,
         nutritionMealRows,
         nutritionCheckinRows,
+        billingProfileRow,
+        billingInvoiceRows,
+        billingPaymentRows,
       ] = await Promise.all([
         fetchWorkouts(user.id),
         fetchProgressCheckpoints(user.id),
@@ -137,6 +148,9 @@ const DashboardPage = () => {
         fetchNutritionAssignments({ memberId: user.id, limit: 12 }),
         fetchMealLogs(user.id, { limit: 40 }),
         fetchNutritionCheckins(user.id, 12),
+        fetchBillingProfile(user.id),
+        fetchBillingInvoices({ memberId: user.id, limit: 12 }),
+        fetchBillingPayments({ memberId: user.id, limit: 12 }),
       ]);
 
       setWorkouts(sortWorkoutRows(workoutRows));
@@ -146,6 +160,9 @@ const DashboardPage = () => {
       setNutritionAssignments(sortNutritionAssignments(nutritionAssignmentRows));
       setNutritionMealLogs(sortMealLogs(nutritionMealRows));
       setNutritionCheckins(sortNutritionCheckins(nutritionCheckinRows));
+      setBillingProfile(billingProfileRow);
+      setBillingInvoices(sortBillingInvoices(billingInvoiceRows));
+      setBillingPayments(sortBillingPayments(billingPaymentRows));
     } catch (error) {
       setFeedback({ type: 'error', message: error.message || 'Unable to load your dashboard.' });
     } finally {
@@ -168,6 +185,10 @@ const DashboardPage = () => {
 
     return buildNutritionAssignmentSummary(activeAssignment, nutritionMealLogs, nutritionCheckins);
   }, [nutritionAssignments, nutritionCheckins, nutritionMealLogs]);
+  const billingSummary = useMemo(
+    () => buildBillingSummary(profile || {}, billingProfile, billingInvoices, billingPayments),
+    [billingInvoices, billingPayments, billingProfile, profile],
+  );
   const profileCompleteness = useMemo(() => getProfileCompleteness(profile || {}), [profile]);
   const dashboardAlerts = useMemo(() => buildDashboardAlerts({
     profile,
@@ -490,6 +511,10 @@ const DashboardPage = () => {
 
             <Grid item xs={12} lg={4}>
               <NutritionSummaryCard summary={nutritionSummary} />
+            </Grid>
+
+            <Grid item xs={12} lg={4}>
+              <BillingSummaryCard summary={billingSummary} />
             </Grid>
 
             <Grid item xs={12}>
