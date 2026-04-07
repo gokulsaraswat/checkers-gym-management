@@ -377,19 +377,21 @@ export const deletePlan = async (planId) => {
   unwrap(error, 'Unable to delete plan.');
 };
 
-export const updateMember = async (memberId, changes) => {
+export const updateMember = async (memberId, changes, options = {}) => {
   const client = ensureSupabase();
   const payload = buildProfilePayload(changes, { includeAdminFields: true });
+  const changeReason = normaliseOptionalText(
+    options.changeReason ?? changes.changeReason ?? null,
+  ) ?? null;
 
-  const { data, error } = await client
-    .from('profiles')
-    .update(payload)
-    .eq('id', memberId)
-    .select(profileSelect)
-    .single();
+  const { error } = await client.rpc('admin_update_member_record', {
+    p_member_id: memberId,
+    p_changes: payload,
+    p_change_reason: changeReason,
+  });
 
   unwrap(error, 'Unable to update member.');
-  return data;
+  return fetchMemberById(memberId);
 };
 
 export const fetchWorkouts = async (userId) => {
@@ -565,6 +567,68 @@ export const fetchUpcomingClassBookings = async (userId) => {
 
   unwrap(error, 'Unable to load upcoming class bookings.');
   return (data ?? []).filter((booking) => booking?.class_session);
+};
+
+export const fetchMemberNotes = async (memberId) => {
+  const client = ensureSupabase();
+  const { data, error } = await client
+    .from('member_notes')
+    .select('*')
+    .eq('profile_id', memberId)
+    .order('is_pinned', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  unwrap(error, 'Unable to load member notes.');
+  return data ?? [];
+};
+
+export const createMemberNote = async (memberId, note, options = {}) => {
+  const client = ensureSupabase();
+  const trimmedNote = String(note ?? '').trim();
+
+  if (!trimmedNote) {
+    throw new Error('Note cannot be empty.');
+  }
+
+  const { data, error } = await client.rpc('add_member_note', {
+    p_member_id: memberId,
+    p_note: trimmedNote,
+    p_is_pinned: Boolean(options.isPinned),
+    p_visibility: options.visibility || 'staff',
+  });
+
+  unwrap(error, 'Unable to save member note.');
+  return data;
+};
+
+export const deleteMemberNote = async (noteId) => {
+  const client = ensureSupabase();
+  const { error } = await client.rpc('delete_member_note', {
+    p_note_id: noteId,
+  });
+
+  unwrap(error, 'Unable to delete member note.');
+};
+
+export const fetchAdminActivity = async ({ memberId = null, limit = 12 } = {}) => {
+  const client = ensureSupabase();
+  let query = client
+    .from('admin_activity_log')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (memberId) {
+    query = query.eq('target_profile_id', memberId);
+  }
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+
+  unwrap(error, 'Unable to load admin activity.');
+  return data ?? [];
 };
 
 const parseFunctionError = async (error) => {

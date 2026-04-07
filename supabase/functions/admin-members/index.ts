@@ -1,4 +1,3 @@
-
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
@@ -14,6 +13,8 @@ const json = (body: Record<string, unknown>, status = 200) =>
     },
   });
 
+const safeTrim = (value?: string | null) => (typeof value === 'string' ? value.trim() : '');
+
 const isIsoDateString = (value?: string | null) => Boolean(value && /^\d{4}-\d{2}-\d{2}$/.test(value));
 
 const addDays = (dateValue: string, days: number) => {
@@ -23,6 +24,25 @@ const addDays = (dateValue: string, days: number) => {
 };
 
 const getTodayIso = () => new Date().toISOString().slice(0, 10);
+
+const recordActivity = async (
+  userClient: ReturnType<typeof createClient>,
+  targetProfileId: string,
+  actionType: string,
+  actionSummary: string,
+  metadata: Record<string, unknown> = {},
+) => {
+  try {
+    await userClient.rpc('log_admin_activity', {
+      p_target_profile_id: targetProfileId,
+      p_action_type: actionType,
+      p_action_summary: actionSummary,
+      p_metadata: metadata,
+    });
+  } catch (error) {
+    console.error('Unable to record admin activity', error);
+  }
+};
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -72,7 +92,7 @@ Deno.serve(async (req) => {
 
     const { data: callerProfile, error: callerProfileError } = await adminClient
       .from('profiles')
-      .select('role, is_active')
+      .select('role, is_active, full_name, email')
       .eq('id', callerId)
       .maybeSingle();
 
@@ -87,12 +107,14 @@ Deno.serve(async (req) => {
     const { action, payload } = await req.json();
 
     if (action === 'create-user') {
-      const email = payload?.email?.trim?.();
+      const email = safeTrim(payload?.email);
       const password = payload?.password;
-      const fullName = payload?.fullName?.trim?.() || '';
+      const fullName = safeTrim(payload?.fullName);
+      const phone = safeTrim(payload?.phone);
       const planId = payload?.planId || null;
-      const requestedRole = payload?.role?.trim?.();
+      const requestedRole = safeTrim(payload?.role);
       const role = ALLOWED_APP_ROLES.has(requestedRole) ? requestedRole : 'member';
+      const isActive = payload?.isActive !== false;
 
       if (!email || !password) {
         return json({ error: 'Email and password are required.' }, 400);
@@ -119,7 +141,7 @@ Deno.serve(async (req) => {
       }
 
       const todayIso = getTodayIso();
-      const requestedMembershipStatus = payload?.membershipStatus?.trim?.();
+      const requestedMembershipStatus = safeTrim(payload?.membershipStatus);
       const membershipStatus = ALLOWED_MEMBERSHIP_STATUSES.has(requestedMembershipStatus)
         ? requestedMembershipStatus
         : (planId ? 'active' : 'trial');
@@ -164,9 +186,10 @@ Deno.serve(async (req) => {
         .update({
           email,
           full_name: fullName || email.split('@')[0],
+          phone: phone || null,
           role,
           plan_id: planId,
-          is_active: true,
+          is_active: isActive,
           membership_status: membershipStatus,
           membership_start_date: membershipStartDate,
           membership_end_date: membershipEndDate,
@@ -177,6 +200,20 @@ Deno.serve(async (req) => {
       if (profileUpdateError) {
         return json({ error: profileUpdateError.message }, 500);
       }
+
+      await recordActivity(
+        userClient,
+        createdUser.user.id,
+        'member.created',
+        `Created ${role} account`,
+        {
+          email,
+          role,
+          plan_id: planId,
+          membership_status: membershipStatus,
+          is_active: isActive,
+        },
+      );
 
       return json({
         success: true,
@@ -194,6 +231,23 @@ Deno.serve(async (req) => {
       if (userId === callerId) {
         return json({ error: 'You cannot delete your own admin account from the app.' }, 400);
       }
+
+      const { data: targetProfile } = await adminClient
+        .from('profiles')
+        .select('full_name, email')
+        .eq('id', userId)
+        .maybeSingle();
+
+      await recordActivity(
+        userClient,
+        userId,
+        'member.deleted',
+        `Deleted member account`,
+        {
+          email: targetProfile?.email || null,
+          full_name: targetProfile?.full_name || null,
+        },
+      );
 
       const { error: deleteError } = await adminClient.auth.admin.deleteUser(userId, false);
 

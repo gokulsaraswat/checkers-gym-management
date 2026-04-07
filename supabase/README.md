@@ -54,3 +54,14 @@ supabase.functions.invoke('admin-members')
 Use either:
 - Supabase Dashboard > Edge Functions
 - Supabase CLI
+
+## Phase 4 notes
+This phase adds:
+- `public.member_notes` for internal admin/staff notes on a member
+- `public.admin_activity_log` for member-management audit context
+- `public.log_admin_activity()` for tracked admin actions
+- `public.admin_update_member_record()` for safer member updates with a reason
+- `public.add_member_note()` and `public.delete_member_note()` for note workflows
+
+After this patch, apply:
+- `supabase/migrations/20260407000500_admin_panel_fully_functional.sql`

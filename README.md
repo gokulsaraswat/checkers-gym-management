@@ -128,19 +128,21 @@ npm start
 ## Admin features
 
 ### Members
-- Create member accounts with an initial membership status and start date
-- Assign a membership plan
+- Create member, staff, or admin accounts with initial lifecycle dates
+- Assign or remove plans from the roster or member detail page
 - Change role between member/staff/admin
 - Track membership status (`trial`, `active`, `suspended`, `expired`, `cancelled`)
 - Activate/deactivate profiles
-- Review lifecycle dates and waiver state from the roster
-- Open a dedicated member detail page for emergency contacts, membership history, and manual waiver records
+- Review lifecycle dates, waiver state, and recent admin activity from the roster
+- Open a dedicated member detail page for emergency contacts, membership history, waiver records, and internal notes
+- Suspend, reactivate, or expire members quickly
 - Remove members
 
 ### Plans
 - Create plans
 - Edit plans
 - Delete plans
+- Filter the roster by plan assignment
 
 ## Workout tracking
 
@@ -261,3 +263,27 @@ This patch keeps workout tracking on the dashboard, but adds more structure arou
 - membership and billing reminders
 
 Dedicated attendance scans, QR check-ins, and full class management still belong to later patches.
+
+## Admin panel 2.0
+
+Phase 4 upgrades the admin area into a fuller operations workspace with:
+
+- roster search, filters, and sorting
+- inline role / plan / status / access updates
+- quick suspend, reactivate, and expire actions
+- recent admin activity logging (`public.admin_activity_log`)
+- internal admin/staff notes (`public.member_notes`)
+- reason-aware member updates through `public.admin_update_member_record(...)`
+
+If you already applied Phase 3 to a live project, also run:
+
+- `supabase/migrations/20260407000500_admin_panel_fully_functional.sql`
+
+## Admin patch notes
+
+This patch is intentionally still pre-attendance and pre-billing. It focuses on day-to-day member operations first:
+
+- admin-side context and auditability
+- safer lifecycle edits
+- better staff/admin visibility
+- richer member detail workflows

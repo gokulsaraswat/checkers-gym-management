@@ -1,11 +1,9 @@
-
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Box,
   Button,
   Chip,
-  Divider,
   FormControlLabel,
   Grid,
   MenuItem,
@@ -17,10 +15,12 @@ import {
 } from '@mui/material';
 import {
   AdminPanelSettings,
-  AssignmentTurnedIn,
   ArrowBack,
-  BadgeOutlined,
+  AssignmentTurnedIn,
+  DeleteOutline,
   HistoryEdu,
+  StickyNote2,
+  WarningAmber,
 } from '@mui/icons-material';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 
@@ -30,13 +30,23 @@ import LoadingScreen from '../../components/common/LoadingScreen';
 import SetupNotice from '../../components/common/SetupNotice';
 import { useAuth } from '../../context/AuthContext';
 import {
+  createMemberNote,
+  deleteMemberNote,
+  fetchAdminActivity,
   fetchAvailablePlans,
   fetchMemberById,
+  fetchMemberNotes,
   fetchMemberWaivers,
   fetchMembershipStatusHistory,
   recordMemberWaiver,
   updateMember,
 } from '../../services/gymService';
+import {
+  APP_ROLE_OPTIONS,
+  formatAdminActivityTimestamp,
+  getRoleChipSx,
+  getRoleLabel,
+} from '../admin/adminHelpers';
 import {
   buildMemberFormValues,
   CURRENT_LIABILITY_WAIVER_VERSION,
@@ -47,6 +57,7 @@ import {
   getWaiverChipSx,
   getWaiverStatusLabel,
   MEMBERSHIP_STATUS_OPTIONS,
+  todayIsoDate,
 } from './memberLifecycle';
 
 const MemberDetailPage = () => {
@@ -57,16 +68,28 @@ const MemberDetailPage = () => {
   const [plans, setPlans] = useState([]);
   const [history, setHistory] = useState([]);
   const [waivers, setWaivers] = useState([]);
-  const [form, setForm] = useState(buildMemberFormValues());
+  const [notes, setNotes] = useState([]);
+  const [activity, setActivity] = useState([]);
+  const [form, setForm] = useState({
+    ...buildMemberFormValues(),
+    changeReason: '',
+  });
   const [waiverForm, setWaiverForm] = useState({
     version: CURRENT_LIABILITY_WAIVER_VERSION,
     notes: '',
   });
+  const [noteForm, setNoteForm] = useState({
+    note: '',
+    isPinned: false,
+    visibility: 'staff',
+  });
   const [pageLoading, setPageLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [recordingWaiver, setRecordingWaiver] = useState(false);
+  const [savingNote, setSavingNote] = useState(false);
   const [feedback, setFeedback] = useState({ type: '', message: '' });
   const [waiverFeedback, setWaiverFeedback] = useState({ type: '', message: '' });
+  const [noteFeedback, setNoteFeedback] = useState({ type: '', message: '' });
 
   const loadPage = async () => {
     if (!memberId) {
@@ -76,18 +99,32 @@ const MemberDetailPage = () => {
 
     try {
       setPageLoading(true);
-      const [memberRow, planRows, historyRows, waiverRows] = await Promise.all([
+      const [
+        memberRow,
+        planRows,
+        historyRows,
+        waiverRows,
+        noteRows,
+        activityRows,
+      ] = await Promise.all([
         fetchMemberById(memberId),
         fetchAvailablePlans(),
         fetchMembershipStatusHistory(memberId),
         fetchMemberWaivers(memberId),
+        fetchMemberNotes(memberId),
+        fetchAdminActivity({ memberId, limit: 12 }),
       ]);
 
       setMember(memberRow);
       setPlans(planRows);
       setHistory(historyRows);
       setWaivers(waiverRows);
-      setForm(buildMemberFormValues(memberRow));
+      setNotes(noteRows);
+      setActivity(activityRows);
+      setForm({
+        ...buildMemberFormValues(memberRow),
+        changeReason: '',
+      });
     } catch (error) {
       setFeedback({
         type: 'error',
@@ -127,6 +164,15 @@ const MemberDetailPage = () => {
     }));
   };
 
+  const handleNoteFieldChange = (field) => (event) => {
+    const nextValue = field === 'isPinned' ? event.target.checked : event.target.value;
+
+    setNoteForm((current) => ({
+      ...current,
+      [field]: nextValue,
+    }));
+  };
+
   const handleSave = async (event) => {
     event.preventDefault();
     setFeedback({ type: '', message: '' });
@@ -147,12 +193,14 @@ const MemberDetailPage = () => {
         emergencyContactPhone: form.emergencyContactPhone,
         fitnessGoal: form.fitnessGoal,
         role: form.role,
-        planId: form.planId,
+        planId: form.planId || null,
         isActive: form.isActive,
         membershipStatus: form.membershipStatus,
         membershipStartDate: form.membershipStartDate,
         membershipEndDate: form.membershipEndDate,
         nextBillingDate: form.nextBillingDate,
+      }, {
+        changeReason: form.changeReason || 'Updated member record from detail page.',
       });
       await loadPage();
       setFeedback({ type: 'success', message: 'Member profile saved successfully.' });
@@ -163,6 +211,45 @@ const MemberDetailPage = () => {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const runQuickAction = async (action) => {
+    try {
+      setFeedback({ type: '', message: '' });
+
+      if (action === 'suspend') {
+        await updateMember(memberId, {
+          membershipStatus: 'suspended',
+          isActive: false,
+        }, {
+          changeReason: `Suspended access for ${member?.full_name || member?.email}.`,
+        });
+      }
+
+      if (action === 'reactivate') {
+        await updateMember(memberId, {
+          membershipStatus: member?.plan_id ? 'active' : 'trial',
+          isActive: true,
+        }, {
+          changeReason: `Reactivated ${member?.full_name || member?.email}.`,
+        });
+      }
+
+      if (action === 'expire') {
+        await updateMember(memberId, {
+          membershipStatus: 'expired',
+          isActive: false,
+          membershipEndDate: todayIsoDate(),
+        }, {
+          changeReason: `Marked ${member?.full_name || member?.email} as expired.`,
+        });
+      }
+
+      await loadPage();
+      setFeedback({ type: 'success', message: 'Quick action applied.' });
+    } catch (error) {
+      setFeedback({ type: 'error', message: error.message || 'Unable to apply quick action.' });
     }
   };
 
@@ -198,6 +285,52 @@ const MemberDetailPage = () => {
     }
   };
 
+  const handleAddNote = async (event) => {
+    event.preventDefault();
+    setNoteFeedback({ type: '', message: '' });
+
+    if (!noteForm.note.trim()) {
+      setNoteFeedback({ type: 'error', message: 'Write a note before saving.' });
+      return;
+    }
+
+    try {
+      setSavingNote(true);
+      await createMemberNote(memberId, noteForm.note, {
+        isPinned: noteForm.isPinned,
+        visibility: noteForm.visibility,
+      });
+      setNoteForm({
+        note: '',
+        isPinned: false,
+        visibility: noteForm.visibility,
+      });
+      await loadPage();
+      setNoteFeedback({ type: 'success', message: 'Internal note saved.' });
+    } catch (error) {
+      setNoteFeedback({
+        type: 'error',
+        message: error.message || 'Unable to save note.',
+      });
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId) => {
+    if (!window.confirm('Delete this internal note?')) {
+      return;
+    }
+
+    try {
+      await deleteMemberNote(noteId);
+      await loadPage();
+      setNoteFeedback({ type: 'success', message: 'Note deleted.' });
+    } catch (error) {
+      setNoteFeedback({ type: 'error', message: error.message || 'Unable to delete note.' });
+    }
+  };
+
   return (
     <Box sx={{ py: { xs: 3, md: 5 } }}>
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" mb={4}>
@@ -209,7 +342,7 @@ const MemberDetailPage = () => {
             {member?.full_name || member?.email || 'Member record'}
           </Typography>
           <Typography color="text.secondary" maxWidth="860px">
-            Edit lifecycle dates, plan assignment, waiver records, and emergency details from one place.
+            Edit lifecycle dates, plan assignment, waiver records, internal notes, and admin context from one page.
           </Typography>
         </Stack>
 
@@ -231,7 +364,12 @@ const MemberDetailPage = () => {
           title="Member not found"
           description="The selected member profile could not be loaded."
           action={(
-            <Button component={RouterLink} to={PATHS.admin} variant="contained" sx={{ textTransform: 'none', borderRadius: 999, bgcolor: '#ff2625', '&:hover': { bgcolor: '#df1d1d' } }}>
+            <Button
+              component={RouterLink}
+              to={PATHS.admin}
+              variant="contained"
+              sx={{ textTransform: 'none', borderRadius: 999, bgcolor: '#ff2625', '&:hover': { bgcolor: '#df1d1d' } }}
+            >
               Return to admin
             </Button>
           )}
@@ -254,440 +392,514 @@ const MemberDetailPage = () => {
             <Grid item xs={12} lg={4}>
               <Stack spacing={3}>
                 <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff' }}>
-                  <Stack spacing={2}>
-                    <Typography color="#ff2625" fontWeight={700}>
-                      Member overview
-                    </Typography>
-                    <Typography variant="h5" fontWeight={800}>
-                      {member.full_name || member.email}
-                    </Typography>
-                    <Typography color="text.secondary">
-                      {member.email}
-                    </Typography>
-
-                    <Stack direction="row" spacing={1} flexWrap="wrap">
-                      <Chip label={lifecycleSummary.membershipLabel} sx={getMembershipStatusChipSx(member.membership_status)} />
-                      <Chip label={lifecycleSummary.waiverLabel} sx={getWaiverChipSx(Boolean(member.waiver_signed_at))} />
+                  <Stack spacing={2.5}>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <AdminPanelSettings sx={{ color: '#ff2625' }} />
+                      <Typography fontWeight={800}>Member overview</Typography>
                     </Stack>
 
-                    <Divider />
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      <Chip label={lifecycleSummary.membershipLabel} sx={getMembershipStatusChipSx(member.membership_status)} />
+                      <Chip label={lifecycleSummary.waiverLabel} sx={getWaiverChipSx(Boolean(member.waiver_signed_at))} />
+                      <Chip label={getRoleLabel(member.role)} sx={getRoleChipSx(member.role)} />
+                    </Stack>
 
-                    <Stack spacing={1.2}>
-                      <Typography variant="body1"><strong>Role:</strong> {member.role}</Typography>
-                      <Typography variant="body1"><strong>Plan:</strong> {member.plan?.name || 'No plan assigned'}</Typography>
-                      <Typography variant="body1"><strong>Member since:</strong> {formatDateValue(member.member_since)}</Typography>
-                      <Typography variant="body1"><strong>Membership starts:</strong> {formatDateValue(member.membership_start_date)}</Typography>
-                      <Typography variant="body1"><strong>Membership renews/ends:</strong> {formatDateValue(member.membership_end_date)}</Typography>
-                      <Typography variant="body1"><strong>Next billing:</strong> {formatDateValue(member.next_billing_date)}</Typography>
-                      <Typography variant="body1"><strong>Account access:</strong> {member.is_active ? 'Enabled' : 'Disabled'}</Typography>
+                    <Stack spacing={1.25}>
+                      <InfoRow label="Email" value={member.email} />
+                      <InfoRow label="Phone" value={member.phone || 'Not set'} />
+                      <InfoRow label="Plan" value={member.plan?.name || 'Not assigned'} />
+                      <InfoRow label="Access" value={member.is_active ? 'Enabled' : 'Paused'} />
+                      <InfoRow label="Member since" value={formatDateValue(member.member_since)} />
+                      <InfoRow label="Starts" value={formatDateValue(member.membership_start_date)} />
+                      <InfoRow label="Ends" value={formatDateValue(member.membership_end_date)} />
+                      <InfoRow label="Next billing" value={formatDateValue(member.next_billing_date)} />
                     </Stack>
                   </Stack>
                 </Paper>
 
                 <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff' }}>
-                  <Stack spacing={1.5}>
-                    <Typography color="#ff2625" fontWeight={700}>
-                      Lifecycle audit
-                    </Typography>
-                    <Typography color="text.secondary" lineHeight={1.8}>
-                      Changing the member status, plan, or lifecycle dates automatically adds a row to the membership
-                      history so admins can see how the profile changed over time.
-                    </Typography>
+                  <Stack spacing={2.5}>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <WarningAmber sx={{ color: '#ff2625' }} />
+                      <Typography fontWeight={800}>Quick actions</Typography>
+                    </Stack>
+
+                    <Stack spacing={1.5}>
+                      <Button
+                        variant="outlined"
+                        onClick={() => {
+                          runQuickAction(member.is_active && member.membership_status !== 'suspended' ? 'suspend' : 'reactivate');
+                        }}
+                        sx={{ textTransform: 'none', borderRadius: 999, justifyContent: 'flex-start' }}
+                      >
+                        {member.is_active && member.membership_status !== 'suspended' ? 'Suspend access' : 'Reactivate member'}
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        onClick={() => {
+                          runQuickAction('expire');
+                        }}
+                        sx={{ textTransform: 'none', borderRadius: 999, justifyContent: 'flex-start' }}
+                      >
+                        Mark membership expired
+                      </Button>
+                    </Stack>
+                  </Stack>
+                </Paper>
+
+                <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff' }}>
+                  <Stack spacing={2.5}>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <HistoryEdu sx={{ color: '#ff2625' }} />
+                      <Typography fontWeight={800}>Recent admin activity</Typography>
+                    </Stack>
+
+                    {!activity.length ? (
+                      <Typography color="text.secondary">
+                        No admin actions have been logged for this member yet.
+                      </Typography>
+                    ) : (
+                      <Stack spacing={2}>
+                        {activity.map((item) => (
+                          <Stack key={item.id} spacing={0.75}>
+                            <Typography fontWeight={700}>
+                              {item.action_summary}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {item.actor_name || 'Admin'} • {formatAdminActivityTimestamp(item.created_at)}
+                            </Typography>
+                          </Stack>
+                        ))}
+                      </Stack>
+                    )}
                   </Stack>
                 </Paper>
               </Stack>
             </Grid>
 
             <Grid item xs={12} lg={8}>
-              <Grid container spacing={3}>
-                <Grid item xs={12}>
-                  <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff' }}>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems={{ xs: 'flex-start', md: 'center' }} mb={3}>
-                      <Box
-                        sx={{
-                          width: 58,
-                          height: 58,
-                          borderRadius: '20px',
-                          display: 'grid',
-                          placeItems: 'center',
-                          bgcolor: '#fff0f0',
-                          color: '#ff2625',
-                        }}
-                      >
-                        <AdminPanelSettings />
-                      </Box>
-                      <Box>
-                        <Typography variant="h5" fontWeight={800}>
-                          Editable member record
-                        </Typography>
-                        <Typography color="text.secondary">
-                          Save profile, access, and lifecycle details for this member.
-                        </Typography>
-                      </Box>
-                    </Stack>
-
-                    <Box component="form" onSubmit={handleSave}>
-                      <Grid container spacing={2.5}>
-                        <Grid item xs={12} md={6}>
-                          <TextField
-                            label="Full name"
-                            value={form.fullName}
-                            onChange={handleFieldChange('fullName')}
-                            fullWidth
-                            required
-                          />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                          <TextField
-                            label="Email"
-                            value={member.email || ''}
-                            fullWidth
-                            disabled
-                          />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                          <TextField
-                            label="Phone number"
-                            value={form.phone}
-                            onChange={handleFieldChange('phone')}
-                            fullWidth
-                          />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                          <TextField
-                            label="Date of birth"
-                            type="date"
-                            value={form.dateOfBirth}
-                            onChange={handleFieldChange('dateOfBirth')}
-                            fullWidth
-                            InputLabelProps={{ shrink: true }}
-                          />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                          <TextField
-                            label="Emergency contact name"
-                            value={form.emergencyContactName}
-                            onChange={handleFieldChange('emergencyContactName')}
-                            fullWidth
-                          />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                          <TextField
-                            label="Emergency contact phone"
-                            value={form.emergencyContactPhone}
-                            onChange={handleFieldChange('emergencyContactPhone')}
-                            fullWidth
-                          />
-                        </Grid>
-                        <Grid item xs={12}>
-                          <TextField
-                            label="Address"
-                            value={form.address}
-                            onChange={handleFieldChange('address')}
-                            fullWidth
-                            multiline
-                            minRows={2}
-                          />
-                        </Grid>
-                        <Grid item xs={12}>
-                          <TextField
-                            label="Fitness goals / notes"
-                            value={form.fitnessGoal}
-                            onChange={handleFieldChange('fitnessGoal')}
-                            fullWidth
-                            multiline
-                            minRows={3}
-                          />
-                        </Grid>
-                        <Grid item xs={12} md={4}>
-                          <TextField
-                            select
-                            label="Role"
-                            value={form.role}
-                            onChange={handleFieldChange('role')}
-                            fullWidth
-                          >
-                            <MenuItem value="member">Member</MenuItem>
-                            <MenuItem value="staff">Staff</MenuItem>
-                            <MenuItem value="admin">Admin</MenuItem>
-                          </TextField>
-                        </Grid>
-                        <Grid item xs={12} md={4}>
-                          <TextField
-                            select
-                            label="Assigned plan"
-                            value={form.planId}
-                            onChange={handleFieldChange('planId')}
-                            fullWidth
-                          >
-                            <MenuItem value="">No plan assigned</MenuItem>
-                            {plans.map((plan) => (
-                              <MenuItem key={plan.id} value={plan.id}>
-                                {plan.name}
-                              </MenuItem>
-                            ))}
-                          </TextField>
-                        </Grid>
-                        <Grid item xs={12} md={4}>
-                          <TextField
-                            select
-                            label="Membership status"
-                            value={form.membershipStatus}
-                            onChange={handleFieldChange('membershipStatus')}
-                            fullWidth
-                          >
-                            {MEMBERSHIP_STATUS_OPTIONS.map((status) => (
-                              <MenuItem key={status.value} value={status.value}>
-                                {status.label}
-                              </MenuItem>
-                            ))}
-                          </TextField>
-                        </Grid>
-                        <Grid item xs={12} md={4}>
-                          <TextField
-                            label="Membership start date"
-                            type="date"
-                            value={form.membershipStartDate}
-                            onChange={handleFieldChange('membershipStartDate')}
-                            fullWidth
-                            InputLabelProps={{ shrink: true }}
-                          />
-                        </Grid>
-                        <Grid item xs={12} md={4}>
-                          <TextField
-                            label="Membership end date"
-                            type="date"
-                            value={form.membershipEndDate}
-                            onChange={handleFieldChange('membershipEndDate')}
-                            fullWidth
-                            InputLabelProps={{ shrink: true }}
-                          />
-                        </Grid>
-                        <Grid item xs={12} md={4}>
-                          <TextField
-                            label="Next billing date"
-                            type="date"
-                            value={form.nextBillingDate}
-                            onChange={handleFieldChange('nextBillingDate')}
-                            fullWidth
-                            InputLabelProps={{ shrink: true }}
-                          />
-                        </Grid>
-                        <Grid item xs={12}>
-                          <FormControlLabel
-                            control={(
-                              <Switch
-                                checked={form.isActive}
-                                onChange={handleFieldChange('isActive')}
-                              />
-                            )}
-                            label="Account access is enabled"
-                          />
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Button
-                            type="submit"
-                            variant="contained"
-                            disabled={saving}
-                            sx={{
-                              bgcolor: '#ff2625',
-                              textTransform: 'none',
-                              borderRadius: 999,
-                              px: 3,
-                              '&:hover': { bgcolor: '#df1d1d' },
-                            }}
-                          >
-                            {saving ? 'Saving...' : 'Save member record'}
-                          </Button>
-                        </Grid>
-                      </Grid>
+              <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff' }}>
+                <Stack spacing={3}>
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems={{ xs: 'flex-start', md: 'center' }}>
+                    <Box
+                      sx={{
+                        width: 58,
+                        height: 58,
+                        borderRadius: '20px',
+                        display: 'grid',
+                        placeItems: 'center',
+                        bgcolor: '#fff0f0',
+                        color: '#ff2625',
+                      }}
+                    >
+                      <AssignmentTurnedIn />
                     </Box>
-                  </Paper>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff', height: '100%' }}>
-                    <Stack direction="row" spacing={1.5} alignItems="center" mb={2}>
-                      <Box
-                        sx={{
-                          width: 46,
-                          height: 46,
-                          borderRadius: '16px',
-                          display: 'grid',
-                          placeItems: 'center',
-                          bgcolor: '#fff0f0',
-                          color: '#ff2625',
-                        }}
-                      >
-                        <AssignmentTurnedIn />
-                      </Box>
-                      <Typography variant="h6" fontWeight={800}>
-                        Waiver records
+                    <Box>
+                      <Typography variant="h5" fontWeight={800}>
+                        Editable member record
                       </Typography>
-                    </Stack>
+                      <Typography color="text.secondary">
+                        Save profile, access, and lifecycle details for this member. Changes are logged with your admin reason.
+                      </Typography>
+                    </Box>
+                  </Stack>
 
-                    {waiverFeedback.message ? (
-                      <Alert severity={waiverFeedback.type || 'info'} sx={{ mb: 2, borderRadius: 3 }}>
-                        {waiverFeedback.message}
-                      </Alert>
-                    ) : null}
-
-                    <Box component="form" onSubmit={handleRecordWaiver}>
-                      <Stack spacing={2}>
+                  <Box component="form" onSubmit={handleSave}>
+                    <Grid container spacing={2.5}>
+                      <Grid item xs={12} md={6}>
                         <TextField
-                          label="Waiver version"
-                          value={waiverForm.version}
-                          onChange={handleWaiverFieldChange('version')}
+                          label="Full name"
+                          value={form.fullName}
+                          onChange={handleFieldChange('fullName')}
+                          fullWidth
+                          required
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <TextField
+                          label="Phone"
+                          value={form.phone}
+                          onChange={handleFieldChange('phone')}
                           fullWidth
                         />
+                      </Grid>
+                      <Grid item xs={12} md={4}>
                         <TextField
-                          label="Notes"
-                          value={waiverForm.notes}
-                          onChange={handleWaiverFieldChange('notes')}
+                          label="Date of birth"
+                          type="date"
+                          value={form.dateOfBirth}
+                          onChange={handleFieldChange('dateOfBirth')}
+                          fullWidth
+                          InputLabelProps={{ shrink: true }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={4}>
+                        <TextField
+                          select
+                          label="Role"
+                          value={form.role}
+                          onChange={handleFieldChange('role')}
+                          fullWidth
+                        >
+                          {APP_ROLE_OPTIONS.map((option) => (
+                            <MenuItem key={option.value} value={option.value}>
+                              {option.label}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                      </Grid>
+                      <Grid item xs={12} md={4}>
+                        <TextField
+                          select
+                          label="Plan"
+                          value={form.planId}
+                          onChange={handleFieldChange('planId')}
+                          fullWidth
+                        >
+                          <MenuItem value="">No plan assigned</MenuItem>
+                          {plans.map((plan) => (
+                            <MenuItem key={plan.id} value={plan.id}>
+                              {plan.name}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                      </Grid>
+                      <Grid item xs={12} md={4}>
+                        <TextField
+                          select
+                          label="Membership status"
+                          value={form.membershipStatus}
+                          onChange={handleFieldChange('membershipStatus')}
+                          fullWidth
+                        >
+                          {MEMBERSHIP_STATUS_OPTIONS.map((option) => (
+                            <MenuItem key={option.value} value={option.value}>
+                              {option.label}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                      </Grid>
+                      <Grid item xs={12} md={4}>
+                        <TextField
+                          label="Membership start"
+                          type="date"
+                          value={form.membershipStartDate}
+                          onChange={handleFieldChange('membershipStartDate')}
+                          fullWidth
+                          InputLabelProps={{ shrink: true }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={4}>
+                        <TextField
+                          label="Membership end"
+                          type="date"
+                          value={form.membershipEndDate}
+                          onChange={handleFieldChange('membershipEndDate')}
+                          fullWidth
+                          InputLabelProps={{ shrink: true }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <TextField
+                          label="Next billing date"
+                          type="date"
+                          value={form.nextBillingDate}
+                          onChange={handleFieldChange('nextBillingDate')}
+                          fullWidth
+                          InputLabelProps={{ shrink: true }}
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <FormControlLabel
+                          control={(
+                            <Switch
+                              checked={Boolean(form.isActive)}
+                              onChange={handleFieldChange('isActive')}
+                              color="error"
+                            />
+                          )}
+                          label="Enable app access"
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          label="Address"
+                          value={form.address}
+                          onChange={handleFieldChange('address')}
                           fullWidth
                           multiline
                           minRows={2}
                         />
-                        <Button
-                          type="submit"
-                          variant="outlined"
-                          disabled={recordingWaiver}
-                          sx={{ textTransform: 'none', borderRadius: 999, alignSelf: 'flex-start' }}
-                        >
-                          {recordingWaiver ? 'Recording...' : 'Record waiver acknowledgement'}
-                        </Button>
-                      </Stack>
-                    </Box>
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <TextField
+                          label="Emergency contact name"
+                          value={form.emergencyContactName}
+                          onChange={handleFieldChange('emergencyContactName')}
+                          fullWidth
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <TextField
+                          label="Emergency contact phone"
+                          value={form.emergencyContactPhone}
+                          onChange={handleFieldChange('emergencyContactPhone')}
+                          fullWidth
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          label="Fitness goal"
+                          value={form.fitnessGoal}
+                          onChange={handleFieldChange('fitnessGoal')}
+                          fullWidth
+                          multiline
+                          minRows={3}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          label="Admin reason for this change"
+                          value={form.changeReason}
+                          onChange={handleFieldChange('changeReason')}
+                          fullWidth
+                          multiline
+                          minRows={2}
+                          placeholder="Example: upgraded to staff role, corrected renewal date after cash payment, reactivated after waiver review..."
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'stretch', sm: 'center' }}>
+                          <Typography variant="body2" color="text.secondary">
+                            Membership lifecycle changes are also written into the history timeline automatically.
+                          </Typography>
+                          <Button
+                            type="submit"
+                            variant="contained"
+                            disabled={saving}
+                            sx={{ textTransform: 'none', borderRadius: 999, bgcolor: '#ff2625', '&:hover': { bgcolor: '#df1d1d' } }}
+                          >
+                            {saving ? 'Saving member...' : 'Save member record'}
+                          </Button>
+                        </Stack>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </Stack>
+              </Paper>
+            </Grid>
 
-                    <Divider sx={{ my: 3 }} />
+            <Grid item xs={12} lg={4}>
+              <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff', height: '100%' }}>
+                <Stack spacing={2.5}>
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <StickyNote2 sx={{ color: '#ff2625' }} />
+                    <Typography fontWeight={800}>Internal notes</Typography>
+                  </Stack>
 
+                  {noteFeedback.message ? (
+                    <Alert severity={noteFeedback.type || 'info'} sx={{ borderRadius: 3 }}>
+                      {noteFeedback.message}
+                    </Alert>
+                  ) : null}
+
+                  <Box component="form" onSubmit={handleAddNote}>
                     <Stack spacing={2}>
-                      {waivers.length ? waivers.map((waiver) => (
-                        <Paper
-                          key={waiver.id}
-                          variant="outlined"
-                          sx={{ p: 2, borderRadius: 3, borderColor: 'rgba(148, 163, 184, 0.25)' }}
-                        >
-                          <Stack spacing={1}>
+                      <TextField
+                        label="Note"
+                        value={noteForm.note}
+                        onChange={handleNoteFieldChange('note')}
+                        multiline
+                        minRows={3}
+                        fullWidth
+                      />
+                      <TextField
+                        select
+                        label="Visibility"
+                        value={noteForm.visibility}
+                        onChange={handleNoteFieldChange('visibility')}
+                        fullWidth
+                      >
+                        <MenuItem value="staff">Staff + admin</MenuItem>
+                        <MenuItem value="admin">Admin only</MenuItem>
+                      </TextField>
+                      <FormControlLabel
+                        control={(
+                          <Switch
+                            checked={Boolean(noteForm.isPinned)}
+                            onChange={handleNoteFieldChange('isPinned')}
+                            color="error"
+                          />
+                        )}
+                        label="Pin note to the top"
+                      />
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        disabled={savingNote}
+                        sx={{ textTransform: 'none', borderRadius: 999, bgcolor: '#ff2625', '&:hover': { bgcolor: '#df1d1d' } }}
+                      >
+                        {savingNote ? 'Saving note...' : 'Save note'}
+                      </Button>
+                    </Stack>
+                  </Box>
+
+                  {!notes.length ? (
+                    <Typography color="text.secondary">
+                      No internal notes yet.
+                    </Typography>
+                  ) : (
+                    <Stack spacing={2}>
+                      {notes.map((note) => (
+                        <Paper key={note.id} variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
+                          <Stack spacing={1.25}>
+                            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap justifyContent="space-between">
+                              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                                {note.is_pinned ? (
+                                  <Chip
+                                    label="Pinned"
+                                    size="small"
+                                    sx={{ bgcolor: '#fff7ed', color: '#c2410c', fontWeight: 700 }}
+                                  />
+                                ) : null}
+                                <Chip
+                                  label={note.visibility === 'admin' ? 'Admin only' : 'Staff + admin'}
+                                  size="small"
+                                  sx={{ bgcolor: '#f8fafc', color: '#475569', fontWeight: 700 }}
+                                />
+                              </Stack>
+
+                              <Button
+                                size="small"
+                                color="error"
+                                startIcon={<DeleteOutline />}
+                                onClick={() => {
+                                  handleDeleteNote(note.id);
+                                }}
+                                sx={{ textTransform: 'none', borderRadius: 999 }}
+                              >
+                                Delete
+                              </Button>
+                            </Stack>
+
+                            <Typography>{note.note}</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {formatDateTimeValue(note.created_at)} • {note.author_name || 'Admin'}
+                            </Typography>
+                          </Stack>
+                        </Paper>
+                      ))}
+                    </Stack>
+                  )}
+                </Stack>
+              </Paper>
+            </Grid>
+
+            <Grid item xs={12} lg={4}>
+              <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff', height: '100%' }}>
+                <Stack spacing={2.5}>
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <HistoryEdu sx={{ color: '#ff2625' }} />
+                    <Typography fontWeight={800}>Membership history</Typography>
+                  </Stack>
+
+                  {!history.length ? (
+                    <Typography color="text.secondary">
+                      No lifecycle history yet.
+                    </Typography>
+                  ) : (
+                    <Stack spacing={2}>
+                      {history.map((item) => (
+                        <Paper key={item.id} variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
+                          <Stack spacing={0.75}>
+                            <Typography fontWeight={700}>
+                              {getMembershipStatusLabel(item.next_status)}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {formatDateValue(item.effective_on)} • {item.change_source.replace('_', ' ')}
+                            </Typography>
+                            {item.change_reason ? (
+                              <Typography variant="body2" color="text.secondary">
+                                {item.change_reason}
+                              </Typography>
+                            ) : null}
+                          </Stack>
+                        </Paper>
+                      ))}
+                    </Stack>
+                  )}
+                </Stack>
+              </Paper>
+            </Grid>
+
+            <Grid item xs={12} lg={4}>
+              <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff', height: '100%' }}>
+                <Stack spacing={2.5}>
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <AssignmentTurnedIn sx={{ color: '#ff2625' }} />
+                    <Typography fontWeight={800}>Waiver records</Typography>
+                  </Stack>
+
+                  {waiverFeedback.message ? (
+                    <Alert severity={waiverFeedback.type || 'info'} sx={{ borderRadius: 3 }}>
+                      {waiverFeedback.message}
+                    </Alert>
+                  ) : null}
+
+                  <Box component="form" onSubmit={handleRecordWaiver}>
+                    <Stack spacing={2}>
+                      <TextField
+                        label="Waiver version"
+                        value={waiverForm.version}
+                        onChange={handleWaiverFieldChange('version')}
+                        fullWidth
+                      />
+                      <TextField
+                        label="Internal note"
+                        value={waiverForm.notes}
+                        onChange={handleWaiverFieldChange('notes')}
+                        multiline
+                        minRows={2}
+                        fullWidth
+                      />
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        disabled={recordingWaiver}
+                        sx={{ textTransform: 'none', borderRadius: 999, bgcolor: '#ff2625', '&:hover': { bgcolor: '#df1d1d' } }}
+                      >
+                        {recordingWaiver ? 'Recording waiver...' : 'Record waiver'}
+                      </Button>
+                    </Stack>
+                  </Box>
+
+                  {!waivers.length ? (
+                    <Typography color="text.secondary">
+                      No waiver acknowledgements recorded yet.
+                    </Typography>
+                  ) : (
+                    <Stack spacing={2}>
+                      {waivers.map((waiver) => (
+                        <Paper key={waiver.id} variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
+                          <Stack spacing={0.75}>
                             <Typography fontWeight={700}>
                               {waiver.version}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                              Accepted {formatDateTimeValue(waiver.accepted_at)}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              Source: {waiver.recorded_source.replace('_', ' ')}
+                              {formatDateTimeValue(waiver.accepted_at)}
                             </Typography>
                             {waiver.notes ? (
                               <Typography variant="body2" color="text.secondary">
-                                Notes: {waiver.notes}
+                                {waiver.notes}
                               </Typography>
                             ) : null}
                           </Stack>
                         </Paper>
-                      )) : (
-                        <Typography color="text.secondary">
-                          No waiver activity has been recorded for this member yet.
-                        </Typography>
-                      )}
+                      ))}
                     </Stack>
-                  </Paper>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff', height: '100%' }}>
-                    <Stack direction="row" spacing={1.5} alignItems="center" mb={2}>
-                      <Box
-                        sx={{
-                          width: 46,
-                          height: 46,
-                          borderRadius: '16px',
-                          display: 'grid',
-                          placeItems: 'center',
-                          bgcolor: '#fff0f0',
-                          color: '#ff2625',
-                        }}
-                      >
-                        <HistoryEdu />
-                      </Box>
-                      <Typography variant="h6" fontWeight={800}>
-                        Membership history
-                      </Typography>
-                    </Stack>
-
-                    <Stack spacing={2}>
-                      {history.length ? history.map((row) => (
-                        <Paper
-                          key={row.id}
-                          variant="outlined"
-                          sx={{ p: 2, borderRadius: 3, borderColor: 'rgba(148, 163, 184, 0.25)' }}
-                        >
-                          <Stack spacing={1}>
-                            <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" flexWrap="wrap">
-                              <Chip
-                                label={getMembershipStatusLabel(row.next_status)}
-                                sx={getMembershipStatusChipSx(row.next_status)}
-                              />
-                              <Typography variant="body2" color="text.secondary">
-                                Effective {formatDateValue(row.effective_on)}
-                              </Typography>
-                            </Stack>
-                            {row.previous_status ? (
-                              <Typography variant="body2" color="text.secondary">
-                                Previous status: {getMembershipStatusLabel(row.previous_status)}
-                              </Typography>
-                            ) : null}
-                            <Typography variant="body2" color="text.secondary">
-                              Membership window: {formatDateValue(row.membership_start_date)} → {formatDateValue(row.membership_end_date)}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              Logged from {row.change_source.replace('_', ' ')}
-                            </Typography>
-                            {row.change_reason ? (
-                              <Typography variant="body2" color="text.secondary">
-                                Reason: {row.change_reason}
-                              </Typography>
-                            ) : null}
-                          </Stack>
-                        </Paper>
-                      )) : (
-                        <Typography color="text.secondary">
-                          Membership history will appear here when lifecycle values change.
-                        </Typography>
-                      )}
-                    </Stack>
-                  </Paper>
-                </Grid>
-
-                <Grid item xs={12}>
-                  <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff' }}>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems={{ xs: 'flex-start', md: 'center' }}>
-                      <Box
-                        sx={{
-                          width: 58,
-                          height: 58,
-                          borderRadius: '20px',
-                          display: 'grid',
-                          placeItems: 'center',
-                          bgcolor: '#fff0f0',
-                          color: '#ff2625',
-                        }}
-                      >
-                        <BadgeOutlined />
-                      </Box>
-                      <Box>
-                        <Typography variant="h6" fontWeight={800}>
-                          Admin note
-                        </Typography>
-                        <Typography color="text.secondary">
-                          Email is shown here as read-only because auth email changes should stay in the protected auth
-                          system, not as a regular row update on the profile table.
-                        </Typography>
-                      </Box>
-                    </Stack>
-                  </Paper>
-                </Grid>
-              </Grid>
+                  )}
+                </Stack>
+              </Paper>
             </Grid>
           </Grid>
         </>
@@ -695,5 +907,14 @@ const MemberDetailPage = () => {
     </Box>
   );
 };
+
+const InfoRow = ({ label, value }) => (
+  <Stack direction="row" justifyContent="space-between" spacing={2}>
+    <Typography color="text.secondary">{label}</Typography>
+    <Typography fontWeight={600} textAlign="right">
+      {value}
+    </Typography>
+  </Stack>
+);
 
 export default MemberDetailPage;
