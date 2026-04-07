@@ -25,6 +25,17 @@ This phase adds:
 After this patch, apply:
 - `supabase/migrations/20260407000300_member_profiles_and_membership_lifecycle.sql`
 
+
+## Phase 3 notes
+This phase adds:
+- `public.progress_checkpoints` for quick member progress snapshots
+- `public.class_sessions` as the future schedule source of truth
+- `public.class_bookings` for member-facing upcoming class visibility
+- dashboard queries that combine workouts, membership lifecycle, progress, and classes
+
+After this patch, apply:
+- `supabase/migrations/20260407000400_dashboard_v2.sql`
+
 ## Auth configuration
 In Supabase Dashboard → Authentication → URL Configuration:
 - keep your Site URL aligned with the deployed app URL

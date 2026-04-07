@@ -78,6 +78,24 @@ const normaliseOptionalDate = (value) => {
   return value || null;
 };
 
+const normaliseOptionalNumber = (value) => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === null || value === '') {
+    return null;
+  }
+
+  const numericValue = Number(value);
+
+  if (Number.isNaN(numericValue)) {
+    throw new Error('Invalid numeric value.');
+  }
+
+  return numericValue;
+};
+
 const normaliseBoolean = (value) => {
   if (value === undefined) {
     return undefined;
@@ -446,6 +464,107 @@ export const deleteWorkout = async (workoutId) => {
     .eq('id', workoutId);
 
   unwrap(error, 'Unable to delete workout.');
+};
+
+export const fetchProgressCheckpoints = async (userId) => {
+  const client = ensureSupabase();
+  const { data, error } = await client
+    .from('progress_checkpoints')
+    .select('*')
+    .eq('user_id', userId)
+    .order('recorded_on', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  unwrap(error, 'Unable to load progress snapshots.');
+  return data ?? [];
+};
+
+export const saveProgressCheckpoint = async (userId, checkpoint = {}) => {
+  const client = ensureSupabase();
+
+  const payload = {
+    user_id: userId,
+    recorded_on: checkpoint.recorded_on || new Date().toISOString().slice(0, 10),
+    weight_kg: normaliseOptionalNumber(checkpoint.weight_kg),
+    body_fat_percent: normaliseOptionalNumber(checkpoint.body_fat_percent),
+    skeletal_muscle_percent: normaliseOptionalNumber(checkpoint.skeletal_muscle_percent),
+    resting_heart_rate: (() => {
+      const value = normaliseOptionalNumber(checkpoint.resting_heart_rate);
+      return value === null || value === undefined ? value : Math.round(value);
+    })(),
+    notes: normaliseOptionalText(checkpoint.notes) ?? null,
+  };
+
+  const hasUsefulValue = [
+    payload.weight_kg,
+    payload.body_fat_percent,
+    payload.skeletal_muscle_percent,
+    payload.resting_heart_rate,
+    payload.notes,
+  ].some((value) => value !== null && value !== undefined);
+
+  if (!hasUsefulValue) {
+    throw new Error('Add at least one metric or note to save a progress snapshot.');
+  }
+
+  if (checkpoint.id) {
+    const { data, error } = await client
+      .from('progress_checkpoints')
+      .update(payload)
+      .eq('id', checkpoint.id)
+      .select()
+      .single();
+
+    unwrap(error, 'Unable to update progress snapshot.');
+    return data;
+  }
+
+  const { data, error } = await client
+    .from('progress_checkpoints')
+    .insert([payload])
+    .select()
+    .single();
+
+  unwrap(error, 'Unable to save progress snapshot.');
+  return data;
+};
+
+export const deleteProgressCheckpoint = async (checkpointId) => {
+  const client = ensureSupabase();
+  const { error } = await client
+    .from('progress_checkpoints')
+    .delete()
+    .eq('id', checkpointId);
+
+  unwrap(error, 'Unable to delete progress snapshot.');
+};
+
+export const fetchUpcomingClassBookings = async (userId) => {
+  const client = ensureSupabase();
+  const { data, error } = await client
+    .from('class_bookings')
+    .select(`
+      id,
+      booking_status,
+      notes,
+      created_at,
+      class_session:class_sessions (
+        id,
+        title,
+        description,
+        coach_name,
+        room_name,
+        starts_at,
+        ends_at,
+        capacity,
+        is_active
+      )
+    `)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  unwrap(error, 'Unable to load upcoming class bookings.');
+  return (data ?? []).filter((booking) => booking?.class_session);
 };
 
 const parseFunctionError = async (error) => {

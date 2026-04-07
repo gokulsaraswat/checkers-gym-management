@@ -235,3 +235,29 @@ If you already applied Phase 1 to a live project, also run:
 
 - `/membership` — member self-service profile and waiver page
 - `/admin/members/:memberId` — admin member lifecycle detail page
+
+
+## Dashboard 2.0
+
+Phase 3 adds a richer member dashboard with real data sections for:
+
+- membership status and renewal visibility
+- alert center for renewals, missing waiver/profile info, and recent activity gaps
+- progress snapshots (`public.progress_checkpoints`)
+- upcoming class bookings (`public.class_bookings` + `public.class_sessions`)
+- planned workout summary built from saved workout logs
+
+If you already applied Phase 2 to a live project, also run:
+
+- `supabase/migrations/20260407000400_dashboard_v2.sql`
+
+## Dashboard notes
+
+This patch keeps workout tracking on the dashboard, but adds more structure around it:
+
+- quick body-metric logging
+- upcoming class cards when bookings exist
+- profile completeness scoring
+- membership and billing reminders
+
+Dedicated attendance scans, QR check-ins, and full class management still belong to later patches.

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Box,
@@ -15,12 +15,12 @@ import {
 } from '@mui/material';
 import {
   Add,
-  CalendarMonth,
-  Checklist,
   DeleteOutline,
   EditOutlined,
+  EventAvailable,
   FitnessCenter,
-  Insights,
+  PlaylistAddCheck,
+  TaskAlt,
 } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
 
@@ -30,16 +30,39 @@ import LoadingScreen from '../../components/common/LoadingScreen';
 import MetricCard from '../../components/common/MetricCard';
 import SetupNotice from '../../components/common/SetupNotice';
 import { useAuth } from '../../context/AuthContext';
-import { deleteWorkout, fetchWorkouts, saveWorkout } from '../../services/gymService';
 import {
-  formatDateValue,
+  deleteProgressCheckpoint,
+  deleteWorkout,
+  fetchProgressCheckpoints,
+  fetchUpcomingClassBookings,
+  fetchWorkouts,
+  saveProgressCheckpoint,
+  saveWorkout,
+} from '../../services/gymService';
+import {
   getMembershipStatusChipSx,
   getMembershipStatusLabel,
   getWaiverChipSx,
   getWaiverStatusLabel,
 } from '../members/memberLifecycle';
+import DashboardAlertsCard from './components/DashboardAlertsCard';
+import ProgressSnapshotCard from './components/ProgressSnapshotCard';
+import UpcomingClassesCard from './components/UpcomingClassesCard';
+import WorkoutPlanSummaryCard from './components/WorkoutPlanSummaryCard';
+import {
+  buildDashboardAlerts,
+  buildProgressSummary,
+  buildUpcomingClassSummary,
+  buildWorkoutPlanSummary,
+  buildWorkoutStats,
+  createEmptyProgressForm,
+  formatDashboardDate,
+  getProfileCompleteness,
+  sortProgressRows,
+  sortWorkoutRows,
+} from './dashboardHelpers';
 
-const emptyWorkoutForm = {
+const createEmptyWorkoutForm = () => ({
   id: '',
   title: '',
   workout_date: new Date().toISOString().slice(0, 10),
@@ -53,56 +76,74 @@ const emptyWorkoutForm = {
       weight: '',
     },
   ],
-};
-
-const formatDate = (value) => formatDateValue(value, 'Not set');
+});
 
 const DashboardPage = () => {
-  const { user, profile, loading, refreshProfile } = useAuth();
+  const {
+    user,
+    profile,
+    loading,
+    isConfigured,
+    refreshProfile,
+  } = useAuth();
+
   const [workouts, setWorkouts] = useState([]);
+  const [progressCheckpoints, setProgressCheckpoints] = useState([]);
+  const [upcomingClasses, setUpcomingClasses] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [savingWorkout, setSavingWorkout] = useState(false);
+  const [savingProgress, setSavingProgress] = useState(false);
   const [feedback, setFeedback] = useState({ type: '', message: '' });
-  const [form, setForm] = useState(emptyWorkoutForm);
+  const [progressFeedback, setProgressFeedback] = useState({ type: '', message: '' });
+  const [form, setForm] = useState(createEmptyWorkoutForm);
+  const [progressForm, setProgressForm] = useState(createEmptyProgressForm);
 
-  const loadDashboardData = async () => {
-    if (!user) {
+  const loadDashboardData = useCallback(async () => {
+    if (!user || !isConfigured) {
+      setPageLoading(false);
       return;
     }
 
     try {
       setPageLoading(true);
+
       await refreshProfile();
-      const workoutRows = await fetchWorkouts(user.id);
-      setWorkouts(workoutRows);
+
+      const [
+        workoutRows,
+        progressRows,
+        bookingRows,
+      ] = await Promise.all([
+        fetchWorkouts(user.id),
+        fetchProgressCheckpoints(user.id),
+        fetchUpcomingClassBookings(user.id),
+      ]);
+
+      setWorkouts(sortWorkoutRows(workoutRows));
+      setProgressCheckpoints(sortProgressRows(progressRows));
+      setUpcomingClasses(buildUpcomingClassSummary(bookingRows).upcoming);
     } catch (error) {
       setFeedback({ type: 'error', message: error.message || 'Unable to load your dashboard.' });
     } finally {
       setPageLoading(false);
     }
-  };
+  }, [isConfigured, refreshProfile, user]);
 
   useEffect(() => {
     loadDashboardData();
-  }, [user]);
+  }, [loadDashboardData]);
 
-  const stats = useMemo(() => {
-    const totalWorkouts = workouts.length;
-    const totalEntries = workouts.reduce((sum, workout) => sum + (workout.entries?.length || 0), 0);
-    const completedWorkouts = workouts.filter((workout) => workout.status === 'completed').length;
-    const recentWorkouts = workouts.filter((workout) => {
-      const workoutTime = new Date(workout.workout_date).getTime();
-      const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-      return workoutTime >= sevenDaysAgo;
-    }).length;
-
-    return {
-      totalWorkouts,
-      totalEntries,
-      completedWorkouts,
-      recentWorkouts,
-    };
-  }, [workouts]);
+  const workoutStats = useMemo(() => buildWorkoutStats(workouts), [workouts]);
+  const workoutPlanSummary = useMemo(() => buildWorkoutPlanSummary(workouts), [workouts]);
+  const progressSummary = useMemo(() => buildProgressSummary(progressCheckpoints), [progressCheckpoints]);
+  const classSummary = useMemo(() => buildUpcomingClassSummary(upcomingClasses), [upcomingClasses]);
+  const profileCompleteness = useMemo(() => getProfileCompleteness(profile || {}), [profile]);
+  const dashboardAlerts = useMemo(() => buildDashboardAlerts({
+    profile,
+    workouts,
+    checkpoints: progressCheckpoints,
+    classBookings: upcomingClasses,
+  }), [profile, progressCheckpoints, upcomingClasses, workouts]);
 
   const updateFormField = (field) => (event) => {
     setForm((current) => ({
@@ -113,6 +154,7 @@ const DashboardPage = () => {
 
   const updateEntryField = (index, field) => (event) => {
     const { value } = event.target;
+
     setForm((current) => ({
       ...current,
       entries: current.entries.map((entry, entryIndex) => (
@@ -140,8 +182,8 @@ const DashboardPage = () => {
     }));
   };
 
-  const resetForm = () => {
-    setForm(emptyWorkoutForm);
+  const resetWorkoutForm = () => {
+    setForm(createEmptyWorkoutForm());
   };
 
   const handleEditWorkout = (workout) => {
@@ -158,7 +200,7 @@ const DashboardPage = () => {
           reps: entry.reps ?? '',
           weight: entry.weight ?? '',
         }))
-        : emptyWorkoutForm.entries,
+        : createEmptyWorkoutForm().entries,
     });
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -178,7 +220,7 @@ const DashboardPage = () => {
     }
   };
 
-  const handleSubmit = async (event) => {
+  const handleSubmitWorkout = async (event) => {
     event.preventDefault();
     setFeedback({ type: '', message: '' });
 
@@ -187,24 +229,82 @@ const DashboardPage = () => {
       const savedWorkout = await saveWorkout(user.id, form);
 
       setWorkouts((current) => {
-        const existing = current.find((item) => item.id === savedWorkout.id);
+        const nextWorkouts = current.some((item) => item.id === savedWorkout.id)
+          ? current.map((item) => (item.id === savedWorkout.id ? savedWorkout : item))
+          : [savedWorkout, ...current];
 
-        if (existing) {
-          return current.map((item) => (item.id === savedWorkout.id ? savedWorkout : item));
-        }
-
-        return [savedWorkout, ...current];
+        return sortWorkoutRows(nextWorkouts);
       });
 
       setFeedback({
         type: 'success',
         message: form.id ? 'Workout updated successfully.' : 'Workout logged successfully.',
       });
-      resetForm();
+
+      resetWorkoutForm();
     } catch (error) {
       setFeedback({ type: 'error', message: error.message || 'Unable to save workout.' });
     } finally {
       setSavingWorkout(false);
+    }
+  };
+
+  const updateProgressField = (field) => (event) => {
+    setProgressForm((current) => ({
+      ...current,
+      [field]: event.target.value,
+    }));
+  };
+
+  const resetProgressForm = () => {
+    setProgressForm(createEmptyProgressForm());
+  };
+
+  const handleSaveProgress = async (event) => {
+    event.preventDefault();
+    setProgressFeedback({ type: '', message: '' });
+
+    try {
+      setSavingProgress(true);
+      const savedCheckpoint = await saveProgressCheckpoint(user.id, progressForm);
+
+      setProgressCheckpoints((current) => sortProgressRows([
+        savedCheckpoint,
+        ...current.filter((checkpoint) => checkpoint.id !== savedCheckpoint.id),
+      ]));
+
+      setProgressFeedback({
+        type: 'success',
+        message: 'Progress snapshot saved.',
+      });
+      resetProgressForm();
+    } catch (error) {
+      setProgressFeedback({
+        type: 'error',
+        message: error.message || 'Unable to save progress snapshot.',
+      });
+    } finally {
+      setSavingProgress(false);
+    }
+  };
+
+  const handleDeleteProgress = async (checkpointId) => {
+    if (!window.confirm('Delete this progress snapshot?')) {
+      return;
+    }
+
+    try {
+      await deleteProgressCheckpoint(checkpointId);
+      setProgressCheckpoints((current) => current.filter((checkpoint) => checkpoint.id !== checkpointId));
+      setProgressFeedback({
+        type: 'success',
+        message: 'Progress snapshot removed.',
+      });
+    } catch (error) {
+      setProgressFeedback({
+        type: 'error',
+        message: error.message || 'Unable to delete progress snapshot.',
+      });
     }
   };
 
@@ -218,7 +318,8 @@ const DashboardPage = () => {
 
       {!profile ? (
         <Alert severity="warning" sx={{ borderRadius: 3 }}>
-          You are authenticated, but no profile record was found. Run <code>supabase/schema.sql</code> and refresh the app.
+          You are authenticated, but no profile record was found. Run <code>supabase/schema.sql</code> and refresh the
+          app.
         </Alert>
       ) : (
         <>
@@ -229,8 +330,8 @@ const DashboardPage = () => {
             <Typography variant="h3" fontWeight={800} sx={{ fontSize: { xs: '32px', md: '46px' } }}>
               Welcome back, {profile.full_name || profile.email}
             </Typography>
-            <Typography color="text.secondary" maxWidth="900px">
-              Review your membership status, keep your training notes organized, and log each workout session from one place.
+            <Typography color="text.secondary" maxWidth="920px">
+              See your membership status, progress snapshots, upcoming classes, and training summary from one place.
             </Typography>
           </Stack>
 
@@ -240,120 +341,147 @@ const DashboardPage = () => {
             </Alert>
           ) : null}
 
-          {!profile.is_active ? (
-            <Alert severity="warning" sx={{ mb: 3, borderRadius: 3 }}>
-              Your membership is marked as inactive. You can still view your data, but ask an admin to reactivate your account.
-            </Alert>
-          ) : null}
-
-          {profile.membership_status && profile.membership_status !== 'active' ? (
-            <Alert severity={profile.membership_status === 'trial' ? 'info' : 'warning'} sx={{ mb: 3, borderRadius: 3 }}>
-              Membership lifecycle status: <strong>{getMembershipStatusLabel(profile.membership_status)}</strong>.
-              {profile.membership_end_date ? ` Review your renewal timeline for ${formatDate(profile.membership_end_date)}.` : ' Review your membership details to make sure dates are up to date.'}
-            </Alert>
-          ) : null}
-
-          {!profile.waiver_signed_at ? (
-            <Alert severity="info" sx={{ mb: 3, borderRadius: 3 }}>
-              Your liability waiver has not been acknowledged yet. Open the membership page to record it.
-            </Alert>
-          ) : null}
-
           <Grid container spacing={3}>
-            <Grid item xs={12} lg={8}>
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
-                  <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, height: '100%', background: '#fff' }}>
-                    <Stack spacing={2}>
-                      <Typography color="#ff2625" fontWeight={700}>
-                        Assigned plan
-                      </Typography>
-                      <Typography variant="h5" fontWeight={800}>
-                        {profile.plan?.name || 'No plan assigned yet'}
-                      </Typography>
-                      <Typography color="text.secondary">
-                        {profile.plan?.description || 'Ask an admin to assign a membership plan to your profile.'}
-                      </Typography>
-                      {profile.plan ? (
-                        <Stack direction="row" spacing={1} flexWrap="wrap">
-                          <Chip label={`$${Number(profile.plan.price || 0).toFixed(2)}`} />
-                          <Chip label={`Every ${profile.plan.billing_cycle}`} />
-                          <Chip label={`${profile.plan.duration_weeks} week cycle`} />
-                        </Stack>
-                      ) : null}
-                    </Stack>
-                  </Paper>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                  <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, height: '100%', background: '#fff' }}>
-                    <Stack spacing={1.5}>
-                      <Typography color="#ff2625" fontWeight={700}>
-                        Membership access
-                      </Typography>
-                      <Stack direction="row" spacing={1} flexWrap="wrap">
-                        <Chip
-                          label={getMembershipStatusLabel(profile.membership_status)}
-                          sx={getMembershipStatusChipSx(profile.membership_status)}
-                        />
-                        <Chip
-                          label={getWaiverStatusLabel(profile)}
-                          sx={getWaiverChipSx(Boolean(profile.waiver_signed_at))}
-                        />
-                      </Stack>
-                      <Typography variant="body1"><strong>Email:</strong> {profile.email}</Typography>
-                      <Typography variant="body1"><strong>Role:</strong> {profile.role}</Typography>
-                      <Typography variant="body1"><strong>Account access:</strong> {profile.is_active ? 'Enabled' : 'Disabled'}</Typography>
-                      <Typography variant="body1"><strong>Member since:</strong> {formatDate(profile.member_since)}</Typography>
-                      <Typography variant="body1"><strong>Membership renews/ends:</strong> {formatDate(profile.membership_end_date)}</Typography>
-                      <Typography variant="body1"><strong>Next billing:</strong> {formatDate(profile.next_billing_date)}</Typography>
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} pt={0.5}>
-                        <Button component={RouterLink} to={PATHS.membership} variant="outlined" sx={{ textTransform: 'none' }}>
-                          Open membership profile
-                        </Button>
-                        {profile.role === 'admin' ? (
-                          <Button component={RouterLink} to={PATHS.admin} variant="outlined" sx={{ textTransform: 'none' }}>
-                            Open Admin Panel
-                          </Button>
-                        ) : null}
-                      </Stack>
-                    </Stack>
-                  </Paper>
-                </Grid>
-
-                <Grid item xs={12} md={3}>
-                  <MetricCard title="Workout logs" value={stats.totalWorkouts} caption="Total sessions stored" icon={FitnessCenter} />
-                </Grid>
-                <Grid item xs={12} md={3}>
-                  <MetricCard title="Exercise rows" value={stats.totalEntries} caption="Entries across all workouts" icon={Checklist} />
-                </Grid>
-                <Grid item xs={12} md={3}>
-                  <MetricCard title="Completed" value={stats.completedWorkouts} caption="Marked finished" icon={Insights} />
-                </Grid>
-                <Grid item xs={12} md={3}>
-                  <MetricCard title="Last 7 days" value={stats.recentWorkouts} caption="Recent training sessions" icon={CalendarMonth} />
-                </Grid>
-              </Grid>
+            <Grid item xs={12} md={3}>
+              <MetricCard
+                title="Profile completeness"
+                value={`${profileCompleteness}%`}
+                caption="Member record filled"
+                icon={TaskAlt}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <MetricCard
+                title="Workout logs"
+                value={workoutStats.totalWorkouts}
+                caption={`${workoutStats.recentWorkouts} in the last 7 days`}
+                icon={FitnessCenter}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <MetricCard
+                title="Planned sessions"
+                value={workoutPlanSummary.plannedWorkouts}
+                caption={workoutPlanSummary.nextPlannedWorkout
+                  ? `Next: ${formatDashboardDate(workoutPlanSummary.nextPlannedWorkout.workout_date)}`
+                  : 'No upcoming plan yet'}
+                icon={PlaylistAddCheck}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <MetricCard
+                title="Upcoming classes"
+                value={classSummary.upcomingCount}
+                caption={classSummary.waitlistCount ? `${classSummary.waitlistCount} on waitlist` : 'Booked coached sessions'}
+                icon={EventAvailable}
+              />
             </Grid>
 
             <Grid item xs={12} lg={4}>
               <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff', height: '100%' }}>
-                <Stack spacing={1}>
+                <Stack spacing={2}>
                   <Typography color="#ff2625" fontWeight={700}>
-                    Quick membership reminder
+                    Membership at a glance
                   </Typography>
-                  <Typography variant="h6" fontWeight={800}>
-                    Keep your member record updated
+                  <Typography variant="h5" fontWeight={800}>
+                    {profile.full_name || profile.email}
                   </Typography>
-                  <Typography color="text.secondary" lineHeight={1.8}>
-                    Update your emergency contact, fitness goals, lifecycle dates, and waiver acknowledgement on the
-                    membership page so staff can support you faster.
-                  </Typography>
+
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    <Chip
+                      label={getMembershipStatusLabel(profile.membership_status)}
+                      sx={getMembershipStatusChipSx(profile.membership_status)}
+                    />
+                    <Chip
+                      label={getWaiverStatusLabel(profile)}
+                      sx={getWaiverChipSx(Boolean(profile.waiver_signed_at))}
+                    />
+                    <Chip label={profile.role} />
+                  </Stack>
+
+                  <Divider />
+
+                  <Stack spacing={1.2}>
+                    <Typography variant="body1">
+                      <strong>Plan:</strong> {profile.plan?.name || 'No plan assigned yet'}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>Account access:</strong> {profile.is_active ? 'Enabled' : 'Disabled'}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>Member since:</strong> {formatDashboardDate(profile.member_since)}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>Membership renews/ends:</strong> {formatDashboardDate(profile.membership_end_date)}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>Next billing:</strong> {formatDashboardDate(profile.next_billing_date)}
+                    </Typography>
+                    <Typography variant="body1">
+                      <strong>Emergency contact:</strong> {profile.emergency_contact_name || 'Not added yet'}
+                    </Typography>
+                  </Stack>
+
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} pt={0.5}>
+                    <Button
+                      component={RouterLink}
+                      to={PATHS.membership}
+                      variant="contained"
+                      sx={{
+                        bgcolor: '#ff2625',
+                        textTransform: 'none',
+                        borderRadius: 999,
+                        '&:hover': { bgcolor: '#df1d1d' },
+                      }}
+                    >
+                      Open membership
+                    </Button>
+
+                    <Button
+                      component={RouterLink}
+                      to={PATHS.account}
+                      variant="outlined"
+                      sx={{ textTransform: 'none', borderRadius: 999 }}
+                    >
+                      Account settings
+                    </Button>
+                  </Stack>
                 </Stack>
               </Paper>
             </Grid>
+
+            <Grid item xs={12} lg={4}>
+              <WorkoutPlanSummaryCard summary={workoutPlanSummary} profile={profile} />
+            </Grid>
+
+            <Grid item xs={12} lg={4}>
+              <DashboardAlertsCard alerts={dashboardAlerts} />
+            </Grid>
+
+            <Grid item xs={12} lg={7}>
+              <ProgressSnapshotCard
+                summary={progressSummary}
+                checkpoints={progressCheckpoints}
+                form={progressForm}
+                feedback={progressFeedback}
+                saving={savingProgress}
+                onFieldChange={updateProgressField}
+                onSubmit={handleSaveProgress}
+                onDelete={handleDeleteProgress}
+                disableActions={!profile.is_active}
+              />
+            </Grid>
+
             <Grid item xs={12} lg={5}>
-              <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff', height: '100%' }}>
+              <UpcomingClassesCard bookings={classSummary.upcoming} />
+            </Grid>
+
+            <Grid item xs={12} lg={5}>
+              <Paper
+                id="workout-tracker"
+                className="surface-card"
+                sx={{ p: 3, borderRadius: 4, background: '#fff', height: '100%' }}
+              >
                 <Stack spacing={1.5} mb={3}>
                   <Typography color="#ff2625" fontWeight={700}>
                     Workout tracker
@@ -362,11 +490,11 @@ const DashboardPage = () => {
                     {form.id ? 'Edit workout log' : 'Log a new workout'}
                   </Typography>
                   <Typography color="text.secondary">
-                    Add multiple exercise entries for one session.
+                    Save planned or completed sessions and attach as many exercise rows as you need.
                   </Typography>
                 </Stack>
 
-                <Box component="form" onSubmit={handleSubmit}>
+                <Box component="form" onSubmit={handleSubmitWorkout}>
                   <Stack spacing={2.5}>
                     <TextField
                       label="Workout title"
@@ -492,7 +620,7 @@ const DashboardPage = () => {
                       <Button
                         type="button"
                         variant="outlined"
-                        onClick={resetForm}
+                        onClick={resetWorkoutForm}
                         sx={{ textTransform: 'none', borderRadius: 999, py: 1.4, flex: 1 }}
                       >
                         Reset
@@ -533,7 +661,7 @@ const DashboardPage = () => {
                               {workout.title}
                             </Typography>
                             <Typography color="text.secondary">
-                              {formatDate(workout.workout_date)} • {workout.status}
+                              {formatDashboardDate(workout.workout_date)} • {workout.status}
                             </Typography>
                           </Box>
 
@@ -577,7 +705,7 @@ const DashboardPage = () => {
                                 <Typography fontWeight={700} textTransform="capitalize">
                                   {entry.exercise_name}
                                 </Typography>
-                                <Stack direction="row" spacing={1} flexWrap="wrap">
+                                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                                   {entry.sets !== null && entry.sets !== undefined ? <Chip label={`Sets: ${entry.sets}`} /> : null}
                                   {entry.reps !== null && entry.reps !== undefined ? <Chip label={`Reps: ${entry.reps}`} /> : null}
                                   {entry.weight !== null && entry.weight !== undefined ? <Chip label={`Weight: ${entry.weight}`} /> : null}
