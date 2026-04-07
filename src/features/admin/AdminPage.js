@@ -1,9 +1,11 @@
+
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Box,
   Button,
   Grid,
+  Chip,
   MenuItem,
   Paper,
   Stack,
@@ -19,13 +21,16 @@ import {
 } from '@mui/material';
 import {
   AdminPanelSettings,
+  AssignmentTurnedIn,
+  DeleteOutline,
+  EditOutlined,
   Group,
   LocalOffer,
   PersonAddAlt1,
-  DeleteOutline,
-  EditOutlined,
 } from '@mui/icons-material';
+import { Link as RouterLink } from 'react-router-dom';
 
+import { getAdminMemberDetailPath } from '../../app/paths';
 import LoadingScreen from '../../components/common/LoadingScreen';
 import MetricCard from '../../components/common/MetricCard';
 import SetupNotice from '../../components/common/SetupNotice';
@@ -38,6 +43,15 @@ import {
   invokeAdminMemberAction,
   updateMember,
 } from '../../services/gymService';
+import {
+  CURRENT_LIABILITY_WAIVER_VERSION,
+  formatDateValue,
+  getMembershipStatusChipSx,
+  getMembershipStatusLabel,
+  getWaiverChipSx,
+  MEMBERSHIP_STATUS_OPTIONS,
+  todayIsoDate,
+} from '../members/memberLifecycle';
 
 const emptyMemberForm = {
   fullName: '',
@@ -45,6 +59,8 @@ const emptyMemberForm = {
   password: '',
   planId: '',
   role: 'member',
+  membershipStatus: 'active',
+  membershipStartDate: todayIsoDate(),
 };
 
 const emptyPlanForm = {
@@ -61,6 +77,7 @@ const currency = (value) => `$${Number(value || 0).toFixed(2)}`;
 
 const AdminPage = () => {
   const { loading, profile } = useAuth();
+
   const [pageLoading, setPageLoading] = useState(true);
   const [members, setMembers] = useState([]);
   const [plans, setPlans] = useState([]);
@@ -93,8 +110,9 @@ const AdminPage = () => {
 
   const stats = useMemo(() => ({
     totalMembers: members.length,
-    activeMembers: members.filter((member) => member.is_active).length,
-    adminUsers: members.filter((member) => member.role === 'admin').length,
+    activeMemberships: members.filter((member) => member.is_active && ['trial', 'active'].includes(member.membership_status)).length,
+    lifecycleAlerts: members.filter((member) => ['suspended', 'expired', 'cancelled'].includes(member.membership_status) || !member.is_active).length,
+    waiverPending: members.filter((member) => !member.waiver_signed_at).length,
     activePlans: plans.filter((plan) => plan.is_active).length,
   }), [members, plans]);
 
@@ -126,9 +144,14 @@ const AdminPage = () => {
         fullName: memberForm.fullName,
         planId: memberForm.planId || null,
         role: memberForm.role,
+        membershipStatus: memberForm.membershipStatus,
+        membershipStartDate: memberForm.membershipStartDate || null,
       });
 
-      setMemberForm(emptyMemberForm);
+      setMemberForm({
+        ...emptyMemberForm,
+        membershipStartDate: todayIsoDate(),
+      });
       await loadAdminData();
       setFeedback({ type: 'success', message: 'Member created successfully.' });
     } catch (error) {
@@ -244,11 +267,11 @@ const AdminPage = () => {
               Admin command center
             </Typography>
             <Typography variant="h3" fontWeight={800} sx={{ fontSize: { xs: '32px', md: '46px' } }}>
-              Manage plans, members, and gym access
+              Manage member lifecycle, plans, and access
             </Typography>
             <Typography color="text.secondary" maxWidth="920px">
-              This page is designed for owners, managers, or coaches who need to manage member records without
-              exposing admin credentials in the browser.
+              Use this page to create accounts, track membership status, monitor pending waivers, and jump into each
+              member&apos;s lifecycle editor without exposing privileged keys in the browser.
             </Typography>
           </Stack>
 
@@ -267,49 +290,56 @@ const AdminPage = () => {
               <MetricCard title="Members" value={stats.totalMembers} caption="Total profiles" icon={Group} />
             </Grid>
             <Grid item xs={12} md={3}>
-              <MetricCard title="Active members" value={stats.activeMembers} caption="Profiles marked active" icon={PersonAddAlt1} />
+              <MetricCard title="Live memberships" value={stats.activeMemberships} caption="Trial or active access" icon={PersonAddAlt1} />
             </Grid>
             <Grid item xs={12} md={3}>
-              <MetricCard title="Admins" value={stats.adminUsers} caption="Users with admin role" icon={AdminPanelSettings} />
+              <MetricCard title="Lifecycle alerts" value={stats.lifecycleAlerts} caption="Suspended, expired, or disabled" icon={AdminPanelSettings} />
             </Grid>
             <Grid item xs={12} md={3}>
-              <MetricCard title="Active plans" value={stats.activePlans} caption="Membership plans live" icon={LocalOffer} />
+              <MetricCard title="Waivers pending" value={stats.waiverPending} caption="Members still missing waivers" icon={AssignmentTurnedIn} />
             </Grid>
 
-            <Grid item xs={12} lg={7}>
+            <Grid item xs={12} lg={8}>
               <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff' }}>
                 <Stack spacing={1.5} mb={3}>
                   <Typography color="#ff2625" fontWeight={700}>
                     Member roster
                   </Typography>
                   <Typography variant="h5" fontWeight={800}>
-                    Update roles, plans, and status
+                    Update roles, plans, and membership status
+                  </Typography>
+                  <Typography color="text.secondary">
+                    Use the detail page for full lifecycle editing, emergency contacts, and manual waiver records.
                   </Typography>
                 </Stack>
 
                 <TableContainer>
-                  <Table sx={{ minWidth: 760 }}>
+                  <Table sx={{ minWidth: 980 }}>
                     <TableHead>
                       <TableRow>
-                        <TableCell><strong>Name</strong></TableCell>
-                        <TableCell><strong>Email</strong></TableCell>
+                        <TableCell><strong>Member</strong></TableCell>
                         <TableCell><strong>Plan</strong></TableCell>
                         <TableCell><strong>Role</strong></TableCell>
-                        <TableCell><strong>Active</strong></TableCell>
+                        <TableCell><strong>Membership</strong></TableCell>
+                        <TableCell><strong>Renewal</strong></TableCell>
+                        <TableCell><strong>Access</strong></TableCell>
+                        <TableCell><strong>Waiver</strong></TableCell>
                         <TableCell><strong>Actions</strong></TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {members.map((member) => (
                         <TableRow key={member.id}>
-                          <TableCell>{member.full_name || 'Unnamed user'}</TableCell>
-                          <TableCell>{member.email}</TableCell>
+                          <TableCell sx={{ minWidth: 210 }}>
+                            <Typography fontWeight={700}>{member.full_name || 'Unnamed user'}</Typography>
+                            <Typography variant="body2" color="text.secondary">{member.email}</Typography>
+                          </TableCell>
                           <TableCell sx={{ minWidth: 190 }}>
                             <TextField
                               select
                               size="small"
                               value={member.plan_id || ''}
-                              onChange={(event) => handleInlineMemberUpdate(member.id, { plan_id: event.target.value || null })}
+                              onChange={(event) => handleInlineMemberUpdate(member.id, { planId: event.target.value || null })}
                               fullWidth
                             >
                               <MenuItem value="">No plan</MenuItem>
@@ -331,113 +361,205 @@ const AdminPage = () => {
                               <MenuItem value="admin">Admin</MenuItem>
                             </TextField>
                           </TableCell>
+                          <TableCell sx={{ minWidth: 170 }}>
+                            <TextField
+                              select
+                              size="small"
+                              value={member.membership_status || 'trial'}
+                              onChange={(event) => handleInlineMemberUpdate(member.id, { membershipStatus: event.target.value })}
+                              fullWidth
+                            >
+                              {MEMBERSHIP_STATUS_OPTIONS.map((status) => (
+                                <MenuItem key={status.value} value={status.value}>
+                                  {status.label}
+                                </MenuItem>
+                              ))}
+                            </TextField>
+                          </TableCell>
+                          <TableCell sx={{ minWidth: 140 }}>
+                            <Typography fontWeight={700}>
+                              {formatDateValue(member.membership_end_date)}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {member.next_billing_date ? `Billing ${formatDateValue(member.next_billing_date)}` : 'Billing not set'}
+                            </Typography>
+                          </TableCell>
                           <TableCell>
                             <Switch
                               checked={member.is_active}
-                              onChange={(event) => handleInlineMemberUpdate(member.id, { is_active: event.target.checked })}
+                              onChange={(event) => handleInlineMemberUpdate(member.id, { isActive: event.target.checked })}
                             />
                           </TableCell>
                           <TableCell>
-                            <Button
-                              color="error"
-                              startIcon={<DeleteOutline />}
-                              onClick={() => handleDeleteMember(member.id)}
-                              disabled={member.id === profile.id}
-                              sx={{ textTransform: 'none' }}
-                            >
-                              Remove
-                            </Button>
+                            <Stack spacing={1}>
+                              <Chip
+                                label={getMembershipStatusLabel(member.membership_status)}
+                                sx={getMembershipStatusChipSx(member.membership_status)}
+                              />
+                              <Chip
+                                label={member.waiver_signed_at ? 'Signed' : 'Pending'}
+                                sx={getWaiverChipSx(Boolean(member.waiver_signed_at))}
+                              />
+                            </Stack>
+                          </TableCell>
+                          <TableCell sx={{ minWidth: 220 }}>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                              <Button
+                                component={RouterLink}
+                                to={getAdminMemberDetailPath(member.id)}
+                                variant="outlined"
+                                sx={{ textTransform: 'none' }}
+                              >
+                                Details
+                              </Button>
+                              <Button
+                                color="error"
+                                startIcon={<DeleteOutline />}
+                                onClick={() => handleDeleteMember(member.id)}
+                                disabled={member.id === profile.id}
+                                sx={{ textTransform: 'none' }}
+                              >
+                                Remove
+                              </Button>
+                            </Stack>
                           </TableCell>
                         </TableRow>
                       ))}
+                      {!members.length ? (
+                        <TableRow>
+                          <TableCell colSpan={8}>
+                            <Typography color="text.secondary">
+                              No members yet. Create the first member account from the form beside this table.
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ) : null}
                     </TableBody>
                   </Table>
                 </TableContainer>
               </Paper>
             </Grid>
 
-            <Grid item xs={12} lg={5}>
-              <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff' }}>
-                <Stack spacing={1.5} mb={3}>
-                  <Typography color="#ff2625" fontWeight={700}>
-                    Create member
-                  </Typography>
-                  <Typography variant="h5" fontWeight={800}>
-                    Add a new account
-                  </Typography>
-                  <Typography color="text.secondary">
-                    This form creates a Supabase auth user and immediately prepares the member profile.
-                  </Typography>
-                </Stack>
-
-                <Box component="form" onSubmit={handleCreateMember}>
-                  <Stack spacing={2.5}>
-                    <TextField
-                      label="Full name"
-                      value={memberForm.fullName}
-                      onChange={updateMemberFormField('fullName')}
-                      fullWidth
-                      required
-                    />
-                    <TextField
-                      label="Email"
-                      type="email"
-                      value={memberForm.email}
-                      onChange={updateMemberFormField('email')}
-                      fullWidth
-                      required
-                    />
-                    <TextField
-                      label="Temporary password"
-                      type="password"
-                      value={memberForm.password}
-                      onChange={updateMemberFormField('password')}
-                      fullWidth
-                      required
-                    />
-                    <TextField
-                      select
-                      label="Role"
-                      value={memberForm.role}
-                      onChange={updateMemberFormField('role')}
-                      fullWidth
-                    >
-                      <MenuItem value="member">Member</MenuItem>
-                      <MenuItem value="staff">Staff</MenuItem>
-                      <MenuItem value="admin">Admin</MenuItem>
-                    </TextField>
-                    <TextField
-                      select
-                      label="Assign plan"
-                      value={memberForm.planId}
-                      onChange={updateMemberFormField('planId')}
-                      fullWidth
-                    >
-                      <MenuItem value="">No plan yet</MenuItem>
-                      {plans.map((plan) => (
-                        <MenuItem key={plan.id} value={plan.id}>
-                          {plan.name}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      disabled={savingMember}
-                      sx={{
-                        bgcolor: '#ff2625',
-                        textTransform: 'none',
-                        borderRadius: 999,
-                        py: 1.4,
-                        '&:hover': { bgcolor: '#df1d1d' },
-                      }}
-                    >
-                      {savingMember ? 'Creating...' : 'Create member'}
-                    </Button>
+            <Grid item xs={12} lg={4}>
+              <Stack spacing={3}>
+                <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff' }}>
+                  <Stack spacing={1.5} mb={3}>
+                    <Typography color="#ff2625" fontWeight={700}>
+                      Create member
+                    </Typography>
+                    <Typography variant="h5" fontWeight={800}>
+                      Add a new account
+                    </Typography>
+                    <Typography color="text.secondary">
+                      The initial lifecycle dates are created now, and can be refined later on the member detail page.
+                    </Typography>
                   </Stack>
-                </Box>
-              </Paper>
+
+                  <Box component="form" onSubmit={handleCreateMember}>
+                    <Stack spacing={2.5}>
+                      <TextField
+                        label="Full name"
+                        value={memberForm.fullName}
+                        onChange={updateMemberFormField('fullName')}
+                        fullWidth
+                        required
+                      />
+                      <TextField
+                        label="Email"
+                        type="email"
+                        value={memberForm.email}
+                        onChange={updateMemberFormField('email')}
+                        fullWidth
+                        required
+                      />
+                      <TextField
+                        label="Temporary password"
+                        type="password"
+                        value={memberForm.password}
+                        onChange={updateMemberFormField('password')}
+                        fullWidth
+                        required
+                      />
+                      <TextField
+                        select
+                        label="Role"
+                        value={memberForm.role}
+                        onChange={updateMemberFormField('role')}
+                        fullWidth
+                      >
+                        <MenuItem value="member">Member</MenuItem>
+                        <MenuItem value="staff">Staff</MenuItem>
+                        <MenuItem value="admin">Admin</MenuItem>
+                      </TextField>
+                      <TextField
+                        select
+                        label="Assign plan"
+                        value={memberForm.planId}
+                        onChange={updateMemberFormField('planId')}
+                        fullWidth
+                      >
+                        <MenuItem value="">No plan yet</MenuItem>
+                        {plans.map((plan) => (
+                          <MenuItem key={plan.id} value={plan.id}>
+                            {plan.name}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                      <TextField
+                        select
+                        label="Membership status"
+                        value={memberForm.membershipStatus}
+                        onChange={updateMemberFormField('membershipStatus')}
+                        fullWidth
+                      >
+                        {MEMBERSHIP_STATUS_OPTIONS.map((status) => (
+                          <MenuItem key={status.value} value={status.value}>
+                            {status.label}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                      <TextField
+                        label="Membership start date"
+                        type="date"
+                        value={memberForm.membershipStartDate}
+                        onChange={updateMemberFormField('membershipStartDate')}
+                        fullWidth
+                        InputLabelProps={{ shrink: true }}
+                      />
+
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        disabled={savingMember}
+                        sx={{
+                          bgcolor: '#ff2625',
+                          textTransform: 'none',
+                          borderRadius: 999,
+                          py: 1.4,
+                          '&:hover': { bgcolor: '#df1d1d' },
+                        }}
+                      >
+                        {savingMember ? 'Creating...' : 'Create member'}
+                      </Button>
+                    </Stack>
+                  </Box>
+                </Paper>
+
+                <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff' }}>
+                  <Stack spacing={1.5}>
+                    <Typography color="#ff2625" fontWeight={700}>
+                      Phase 2 note
+                    </Typography>
+                    <Typography variant="h6" fontWeight={800}>
+                      Waiver workflow
+                    </Typography>
+                    <Typography color="text.secondary" lineHeight={1.8}>
+                      Member self-service acknowledgements default to the <strong>{CURRENT_LIABILITY_WAIVER_VERSION}</strong> waiver version.
+                      Admins can also add manual waiver records from the member detail page for paper or in-person signatures.
+                    </Typography>
+                  </Stack>
+                </Paper>
+              </Stack>
             </Grid>
 
             <Grid item xs={12} lg={5}>
@@ -575,6 +697,18 @@ const AdminPage = () => {
                     </Paper>
                   </Grid>
                 ))}
+                {!plans.length ? (
+                  <Grid item xs={12}>
+                    <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff' }}>
+                      <Stack direction="row" spacing={2} alignItems="center">
+                        <LocalOffer color="error" />
+                        <Typography color="text.secondary">
+                          No membership plans exist yet. Create the first plan to start assigning lifecycle windows automatically.
+                        </Typography>
+                      </Stack>
+                    </Paper>
+                  </Grid>
+                ) : null}
               </Grid>
             </Grid>
           </Grid>

@@ -31,6 +31,13 @@ import MetricCard from '../../components/common/MetricCard';
 import SetupNotice from '../../components/common/SetupNotice';
 import { useAuth } from '../../context/AuthContext';
 import { deleteWorkout, fetchWorkouts, saveWorkout } from '../../services/gymService';
+import {
+  formatDateValue,
+  getMembershipStatusChipSx,
+  getMembershipStatusLabel,
+  getWaiverChipSx,
+  getWaiverStatusLabel,
+} from '../members/memberLifecycle';
 
 const emptyWorkoutForm = {
   id: '',
@@ -48,7 +55,7 @@ const emptyWorkoutForm = {
   ],
 };
 
-const formatDate = (value) => new Date(value).toLocaleDateString();
+const formatDate = (value) => formatDateValue(value, 'Not set');
 
 const DashboardPage = () => {
   const { user, profile, loading, refreshProfile } = useAuth();
@@ -223,7 +230,7 @@ const DashboardPage = () => {
               Welcome back, {profile.full_name || profile.email}
             </Typography>
             <Typography color="text.secondary" maxWidth="900px">
-              Review your membership plan, keep your training notes organized, and log each workout session from one place.
+              Review your membership status, keep your training notes organized, and log each workout session from one place.
             </Typography>
           </Stack>
 
@@ -236,6 +243,19 @@ const DashboardPage = () => {
           {!profile.is_active ? (
             <Alert severity="warning" sx={{ mb: 3, borderRadius: 3 }}>
               Your membership is marked as inactive. You can still view your data, but ask an admin to reactivate your account.
+            </Alert>
+          ) : null}
+
+          {profile.membership_status && profile.membership_status !== 'active' ? (
+            <Alert severity={profile.membership_status === 'trial' ? 'info' : 'warning'} sx={{ mb: 3, borderRadius: 3 }}>
+              Membership lifecycle status: <strong>{getMembershipStatusLabel(profile.membership_status)}</strong>.
+              {profile.membership_end_date ? ` Review your renewal timeline for ${formatDate(profile.membership_end_date)}.` : ' Review your membership details to make sure dates are up to date.'}
+            </Alert>
+          ) : null}
+
+          {!profile.waiver_signed_at ? (
+            <Alert severity="info" sx={{ mb: 3, borderRadius: 3 }}>
+              Your liability waiver has not been acknowledged yet. Open the membership page to record it.
             </Alert>
           ) : null}
 
@@ -267,19 +287,36 @@ const DashboardPage = () => {
 
                 <Grid item xs={12} md={6}>
                   <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, height: '100%', background: '#fff' }}>
-                    <Stack spacing={1.2}>
+                    <Stack spacing={1.5}>
                       <Typography color="#ff2625" fontWeight={700}>
-                        Profile
+                        Membership access
                       </Typography>
+                      <Stack direction="row" spacing={1} flexWrap="wrap">
+                        <Chip
+                          label={getMembershipStatusLabel(profile.membership_status)}
+                          sx={getMembershipStatusChipSx(profile.membership_status)}
+                        />
+                        <Chip
+                          label={getWaiverStatusLabel(profile)}
+                          sx={getWaiverChipSx(Boolean(profile.waiver_signed_at))}
+                        />
+                      </Stack>
                       <Typography variant="body1"><strong>Email:</strong> {profile.email}</Typography>
                       <Typography variant="body1"><strong>Role:</strong> {profile.role}</Typography>
-                      <Typography variant="body1"><strong>Status:</strong> {profile.is_active ? 'Active' : 'Inactive'}</Typography>
+                      <Typography variant="body1"><strong>Account access:</strong> {profile.is_active ? 'Enabled' : 'Disabled'}</Typography>
                       <Typography variant="body1"><strong>Member since:</strong> {formatDate(profile.member_since)}</Typography>
-                      {profile.role === 'admin' ? (
-                        <Button component={RouterLink} to={PATHS.admin} variant="outlined" sx={{ mt: 1, textTransform: 'none' }}>
-                          Open Admin Panel
+                      <Typography variant="body1"><strong>Membership renews/ends:</strong> {formatDate(profile.membership_end_date)}</Typography>
+                      <Typography variant="body1"><strong>Next billing:</strong> {formatDate(profile.next_billing_date)}</Typography>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} pt={0.5}>
+                        <Button component={RouterLink} to={PATHS.membership} variant="outlined" sx={{ textTransform: 'none' }}>
+                          Open membership profile
                         </Button>
-                      ) : null}
+                        {profile.role === 'admin' ? (
+                          <Button component={RouterLink} to={PATHS.admin} variant="outlined" sx={{ textTransform: 'none' }}>
+                            Open Admin Panel
+                          </Button>
+                        ) : null}
+                      </Stack>
                     </Stack>
                   </Paper>
                 </Grid>
@@ -303,19 +340,18 @@ const DashboardPage = () => {
               <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff', height: '100%' }}>
                 <Stack spacing={1}>
                   <Typography color="#ff2625" fontWeight={700}>
-                    Quick training tip
+                    Quick membership reminder
                   </Typography>
                   <Typography variant="h6" fontWeight={800}>
-                    Use one workout log per session
+                    Keep your member record updated
                   </Typography>
                   <Typography color="text.secondary" lineHeight={1.8}>
-                    Add one or more exercise rows under each workout so you can keep your notes, sets,
-                    reps, and load together by training day.
+                    Update your emergency contact, fitness goals, lifecycle dates, and waiver acknowledgement on the
+                    membership page so staff can support you faster.
                   </Typography>
                 </Stack>
               </Paper>
             </Grid>
-
             <Grid item xs={12} lg={5}>
               <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff', height: '100%' }}>
                 <Stack spacing={1.5} mb={3}>

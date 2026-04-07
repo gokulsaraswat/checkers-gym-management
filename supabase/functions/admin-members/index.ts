@@ -1,7 +1,9 @@
+
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const ALLOWED_APP_ROLES = new Set(['member', 'staff', 'admin']);
+const ALLOWED_MEMBERSHIP_STATUSES = new Set(['trial', 'active', 'suspended', 'expired', 'cancelled']);
 
 const json = (body: Record<string, unknown>, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -11,6 +13,16 @@ const json = (body: Record<string, unknown>, status = 200) =>
       'Content-Type': 'application/json',
     },
   });
+
+const isIsoDateString = (value?: string | null) => Boolean(value && /^\d{4}-\d{2}-\d{2}$/.test(value));
+
+const addDays = (dateValue: string, days: number) => {
+  const parsed = new Date(`${dateValue}T00:00:00Z`);
+  parsed.setUTCDate(parsed.getUTCDate() + days);
+  return parsed.toISOString().slice(0, 10);
+};
+
+const getTodayIso = () => new Date().toISOString().slice(0, 10);
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -86,6 +98,54 @@ Deno.serve(async (req) => {
         return json({ error: 'Email and password are required.' }, 400);
       }
 
+      let planDurationWeeks: number | null = null;
+
+      if (planId) {
+        const { data: planRow, error: planError } = await adminClient
+          .from('membership_plans')
+          .select('duration_weeks')
+          .eq('id', planId)
+          .maybeSingle();
+
+        if (planError) {
+          return json({ error: planError.message }, 500);
+        }
+
+        if (!planRow) {
+          return json({ error: 'The selected membership plan was not found.' }, 400);
+        }
+
+        planDurationWeeks = Number(planRow.duration_weeks || 0) || 4;
+      }
+
+      const todayIso = getTodayIso();
+      const requestedMembershipStatus = payload?.membershipStatus?.trim?.();
+      const membershipStatus = ALLOWED_MEMBERSHIP_STATUSES.has(requestedMembershipStatus)
+        ? requestedMembershipStatus
+        : (planId ? 'active' : 'trial');
+      const membershipStartDate = isIsoDateString(payload?.membershipStartDate)
+        ? payload.membershipStartDate
+        : todayIso;
+
+      let membershipEndDate = isIsoDateString(payload?.membershipEndDate)
+        ? payload.membershipEndDate
+        : null;
+      let nextBillingDate = isIsoDateString(payload?.nextBillingDate)
+        ? payload.nextBillingDate
+        : null;
+
+      if (!membershipEndDate && planDurationWeeks) {
+        membershipEndDate = addDays(membershipStartDate, planDurationWeeks * 7);
+      }
+
+      if (!membershipEndDate && membershipStatus === 'trial') {
+        membershipEndDate = addDays(membershipStartDate, 7);
+      }
+
+      if (!nextBillingDate && planDurationWeeks) {
+        nextBillingDate = membershipEndDate;
+      }
+
       const { data: createdUser, error: createError } = await adminClient.auth.admin.createUser({
         email,
         password,
@@ -107,6 +167,10 @@ Deno.serve(async (req) => {
           role,
           plan_id: planId,
           is_active: true,
+          membership_status: membershipStatus,
+          membership_start_date: membershipStartDate,
+          membership_end_date: membershipEndDate,
+          next_billing_date: nextBillingDate,
         })
         .eq('id', createdUser.user.id);
 
@@ -137,14 +201,13 @@ Deno.serve(async (req) => {
         return json({ error: deleteError.message }, 400);
       }
 
-      return json({
-        success: true,
-        userId,
-      });
+      return json({ success: true });
     }
 
-    return json({ error: 'Unsupported action.' }, 400);
+    return json({ error: 'Unknown action.' }, 400);
   } catch (error) {
-    return json({ error: error instanceof Error ? error.message : 'Unexpected function error.' }, 500);
+    return json({
+      error: error instanceof Error ? error.message : 'Unexpected server error.',
+    }, 500);
   }
 });

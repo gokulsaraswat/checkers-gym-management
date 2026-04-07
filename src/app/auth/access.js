@@ -1,3 +1,4 @@
+
 import { PATHS } from '../paths';
 
 export const USER_ROLES = {
@@ -12,17 +13,19 @@ const roleHomePathMap = {
   [USER_ROLES.admin]: PATHS.admin,
 };
 
-const protectedAuthPaths = new Set([
-  PATHS.dashboard,
-  PATHS.account,
-  PATHS.staff,
-  PATHS.admin,
-]);
-
 const guestOnlyPaths = new Set([
   PATHS.auth,
   PATHS.forgotPassword,
 ]);
+
+const authOnlyPaths = new Set([
+  PATHS.dashboard,
+  PATHS.membership,
+  PATHS.account,
+]);
+
+const isAdminPath = (pathname = '') => pathname === PATHS.admin || pathname.startsWith(`${PATHS.admin}/`);
+const isStaffPath = (pathname = '') => pathname === PATHS.staff || pathname.startsWith(`${PATHS.staff}/`);
 
 export const getPostAuthPath = (role) => roleHomePathMap[role] || PATHS.dashboard;
 
@@ -47,19 +50,19 @@ export const canRoleAccessPath = (role, pathname = '') => {
     return false;
   }
 
-  if (!protectedAuthPaths.has(pathname)) {
-    return true;
-  }
-
-  if (pathname === PATHS.admin) {
+  if (isAdminPath(pathname)) {
     return role === USER_ROLES.admin;
   }
 
-  if (pathname === PATHS.staff) {
+  if (isStaffPath(pathname)) {
     return isStaffRole(role);
   }
 
-  return Boolean(role);
+  if (authOnlyPaths.has(pathname)) {
+    return Boolean(role);
+  }
+
+  return true;
 };
 
 export const getSafeAuthRedirectPath = (role, from) => {

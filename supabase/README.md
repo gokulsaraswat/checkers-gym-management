@@ -1,3 +1,4 @@
+
 # Supabase assets
 
 ## Source of truth
@@ -12,14 +13,17 @@ For tracked changes going forward:
 2. Apply it locally with the Supabase CLI when available
 3. Push it to the remote project
 
-## Phase 1 notes
+## Phase 2 notes
 This phase adds:
-- `staff` as a supported application role
-- `public.is_staff()` for future policy work
-- `public.update_my_profile()` so members can safely update their own full name without broad profile update rights
+- richer member profile fields on `public.profiles`
+- membership lifecycle dates and status tracking
+- `public.membership_status_history` for lifecycle snapshots
+- `public.member_waivers` for digital liability acknowledgement records
+- `public.update_my_member_profile()` for self-service profile updates
+- `public.sign_current_liability_waiver()` for member waiver acknowledgement
 
 After this patch, apply:
-- `supabase/migrations/20260407000200_auth_account_flow.sql`
+- `supabase/migrations/20260407000300_member_profiles_and_membership_lifecycle.sql`
 
 ## Auth configuration
 In Supabase Dashboard → Authentication → URL Configuration:

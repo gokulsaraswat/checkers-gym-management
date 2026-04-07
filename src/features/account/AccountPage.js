@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -16,10 +17,19 @@ import {
   PersonOutline,
   VerifiedUser,
 } from '@mui/icons-material';
+import { Link as RouterLink } from 'react-router-dom';
 
+import { PATHS } from '../../app/paths';
 import SetupNotice from '../../components/common/SetupNotice';
 import LoadingScreen from '../../components/common/LoadingScreen';
 import { useAuth } from '../../context/AuthContext';
+import {
+  formatDateTimeValue,
+  getMembershipStatusChipSx,
+  getMembershipStatusLabel,
+  getWaiverChipSx,
+  getWaiverStatusLabel,
+} from '../members/memberLifecycle';
 
 const AccountPage = () => {
   const {
@@ -77,11 +87,11 @@ const AccountPage = () => {
     try {
       setProfileSaving(true);
       await updateMyProfile({ fullName: profileForm.fullName });
-      setProfileFeedback({ type: 'success', message: 'Profile updated successfully.' });
+      setProfileFeedback({ type: 'success', message: 'Account name updated successfully.' });
     } catch (error) {
       setProfileFeedback({
         type: 'error',
-        message: error.message || 'Unable to update your profile.',
+        message: error.message || 'Unable to update your account profile.',
       });
     } finally {
       setProfileSaving(false);
@@ -129,10 +139,11 @@ const AccountPage = () => {
           My account
         </Typography>
         <Typography variant="h3" fontWeight={800} sx={{ fontSize: { xs: '32px', md: '42px' } }}>
-          Manage your profile and security
+          Manage security and sign-in details
         </Typography>
         <Typography color="text.secondary" maxWidth="780px">
-          Keep your profile details up to date and change your password without leaving the app.
+          Use this page for account security. Personal details, emergency contacts, and waiver activity now live in
+          your dedicated membership profile.
         </Typography>
       </Stack>
 
@@ -141,175 +152,273 @@ const AccountPage = () => {
       {!isConfigured ? null : (
         <Grid container spacing={3}>
           <Grid item xs={12} lg={4}>
-            <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff', height: '100%' }}>
-              <Stack spacing={2.5}>
-                <Box
-                  sx={{
-                    width: 68,
-                    height: 68,
-                    borderRadius: '24px',
-                    display: 'grid',
-                    placeItems: 'center',
-                    bgcolor: '#fff0f0',
-                    color: '#ff2625',
-                  }}
-                >
-                  <VerifiedUser />
-                </Box>
+            <Stack spacing={3} height="100%">
+              <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff' }}>
+                <Stack spacing={2.5}>
+                  <Box
+                    sx={{
+                      width: 68,
+                      height: 68,
+                      borderRadius: '24px',
+                      display: 'grid',
+                      placeItems: 'center',
+                      bgcolor: '#fff0f0',
+                      color: '#ff2625',
+                    }}
+                  >
+                    <VerifiedUser />
+                  </Box>
 
-                <Box>
-                  <Typography color="#ff2625" fontWeight={700} mb={1}>
-                    Signed-in account
-                  </Typography>
-                  <Typography variant="h5" fontWeight={800}>
-                    {profile?.full_name || user?.email || 'Gym member'}
-                  </Typography>
-                </Box>
-
-                <Stack spacing={1.5}>
-                  <Stack direction="row" spacing={1.5} alignItems="center">
-                    <BadgeOutlined color="error" />
-                    <Typography color="text.secondary">{user?.email || 'No email found'}</Typography>
-                  </Stack>
-                  <Stack direction="row" spacing={1.5} alignItems="center">
-                    <PersonOutline color="error" />
-                    <Typography color="text.secondary">
-                      Role: <strong>{profile?.role || 'member'}</strong>
+                  <Box>
+                    <Typography color="#ff2625" fontWeight={700} mb={1}>
+                      Signed-in account
                     </Typography>
+                    <Typography variant="h5" fontWeight={800}>
+                      {profile?.full_name || user?.email || 'Gym member'}
+                    </Typography>
+                  </Box>
+
+                  <Stack spacing={1.5}>
+                    <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="space-between">
+                      <Typography color="text.secondary">Role</Typography>
+                      <Chip label={profile?.role || 'member'} />
+                    </Stack>
+                    <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="space-between">
+                      <Typography color="text.secondary">Membership</Typography>
+                      <Chip
+                        label={getMembershipStatusLabel(profile?.membership_status)}
+                        sx={getMembershipStatusChipSx(profile?.membership_status)}
+                      />
+                    </Stack>
+                    <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="space-between">
+                      <Typography color="text.secondary">Waiver</Typography>
+                      <Chip
+                        label={getWaiverStatusLabel(profile)}
+                        sx={getWaiverChipSx(Boolean(profile?.waiver_signed_at))}
+                      />
+                    </Stack>
+                    <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="space-between">
+                      <Typography color="text.secondary">Last waiver activity</Typography>
+                      <Typography fontWeight={700} textAlign="right">
+                        {formatDateTimeValue(profile?.waiver_signed_at, 'Pending')}
+                      </Typography>
+                    </Stack>
                   </Stack>
+
+                  <Button
+                    component={RouterLink}
+                    to={PATHS.membership}
+                    variant="outlined"
+                    sx={{ textTransform: 'none', borderRadius: 999 }}
+                  >
+                    Open membership profile
+                  </Button>
                 </Stack>
+              </Paper>
 
-                <Stack direction="row" spacing={1.25} flexWrap="wrap">
-                  {profile?.is_active ? (
-                    <Chip label="Active account" sx={{ bgcolor: '#ecfdf3', color: '#027a48', fontWeight: 700 }} />
-                  ) : (
-                    <Chip label="Inactive account" sx={{ bgcolor: '#fff3f4', color: '#ff2625', fontWeight: 700 }} />
-                  )}
-
-                  {profile?.plan?.name ? (
-                    <Chip label={`Plan: ${profile.plan.name}`} sx={{ bgcolor: '#fff7ed', color: '#c2410c', fontWeight: 700 }} />
-                  ) : (
-                    <Chip label="No plan assigned yet" sx={{ bgcolor: '#f5f5f5', color: '#374151', fontWeight: 700 }} />
-                  )}
+              <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff', flex: 1 }}>
+                <Stack spacing={1.5}>
+                  <Typography color="#ff2625" fontWeight={700}>
+                    Where to update member details
+                  </Typography>
+                  <Typography variant="h6" fontWeight={800}>
+                    Membership profile
+                  </Typography>
+                  <Typography color="text.secondary" lineHeight={1.8}>
+                    Update your phone number, address, emergency contact, fitness goals, and waiver acknowledgement on
+                    the membership page so your account settings stay focused on security.
+                  </Typography>
+                  <Button
+                    component={RouterLink}
+                    to={PATHS.membership}
+                    variant="contained"
+                    sx={{
+                      bgcolor: '#ff2625',
+                      textTransform: 'none',
+                      borderRadius: 999,
+                      alignSelf: 'flex-start',
+                      '&:hover': { bgcolor: '#df1d1d' },
+                    }}
+                  >
+                    Go to membership profile
+                  </Button>
                 </Stack>
-
-                <Typography color="text.secondary">
-                  Member since {profile?.member_since ? new Date(profile.member_since).toLocaleDateString() : '—'}
-                </Typography>
-              </Stack>
-            </Paper>
+              </Paper>
+            </Stack>
           </Grid>
 
           <Grid item xs={12} lg={8}>
-            <Stack spacing={3}>
-              <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff' }}>
-                <Stack spacing={1.5} mb={3}>
-                  <Typography color="#ff2625" fontWeight={700}>
-                    Profile details
-                  </Typography>
-                  <Typography variant="h5" fontWeight={800}>
-                    Update the basics
-                  </Typography>
-                </Stack>
-
-                {profileFeedback.message ? (
-                  <Alert severity={profileFeedback.type || 'info'} sx={{ mb: 3, borderRadius: 3 }}>
-                    {profileFeedback.message}
-                  </Alert>
-                ) : null}
-
-                <Box component="form" onSubmit={handleProfileSubmit}>
-                  <Stack spacing={2.5}>
-                    <TextField
-                      label="Full name"
-                      value={profileForm.fullName}
-                      onChange={handleProfileFieldChange('fullName')}
-                      fullWidth
-                      required
-                    />
-
-                    <TextField
-                      label="Email"
-                      value={user?.email || ''}
-                      fullWidth
-                      disabled
-                      helperText="Email changes can be added in a later patch."
-                    />
-
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      disabled={profileSaving}
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff' }}>
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems={{ xs: 'flex-start', md: 'center' }} mb={3}>
+                    <Box
                       sx={{
-                        alignSelf: 'flex-start',
-                        bgcolor: '#ff2625',
-                        textTransform: 'none',
-                        borderRadius: 999,
-                        px: 3,
-                        '&:hover': { bgcolor: '#df1d1d' },
+                        width: 58,
+                        height: 58,
+                        borderRadius: '20px',
+                        display: 'grid',
+                        placeItems: 'center',
+                        bgcolor: '#fff0f0',
+                        color: '#ff2625',
                       }}
                     >
-                      {profileSaving ? 'Saving...' : 'Save profile'}
-                    </Button>
+                      <PersonOutline />
+                    </Box>
+                    <Box>
+                      <Typography variant="h5" fontWeight={800}>
+                        Account identity
+                      </Typography>
+                      <Typography color="text.secondary">
+                        Keep the name attached to your login up to date.
+                      </Typography>
+                    </Box>
                   </Stack>
-                </Box>
-              </Paper>
 
-              <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff' }}>
-                <Stack spacing={1.5} mb={3}>
-                  <Typography color="#ff2625" fontWeight={700}>
-                    Security
-                  </Typography>
-                  <Typography variant="h5" fontWeight={800}>
-                    Change your password
-                  </Typography>
-                </Stack>
+                  {profileFeedback.message ? (
+                    <Alert severity={profileFeedback.type || 'info'} sx={{ mb: 3, borderRadius: 3 }}>
+                      {profileFeedback.message}
+                    </Alert>
+                  ) : null}
 
-                {passwordFeedback.message ? (
-                  <Alert severity={passwordFeedback.type || 'info'} sx={{ mb: 3, borderRadius: 3 }}>
-                    {passwordFeedback.message}
-                  </Alert>
-                ) : null}
+                  <Box component="form" onSubmit={handleProfileSubmit}>
+                    <Stack spacing={2.5}>
+                      <TextField
+                        label="Full name"
+                        value={profileForm.fullName}
+                        onChange={handleProfileFieldChange('fullName')}
+                        fullWidth
+                        required
+                      />
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        disabled={profileSaving}
+                        sx={{
+                          bgcolor: '#ff2625',
+                          textTransform: 'none',
+                          borderRadius: 999,
+                          alignSelf: 'flex-start',
+                          px: 3,
+                          '&:hover': { bgcolor: '#df1d1d' },
+                        }}
+                      >
+                        {profileSaving ? 'Saving...' : 'Save account name'}
+                      </Button>
+                    </Stack>
+                  </Box>
+                </Paper>
+              </Grid>
 
-                <Box component="form" onSubmit={handlePasswordSubmit}>
-                  <Stack spacing={2.5}>
-                    <TextField
-                      label="New password"
-                      type="password"
-                      value={passwordForm.password}
-                      onChange={handlePasswordFieldChange('password')}
-                      fullWidth
-                      required
-                    />
-                    <TextField
-                      label="Confirm new password"
-                      type="password"
-                      value={passwordForm.confirmPassword}
-                      onChange={handlePasswordFieldChange('confirmPassword')}
-                      fullWidth
-                      required
-                    />
-
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      startIcon={<LockReset />}
-                      disabled={passwordSaving}
+              <Grid item xs={12}>
+                <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff' }}>
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems={{ xs: 'flex-start', md: 'center' }} mb={3}>
+                    <Box
                       sx={{
-                        alignSelf: 'flex-start',
-                        bgcolor: '#111827',
-                        textTransform: 'none',
-                        borderRadius: 999,
-                        px: 3,
-                        '&:hover': { bgcolor: '#030712' },
+                        width: 58,
+                        height: 58,
+                        borderRadius: '20px',
+                        display: 'grid',
+                        placeItems: 'center',
+                        bgcolor: '#fff0f0',
+                        color: '#ff2625',
                       }}
                     >
-                      {passwordSaving ? 'Updating...' : 'Update password'}
-                    </Button>
+                      <BadgeOutlined />
+                    </Box>
+                    <Box>
+                      <Typography variant="h5" fontWeight={800}>
+                        Account overview
+                      </Typography>
+                      <Typography color="text.secondary">
+                        Quick snapshot of the login tied to your membership.
+                      </Typography>
+                    </Box>
                   </Stack>
-                </Box>
-              </Paper>
-            </Stack>
+
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <Typography color="text.secondary">Email address</Typography>
+                      <Typography fontWeight={700}>{user?.email || profile?.email || 'No email found'}</Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Typography color="text.secondary">Member since</Typography>
+                      <Typography fontWeight={700}>{profile?.member_since ? new Date(profile.member_since).toLocaleDateString() : 'Not set'}</Typography>
+                    </Grid>
+                  </Grid>
+                </Paper>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff' }}>
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems={{ xs: 'flex-start', md: 'center' }} mb={3}>
+                    <Box
+                      sx={{
+                        width: 58,
+                        height: 58,
+                        borderRadius: '20px',
+                        display: 'grid',
+                        placeItems: 'center',
+                        bgcolor: '#fff0f0',
+                        color: '#ff2625',
+                      }}
+                    >
+                      <LockReset />
+                    </Box>
+                    <Box>
+                      <Typography variant="h5" fontWeight={800}>
+                        Password security
+                      </Typography>
+                      <Typography color="text.secondary">
+                        Change your password without leaving the app.
+                      </Typography>
+                    </Box>
+                  </Stack>
+
+                  {passwordFeedback.message ? (
+                    <Alert severity={passwordFeedback.type || 'info'} sx={{ mb: 3, borderRadius: 3 }}>
+                      {passwordFeedback.message}
+                    </Alert>
+                  ) : null}
+
+                  <Box component="form" onSubmit={handlePasswordSubmit}>
+                    <Stack spacing={2.5}>
+                      <TextField
+                        label="New password"
+                        type="password"
+                        value={passwordForm.password}
+                        onChange={handlePasswordFieldChange('password')}
+                        fullWidth
+                        required
+                      />
+                      <TextField
+                        label="Confirm new password"
+                        type="password"
+                        value={passwordForm.confirmPassword}
+                        onChange={handlePasswordFieldChange('confirmPassword')}
+                        fullWidth
+                        required
+                      />
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        disabled={passwordSaving}
+                        sx={{
+                          bgcolor: '#ff2625',
+                          textTransform: 'none',
+                          borderRadius: 999,
+                          alignSelf: 'flex-start',
+                          px: 3,
+                          '&:hover': { bgcolor: '#df1d1d' },
+                        }}
+                      >
+                        {passwordSaving ? 'Updating...' : 'Update password'}
+                      </Button>
+                    </Stack>
+                  </Box>
+                </Paper>
+              </Grid>
+            </Grid>
           </Grid>
         </Grid>
       )}

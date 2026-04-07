@@ -4,8 +4,9 @@ This project upgrades the original Checkers Gym React site into a **Gym Manageme
 
 - Supabase authentication (email + password)
 - Member dashboard with membership plan details
+- Membership profile page with lifecycle dates, emergency contacts, and waiver acknowledgement
 - Workout tracking (create, edit, delete logs)
-- Admin panel for plans and members
+- Admin panel for plans, members, lifecycle tracking, and waivers
 - Optional live exercise explorer powered by RapidAPI
 - Demo exercise fallback when no RapidAPI key is configured
 
@@ -24,8 +25,10 @@ This project upgrades the original Checkers Gym React site into a **Gym Manageme
 - Forgot password and reset password flow
 - Protected member dashboard
 - Account settings page
+- Membership profile page
 - Protected staff-ready route foundation
 - Protected admin page
+- Admin member detail lifecycle editor
 - Workout tracking UI
 - Exercise explorer with graceful fallback sample data
 
@@ -54,6 +57,8 @@ This creates:
 - `profiles`
 - `membership_plans`
 - `workouts`
+- `membership_status_history`
+- `member_waivers`
 
 It also enables Row Level Security and creates the trigger that inserts a profile row whenever a new auth user is created.
 
@@ -123,10 +128,13 @@ npm start
 ## Admin features
 
 ### Members
-- Create member accounts
+- Create member accounts with an initial membership status and start date
 - Assign a membership plan
-- Change role between member/admin
+- Change role between member/staff/admin
+- Track membership status (`trial`, `active`, `suspended`, `expired`, `cancelled`)
 - Activate/deactivate profiles
+- Review lifecycle dates and waiver state from the roster
+- Open a dedicated member detail page for emergency contacts, membership history, and manual waiver records
 - Remove members
 
 ### Plans
@@ -207,3 +215,23 @@ REACT_APP_RAPID_API_KEY=your_rapidapi_key
 ```
 
 Without it, the UI still works with sample exercises so the gym management flow can be tested immediately.
+
+
+## Member lifecycle and waivers
+
+Phase 2 adds:
+
+- richer member profile fields (`phone`, `address`, `date_of_birth`, emergency contacts, fitness goals)
+- membership lifecycle fields (`membership_status`, `membership_start_date`, `membership_end_date`, `next_billing_date`)
+- digital liability waiver acknowledgement tracking
+- member-facing `/membership` page
+- admin `/admin/members/:memberId` detail page
+
+If you already applied Phase 1 to a live project, also run:
+
+- `supabase/migrations/20260407000300_member_profiles_and_membership_lifecycle.sql`
+
+## New routes
+
+- `/membership` — member self-service profile and waiver page
+- `/admin/members/:memberId` — admin member lifecycle detail page

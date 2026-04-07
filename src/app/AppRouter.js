@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
@@ -7,6 +8,8 @@ import AuthPage from '../features/auth/AuthPage';
 import ForgotPasswordPage from '../features/auth/ForgotPasswordPage';
 import ResetPasswordPage from '../features/auth/ResetPasswordPage';
 import DashboardPage from '../features/dashboard/DashboardPage';
+import MembershipProfilePage from '../features/members/MemberProfilePage';
+import MemberDetailPage from '../features/members/MemberDetailPage';
 import AccountPage from '../features/account/AccountPage';
 import StaffHomePage from '../features/staff/StaffHomePage';
 import AdminPage from '../features/admin/AdminPage';
@@ -32,6 +35,7 @@ const AppRouter = () => (
 
       <Route element={<ProtectedRoute />}>
         <Route path={PATHS.dashboard} element={<DashboardPage />} />
+        <Route path={PATHS.membership} element={<MembershipProfilePage />} />
         <Route path={PATHS.account} element={<AccountPage />} />
       </Route>
 
@@ -41,6 +45,7 @@ const AppRouter = () => (
 
       <Route element={<AdminRoute />}>
         <Route path={PATHS.admin} element={<AdminPage />} />
+        <Route path={PATHS.memberDetail} element={<MemberDetailPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to={PATHS.home} replace />} />

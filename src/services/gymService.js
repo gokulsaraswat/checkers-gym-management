@@ -1,4 +1,6 @@
+
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
+import { CURRENT_LIABILITY_WAIVER_VERSION } from '../features/members/memberLifecycle';
 
 const missingConfigError = () => new Error('Supabase is not configured. Add your URL and publishable/anon key to .env first.');
 
@@ -6,10 +8,22 @@ const profileSelect = `
   id,
   email,
   full_name,
+  phone,
+  date_of_birth,
+  address,
+  emergency_contact_name,
+  emergency_contact_phone,
+  fitness_goal,
   role,
   plan_id,
   is_active,
   member_since,
+  membership_status,
+  membership_start_date,
+  membership_end_date,
+  next_billing_date,
+  current_waiver_version,
+  waiver_signed_at,
   created_at,
   updated_at,
   plan:membership_plans (
@@ -37,6 +51,120 @@ const unwrap = (error, fallbackMessage) => {
   }
 };
 
+const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
+
+const pickFirstDefined = (value, keys) => keys.reduce((accumulator, key) => {
+  if (accumulator !== undefined) {
+    return accumulator;
+  }
+
+  return hasOwn(value, key) ? value[key] : undefined;
+}, undefined);
+
+const normaliseOptionalText = (value) => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const nextValue = String(value ?? '').trim();
+  return nextValue || null;
+};
+
+const normaliseOptionalDate = (value) => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  return value || null;
+};
+
+const normaliseBoolean = (value) => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  return Boolean(value);
+};
+
+const buildProfilePayload = (changes = {}, options = {}) => {
+  const {
+    includeAdminFields = false,
+    requireFullName = false,
+  } = options;
+
+  const payload = {};
+
+  const fullName = pickFirstDefined(changes, ['fullName', 'full_name']);
+
+  if (fullName !== undefined) {
+    const nextValue = String(fullName ?? '').trim();
+
+    if (requireFullName && !nextValue) {
+      throw new Error('Full name is required.');
+    }
+
+    payload.full_name = nextValue || null;
+  } else if (requireFullName) {
+    throw new Error('Full name is required.');
+  }
+
+  const textFieldMap = [
+    ['phone', ['phone']],
+    ['address', ['address']],
+    ['emergency_contact_name', ['emergencyContactName', 'emergency_contact_name']],
+    ['emergency_contact_phone', ['emergencyContactPhone', 'emergency_contact_phone']],
+    ['fitness_goal', ['fitnessGoal', 'fitness_goal']],
+  ];
+
+  textFieldMap.forEach(([targetKey, sourceKeys]) => {
+    const nextValue = normaliseOptionalText(pickFirstDefined(changes, sourceKeys));
+
+    if (nextValue !== undefined) {
+      payload[targetKey] = nextValue;
+    }
+  });
+
+  const dateFieldMap = [
+    ['date_of_birth', ['dateOfBirth', 'date_of_birth']],
+    ['membership_start_date', ['membershipStartDate', 'membership_start_date']],
+    ['membership_end_date', ['membershipEndDate', 'membership_end_date']],
+    ['next_billing_date', ['nextBillingDate', 'next_billing_date']],
+  ];
+
+  dateFieldMap.forEach(([targetKey, sourceKeys]) => {
+    const nextValue = normaliseOptionalDate(pickFirstDefined(changes, sourceKeys));
+
+    if (nextValue !== undefined) {
+      payload[targetKey] = nextValue;
+    }
+  });
+
+  if (includeAdminFields) {
+    const role = pickFirstDefined(changes, ['role']);
+    const membershipStatus = pickFirstDefined(changes, ['membershipStatus', 'membership_status']);
+    const planId = pickFirstDefined(changes, ['planId', 'plan_id']);
+    const isActive = pickFirstDefined(changes, ['isActive', 'is_active']);
+
+    if (role !== undefined) {
+      payload.role = role;
+    }
+
+    if (membershipStatus !== undefined) {
+      payload.membership_status = membershipStatus;
+    }
+
+    if (planId !== undefined) {
+      payload.plan_id = planId || null;
+    }
+
+    if (isActive !== undefined) {
+      payload.is_active = normaliseBoolean(isActive);
+    }
+  }
+
+  return payload;
+};
+
 export const fetchProfile = async (userId) => {
   const client = ensureSupabase();
   const { data, error } = await client
@@ -49,16 +177,48 @@ export const fetchProfile = async (userId) => {
   return data;
 };
 
+export const fetchMemberById = async (memberId) => {
+  const client = ensureSupabase();
+  const { data, error } = await client
+    .from('profiles')
+    .select(profileSelect)
+    .eq('id', memberId)
+    .maybeSingle();
+
+  unwrap(error, 'Unable to load member.');
+  return data;
+};
+
 export const updateOwnProfile = async (userId, changes) => {
   const client = ensureSupabase();
-  const fullName = String(changes.fullName ?? changes.full_name ?? '').trim();
+  const payload = buildProfilePayload(changes, { requireFullName: true });
 
-  if (!fullName) {
-    throw new Error('Full name is required.');
+  const hasExtendedFields = [
+    'phone',
+    'address',
+    'emergency_contact_name',
+    'emergency_contact_phone',
+    'fitness_goal',
+    'date_of_birth',
+  ].some((field) => payload[field] !== undefined);
+
+  if (hasExtendedFields) {
+    const { error } = await client.rpc('update_my_member_profile', {
+      p_full_name: payload.full_name,
+      p_phone: payload.phone ?? null,
+      p_date_of_birth: payload.date_of_birth ?? null,
+      p_address: payload.address ?? null,
+      p_emergency_contact_name: payload.emergency_contact_name ?? null,
+      p_emergency_contact_phone: payload.emergency_contact_phone ?? null,
+      p_fitness_goal: payload.fitness_goal ?? null,
+    });
+
+    unwrap(error, 'Unable to update your membership profile.');
+    return fetchProfile(userId);
   }
 
   const { error } = await client.rpc('update_my_profile', {
-    p_full_name: fullName,
+    p_full_name: payload.full_name,
   });
 
   unwrap(error, 'Unable to update your profile.');
@@ -85,6 +245,70 @@ export const fetchMembers = async () => {
 
   unwrap(error, 'Unable to load members.');
   return data ?? [];
+};
+
+export const fetchMembershipStatusHistory = async (memberId) => {
+  const client = ensureSupabase();
+  const { data, error } = await client
+    .from('membership_status_history')
+    .select('*')
+    .eq('profile_id', memberId)
+    .order('effective_on', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  unwrap(error, 'Unable to load membership history.');
+  return data ?? [];
+};
+
+export const fetchMemberWaivers = async (memberId) => {
+  const client = ensureSupabase();
+  const { data, error } = await client
+    .from('member_waivers')
+    .select('*')
+    .eq('profile_id', memberId)
+    .order('accepted_at', { ascending: false });
+
+  unwrap(error, 'Unable to load member waivers.');
+  return data ?? [];
+};
+
+export const signCurrentLiabilityWaiver = async (version = CURRENT_LIABILITY_WAIVER_VERSION) => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('sign_current_liability_waiver', {
+    p_version: version,
+  });
+
+  unwrap(error, 'Unable to record your waiver acknowledgement.');
+  return data;
+};
+
+export const recordMemberWaiver = async (memberId, waiver = {}) => {
+  const client = ensureSupabase();
+
+  const payload = {
+    profile_id: memberId,
+    waiver_type: waiver.waiverType || 'liability',
+    version: String(waiver.version || CURRENT_LIABILITY_WAIVER_VERSION).trim(),
+    recorded_source: waiver.recordedSource || 'admin_panel',
+    notes: normaliseOptionalText(waiver.notes) ?? null,
+  };
+
+  if (!payload.version) {
+    throw new Error('Waiver version is required.');
+  }
+
+  if (waiver.acceptedAt) {
+    payload.accepted_at = waiver.acceptedAt;
+  }
+
+  const { data, error } = await client
+    .from('member_waivers')
+    .insert([payload])
+    .select()
+    .single();
+
+  unwrap(error, 'Unable to record waiver acknowledgement.');
+  return data;
 };
 
 export const createOrUpdatePlan = async (plan) => {
@@ -137,14 +361,7 @@ export const deletePlan = async (planId) => {
 
 export const updateMember = async (memberId, changes) => {
   const client = ensureSupabase();
-
-  const payload = {
-    ...changes,
-  };
-
-  if (Object.prototype.hasOwnProperty.call(payload, 'plan_id') && payload.plan_id === '') {
-    payload.plan_id = null;
-  }
+  const payload = buildProfilePayload(changes, { includeAdminFields: true });
 
   const { data, error } = await client
     .from('profiles')
