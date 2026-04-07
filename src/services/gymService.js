@@ -58,7 +58,11 @@ const pickFirstDefined = (value, keys) => keys.reduce((accumulator, key) => {
     return accumulator;
   }
 
-  return hasOwn(value, key) ? value[key] : undefined;
+  if (hasOwn(value, key)) {
+    return value[key];
+  }
+
+  return undefined;
 }, undefined);
 
 const normaliseOptionalText = (value) => {
@@ -103,6 +107,8 @@ const normaliseBoolean = (value) => {
 
   return Boolean(value);
 };
+
+const todayIsoDate = () => new Date().toISOString().slice(0, 10);
 
 const buildProfilePayload = (changes = {}, options = {}) => {
   const {
@@ -608,6 +614,100 @@ export const deleteMemberNote = async (noteId) => {
   });
 
   unwrap(error, 'Unable to delete member note.');
+};
+
+export const fetchMemberAttendanceVisits = async (memberId, limit = 20) => {
+  const client = ensureSupabase();
+  let query = client
+    .from('attendance_visits')
+    .select('*')
+    .eq('profile_id', memberId)
+    .order('checked_in_at', { ascending: false });
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+
+  unwrap(error, 'Unable to load attendance history.');
+  return data ?? [];
+};
+
+export const recordSelfCheckIn = async (options = {}) => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('record_self_check_in', {
+    p_location_label: normaliseOptionalText(options.locationLabel) ?? null,
+    p_notes: normaliseOptionalText(options.notes) ?? null,
+  });
+
+  unwrap(error, 'Unable to check in.');
+  return data;
+};
+
+export const recordSelfCheckOut = async (options = {}) => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('record_self_check_out', {
+    p_notes: normaliseOptionalText(options.notes) ?? null,
+  });
+
+  unwrap(error, 'Unable to check out.');
+  return data;
+};
+
+export const searchMembersForAttendance = async (query, limit = 25) => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('search_members_for_attendance', {
+    p_query: normaliseOptionalText(query) ?? null,
+    p_limit: limit,
+  });
+
+  unwrap(error, 'Unable to search the member roster.');
+  return data ?? [];
+};
+
+export const fetchStaffAttendanceVisits = async ({
+  visitDate = todayIsoDate(),
+  openOnly = false,
+  limit = 50,
+  memberId = null,
+} = {}) => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('list_staff_attendance_visits', {
+    p_visit_date: visitDate || null,
+    p_open_only: openOnly,
+    p_limit: limit,
+    p_member_id: memberId,
+  });
+
+  unwrap(error, 'Unable to load attendance activity.');
+  return data ?? [];
+};
+
+export const recordStaffCheckIn = async (memberId, options = {}) => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('record_staff_check_in', {
+    p_member_id: memberId,
+    p_location_label: normaliseOptionalText(options.locationLabel) ?? null,
+    p_notes: normaliseOptionalText(options.notes) ?? null,
+    p_source: options.source || 'staff_desk',
+  });
+
+  unwrap(error, 'Unable to check this member in.');
+  return data;
+};
+
+export const recordStaffCheckOut = async (memberId, options = {}) => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('record_staff_check_out', {
+    p_member_id: memberId,
+    p_visit_id: options.visitId || null,
+    p_notes: normaliseOptionalText(options.notes) ?? null,
+    p_source: options.source || 'staff_desk',
+  });
+
+  unwrap(error, 'Unable to check this member out.');
+  return data;
 };
 
 export const fetchAdminActivity = async ({ memberId = null, limit = 12 } = {}) => {

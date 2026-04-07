@@ -8,6 +8,7 @@ import AuthPage from '../features/auth/AuthPage';
 import ForgotPasswordPage from '../features/auth/ForgotPasswordPage';
 import ResetPasswordPage from '../features/auth/ResetPasswordPage';
 import DashboardPage from '../features/dashboard/DashboardPage';
+import AttendancePage from '../features/attendance/AttendancePage';
 import MembershipProfilePage from '../features/members/MemberProfilePage';
 import MemberDetailPage from '../features/members/MemberDetailPage';
 import AccountPage from '../features/account/AccountPage';
@@ -35,6 +36,7 @@ const AppRouter = () => (
 
       <Route element={<ProtectedRoute />}>
         <Route path={PATHS.dashboard} element={<DashboardPage />} />
+        <Route path={PATHS.attendance} element={<AttendancePage />} />
         <Route path={PATHS.membership} element={<MembershipProfilePage />} />
         <Route path={PATHS.account} element={<AccountPage />} />
       </Route>

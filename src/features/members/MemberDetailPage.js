@@ -19,6 +19,7 @@ import {
   AssignmentTurnedIn,
   DeleteOutline,
   HistoryEdu,
+  Login,
   StickyNote2,
   WarningAmber,
 } from '@mui/icons-material';
@@ -34,6 +35,7 @@ import {
   deleteMemberNote,
   fetchAdminActivity,
   fetchAvailablePlans,
+  fetchMemberAttendanceVisits,
   fetchMemberById,
   fetchMemberNotes,
   fetchMemberWaivers,
@@ -59,6 +61,13 @@ import {
   MEMBERSHIP_STATUS_OPTIONS,
   todayIsoDate,
 } from './memberLifecycle';
+import {
+  formatAttendanceDateTime,
+  formatVisitDuration,
+  getAttendanceSourceLabel,
+  getAttendanceStatusChipSx,
+  getAttendanceStatusLabel,
+} from '../attendance/attendanceHelpers';
 
 const MemberDetailPage = () => {
   const { memberId } = useParams();
@@ -68,6 +77,7 @@ const MemberDetailPage = () => {
   const [plans, setPlans] = useState([]);
   const [history, setHistory] = useState([]);
   const [waivers, setWaivers] = useState([]);
+  const [attendanceVisits, setAttendanceVisits] = useState([]);
   const [notes, setNotes] = useState([]);
   const [activity, setActivity] = useState([]);
   const [form, setForm] = useState({
@@ -104,6 +114,7 @@ const MemberDetailPage = () => {
         planRows,
         historyRows,
         waiverRows,
+        attendanceRows,
         noteRows,
         activityRows,
       ] = await Promise.all([
@@ -111,6 +122,7 @@ const MemberDetailPage = () => {
         fetchAvailablePlans(),
         fetchMembershipStatusHistory(memberId),
         fetchMemberWaivers(memberId),
+        fetchMemberAttendanceVisits(memberId, 12),
         fetchMemberNotes(memberId),
         fetchAdminActivity({ memberId, limit: 12 }),
       ]);
@@ -119,6 +131,7 @@ const MemberDetailPage = () => {
       setPlans(planRows);
       setHistory(historyRows);
       setWaivers(waiverRows);
+      setAttendanceVisits(attendanceRows);
       setNotes(noteRows);
       setActivity(activityRows);
       setForm({
@@ -891,6 +904,53 @@ const MemberDetailPage = () => {
                             {waiver.notes ? (
                               <Typography variant="body2" color="text.secondary">
                                 {waiver.notes}
+                              </Typography>
+                            ) : null}
+                          </Stack>
+                        </Paper>
+                      ))}
+                    </Stack>
+                  )}
+                </Stack>
+              </Paper>
+            </Grid>
+
+            <Grid item xs={12} lg={4}>
+              <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff', height: '100%' }}>
+                <Stack spacing={2.5}>
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <Login sx={{ color: '#ff2625' }} />
+                    <Typography fontWeight={800}>Recent attendance</Typography>
+                  </Stack>
+
+                  {!attendanceVisits.length ? (
+                    <Typography color="text.secondary">
+                      No attendance visits have been recorded for this member yet.
+                    </Typography>
+                  ) : (
+                    <Stack spacing={2}>
+                      {attendanceVisits.map((visit) => (
+                        <Paper key={visit.id} variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
+                          <Stack spacing={0.75}>
+                            <Stack direction="row" justifyContent="space-between" spacing={1.5} alignItems="center">
+                              <Typography fontWeight={700}>
+                                {formatAttendanceDateTime(visit.checked_in_at)}
+                              </Typography>
+                              <Chip
+                                size="small"
+                                label={getAttendanceStatusLabel(visit.attendance_status)}
+                                sx={getAttendanceStatusChipSx(visit.attendance_status)}
+                              />
+                            </Stack>
+                            <Typography variant="body2" color="text.secondary">
+                              Duration: {formatVisitDuration(visit)}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Source: {getAttendanceSourceLabel(visit.check_in_source)}
+                            </Typography>
+                            {visit.location_label ? (
+                              <Typography variant="body2" color="text.secondary">
+                                Location: {visit.location_label}
                               </Typography>
                             ) : null}
                           </Stack>
