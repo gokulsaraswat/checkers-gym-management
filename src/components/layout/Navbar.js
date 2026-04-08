@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AppBar,
+  Badge,
   Button,
   Chip,
   Stack,
@@ -12,6 +13,7 @@ import { getRoleBadgeLabel, isStaffRole } from '../../app/auth/access';
 import { PATHS } from '../../app/paths';
 import Logo from '../../assets/images/Logo.png';
 import { useAuth } from '../../context/AuthContext';
+import { fetchUnreadNotificationCount } from '../../services/gymService';
 
 const linkStyle = ({ isActive }) => ({
   textDecoration: 'none',
@@ -22,9 +24,10 @@ const linkStyle = ({ isActive }) => ({
 });
 
 const Navbar = () => {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, isConfigured } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   const handleExercisesClick = () => {
     if (location.pathname !== PATHS.home) {
@@ -39,6 +42,42 @@ const Navbar = () => {
     await signOut();
     navigate(PATHS.home);
   };
+
+  useEffect(() => {
+    let active = true;
+
+    const syncUnreadCount = async () => {
+      if (!user || !isConfigured) {
+        if (active) {
+          setUnreadNotificationCount(0);
+        }
+        return;
+      }
+
+      try {
+        const count = await fetchUnreadNotificationCount(user.id);
+        if (active) {
+          setUnreadNotificationCount(count);
+        }
+      } catch (error) {
+        if (active) {
+          setUnreadNotificationCount(0);
+        }
+      }
+    };
+
+    const handleNotificationsChanged = () => {
+      syncUnreadCount();
+    };
+
+    syncUnreadCount();
+    window.addEventListener('gym:notifications-changed', handleNotificationsChanged);
+
+    return () => {
+      active = false;
+      window.removeEventListener('gym:notifications-changed', handleNotificationsChanged);
+    };
+  }, [isConfigured, location.pathname, user]);
 
   return (
     <AppBar
@@ -97,6 +136,16 @@ const Navbar = () => {
               <NavLink to={PATHS.workoutPlan} style={linkStyle}>Workout plan</NavLink>
               <NavLink to={PATHS.schedule} style={linkStyle}>Schedule</NavLink>
               <NavLink to={PATHS.bookings} style={linkStyle}>Bookings</NavLink>
+              <NavLink to={PATHS.notifications} style={linkStyle}>
+                <Badge
+                  color="error"
+                  badgeContent={unreadNotificationCount}
+                  max={9}
+                  sx={{ '& .MuiBadge-badge': { fontWeight: 700 } }}
+                >
+                  <span>Notifications</span>
+                </Badge>
+              </NavLink>
               <NavLink to={PATHS.billing} style={linkStyle}>Billing</NavLink>
               <NavLink to={PATHS.membership} style={linkStyle}>Membership</NavLink>
               <NavLink to={PATHS.account} style={linkStyle}>Account</NavLink>
@@ -104,7 +153,10 @@ const Navbar = () => {
           ) : null}
 
           {isStaffRole(profile?.role) ? (
-            <NavLink to={PATHS.staff} style={linkStyle}>Staff</NavLink>
+            <>
+              <NavLink to={PATHS.staff} style={linkStyle}>Staff</NavLink>
+              <NavLink to={PATHS.staffNotifications} style={linkStyle}>Staff notifications</NavLink>
+            </>
           ) : null}
 
           {profile?.role === 'admin' ? (

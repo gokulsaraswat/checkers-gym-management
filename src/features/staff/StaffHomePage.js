@@ -28,6 +28,7 @@ import {
   PersonSearch,
   Refresh,
   ReceiptLong,
+  Campaign,
   TrendingUp,
 } from '@mui/icons-material';
 
@@ -250,6 +251,15 @@ const StaffHomePage = () => {
             sx={{ borderRadius: 999, alignSelf: 'flex-start' }}
           >
             Manage billing
+          </Button>
+          <Button
+            component={RouterLink}
+            to={PATHS.staffNotifications}
+            variant="outlined"
+            startIcon={<Campaign />}
+            sx={{ borderRadius: 999, alignSelf: 'flex-start' }}
+          >
+            Send notifications
           </Button>
         </Stack>
       </Stack>

@@ -437,6 +437,42 @@ const billingPaymentSelect = `
   )
 `;
 
+const notificationPreferenceSelect = `
+  user_id,
+  email_enabled,
+  sms_enabled,
+  whatsapp_enabled,
+  push_enabled,
+  class_reminders_enabled,
+  billing_reminders_enabled,
+  workout_reminders_enabled,
+  marketing_enabled,
+  quiet_hours_start,
+  quiet_hours_end,
+  created_at,
+  updated_at
+`;
+
+const memberNotificationSelect = `
+  id,
+  user_id,
+  notification_type,
+  title,
+  message,
+  action_label,
+  action_path,
+  delivery_channel,
+  source_module,
+  source_record_id,
+  metadata,
+  is_read,
+  read_at,
+  expires_at,
+  created_by,
+  created_at,
+  updated_at
+`;
+
 const ensureSupabase = () => {
   if (!isSupabaseConfigured || !supabase) {
     throw missingConfigError();
@@ -2523,6 +2559,159 @@ export const generateDueMembershipInvoices = async ({ dueDate = todayIsoDate(), 
 
   unwrap(error, 'Unable to generate renewal invoices.');
   return data ?? [];
+};
+
+export const emitNotificationsChanged = () => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('gym:notifications-changed'));
+  }
+};
+
+export const fetchNotificationPreferences = async (userId) => {
+  const client = ensureSupabase();
+  const { data, error } = await client
+    .from('notification_preferences')
+    .select(notificationPreferenceSelect)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  unwrap(error, 'Unable to load notification preferences.');
+  return data ?? null;
+};
+
+export const saveNotificationPreferences = async (userId, preferences = {}) => {
+  const client = ensureSupabase();
+  const payload = {
+    user_id: userId,
+    email_enabled: normaliseBoolean(preferences.email_enabled) ?? true,
+    sms_enabled: normaliseBoolean(preferences.sms_enabled) ?? false,
+    whatsapp_enabled: normaliseBoolean(preferences.whatsapp_enabled) ?? false,
+    push_enabled: normaliseBoolean(preferences.push_enabled) ?? true,
+    class_reminders_enabled: normaliseBoolean(preferences.class_reminders_enabled) ?? true,
+    billing_reminders_enabled: normaliseBoolean(preferences.billing_reminders_enabled) ?? true,
+    workout_reminders_enabled: normaliseBoolean(preferences.workout_reminders_enabled) ?? true,
+    marketing_enabled: normaliseBoolean(preferences.marketing_enabled) ?? false,
+    quiet_hours_start: normaliseOptionalText(preferences.quiet_hours_start),
+    quiet_hours_end: normaliseOptionalText(preferences.quiet_hours_end),
+  };
+
+  const { data, error } = await client
+    .from('notification_preferences')
+    .upsert([payload], { onConflict: 'user_id' })
+    .select(notificationPreferenceSelect)
+    .single();
+
+  unwrap(error, 'Unable to save notification preferences.');
+  emitNotificationsChanged();
+  return data;
+};
+
+export const fetchMyNotifications = async (userId, options = {}) => {
+  const client = ensureSupabase();
+  let query = client
+    .from('member_notifications')
+    .select(memberNotificationSelect)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (options.status === 'unread') {
+    query = query.eq('is_read', false);
+  }
+
+  if (options.status === 'read') {
+    query = query.eq('is_read', true);
+  }
+
+  if (options.limit) {
+    query = query.limit(options.limit);
+  }
+
+  const { data, error } = await query;
+
+  unwrap(error, 'Unable to load notifications.');
+  return data ?? [];
+};
+
+export const fetchUnreadNotificationCount = async (userId) => {
+  const client = ensureSupabase();
+  const { count, error } = await client
+    .from('member_notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('is_read', false);
+
+  unwrap(error, 'Unable to load unread notifications.');
+  return count ?? 0;
+};
+
+export const markNotificationReadState = async (notificationId, isRead = true) => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('mark_my_notification_read', {
+    p_notification_id: notificationId,
+    p_is_read: Boolean(isRead),
+  });
+
+  unwrap(error, 'Unable to update the notification.');
+  emitNotificationsChanged();
+  return data;
+};
+
+export const markAllNotificationsRead = async () => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('mark_all_my_notifications_read');
+
+  unwrap(error, 'Unable to mark notifications as read.');
+  emitNotificationsChanged();
+  return Number(data || 0);
+};
+
+export const fetchNotificationTargets = async (query = '', limit = 30) => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('list_notification_targets', {
+    p_query: normaliseOptionalText(query) ?? null,
+    p_limit: Number(limit || 30),
+  });
+
+  unwrap(error, 'Unable to load notification targets.');
+  return data ?? [];
+};
+
+export const fetchStaffNotifications = async ({
+  query = '',
+  status = 'all',
+  notificationType = 'all',
+  limit = 120,
+} = {}) => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('list_staff_notifications', {
+    p_query: normaliseOptionalText(query) ?? null,
+    p_status: status || 'all',
+    p_type: notificationType && notificationType !== 'all' ? notificationType : null,
+    p_limit: Number(limit || 120),
+  });
+
+  unwrap(error, 'Unable to load staff notifications.');
+  return data ?? [];
+};
+
+export const sendStaffNotification = async (payload = {}) => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('staff_send_notification', {
+    p_target_user_id: payload.target_user_id || null,
+    p_target_role: payload.target_mode === 'single' ? null : (payload.target_role || 'member'),
+    p_title: normaliseOptionalText(payload.title),
+    p_message: normaliseOptionalText(payload.message),
+    p_notification_type: payload.notification_type || 'info',
+    p_action_label: normaliseOptionalText(payload.action_label),
+    p_action_path: normaliseOptionalText(payload.action_path),
+    p_delivery_channel: payload.delivery_channel || 'in_app',
+    p_source_module: 'manual',
+    p_include_inactive: Boolean(payload.include_inactive),
+  });
+
+  unwrap(error, 'Unable to send the notification.');
+  emitNotificationsChanged();
+  return Number(data || 0);
 };
 
 export const fetchAdminActivity = async ({ memberId = null, limit = 12 } = {}) => {

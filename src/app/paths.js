@@ -10,6 +10,7 @@ export const PATHS = {
   workoutPlan: '/workout-plan',
   schedule: '/schedule',
   bookings: '/bookings',
+  notifications: '/notifications',
   billing: '/billing',
   membership: '/membership',
   account: '/account',
@@ -18,6 +19,7 @@ export const PATHS = {
   staffNutrition: '/staff/nutrition',
   staffSchedule: '/staff/schedule',
   staffBookings: '/staff/bookings',
+  staffNotifications: '/staff/notifications',
   staffWorkouts: '/staff/workouts',
   staffBilling: '/staff/billing',
   admin: '/admin',
@@ -41,4 +43,8 @@ export const getStaffNutritionPath = (memberId = '') => (
 
 export const getStaffBillingPath = (memberId = '') => (
   memberId ? `/staff/billing?memberId=${encodeURIComponent(memberId)}` : '/staff/billing'
+);
+
+export const getStaffNotificationPath = (userId = '') => (
+  userId ? `/staff/notifications?userId=${encodeURIComponent(userId)}` : '/staff/notifications'
 );

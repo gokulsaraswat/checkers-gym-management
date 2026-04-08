@@ -1,159 +1,5 @@
-alter table public.class_bookings
-  add column if not exists waitlist_position integer,
-  add column if not exists booking_source text not null default 'member_app',
-  add column if not exists cancelled_at timestamp with time zone,
-  add column if not exists cancel_reason text,
-  add column if not exists status_changed_at timestamp with time zone not null default timezone('utc', now());
-
-alter table public.class_bookings
-  drop constraint if exists class_bookings_booking_source_check;
-
-alter table public.class_bookings
-  add constraint class_bookings_booking_source_check
-  check (booking_source in ('member_app', 'staff_desk', 'admin_panel', 'system'));
-
-alter table public.class_bookings
-  drop constraint if exists class_bookings_waitlist_position_positive;
-
-alter table public.class_bookings
-  add constraint class_bookings_waitlist_position_positive
-  check (waitlist_position is null or waitlist_position > 0);
-
-update public.class_bookings
-set
-  status_changed_at = coalesce(status_changed_at, updated_at, created_at, timezone('utc', now())),
-  booking_source = coalesce(nullif(btrim(booking_source), ''), 'member_app');
-
-with ranked_waitlist as (
-  select
-    id,
-    row_number() over (
-      partition by class_session_id
-      order by created_at asc, id asc
-    ) as next_position
-  from public.class_bookings
-  where booking_status = 'waitlist'
-)
-update public.class_bookings as target
-set waitlist_position = ranked_waitlist.next_position
-from ranked_waitlist
-where target.id = ranked_waitlist.id
-  and target.waitlist_position is distinct from ranked_waitlist.next_position;
-
-update public.class_bookings
-set waitlist_position = null
-where booking_status <> 'waitlist'
-  and waitlist_position is not null;
-
-create index if not exists class_bookings_waitlist_position_idx
-  on public.class_bookings (class_session_id, waitlist_position)
-  where booking_status = 'waitlist';
-
-create index if not exists class_bookings_status_changed_at_idx
-  on public.class_bookings (status_changed_at desc);
-
-create or replace function public.resequence_class_waitlist(p_session_id uuid)
-returns void
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  if p_session_id is null then
-    return;
-  end if;
-
-  with ranked_waitlist as (
-    select
-      id,
-      row_number() over (
-        order by created_at asc, id asc
-      ) as next_position
-    from public.class_bookings
-    where class_session_id = p_session_id
-      and booking_status = 'waitlist'
-  )
-  update public.class_bookings as target
-  set waitlist_position = ranked_waitlist.next_position
-  from ranked_waitlist
-  where target.id = ranked_waitlist.id
-    and target.waitlist_position is distinct from ranked_waitlist.next_position;
-
-  update public.class_bookings
-  set waitlist_position = null
-  where class_session_id = p_session_id
-    and booking_status <> 'waitlist'
-    and waitlist_position is not null;
-end;
-$$;
-
-create or replace function public.promote_next_waitlisted_booking(p_session_id uuid)
-returns public.class_bookings
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  target_session public.class_sessions;
-  next_waitlisted_booking public.class_bookings;
-  promoted_booking public.class_bookings;
-  booked_count integer;
-begin
-  if p_session_id is null then
-    return null;
-  end if;
-
-  select *
-  into target_session
-  from public.class_sessions
-  where id = p_session_id
-  for update;
-
-  if target_session.id is null then
-    return null;
-  end if;
-
-  perform public.resequence_class_waitlist(p_session_id);
-
-  select count(*)
-  into booked_count
-  from public.class_bookings
-  where class_session_id = p_session_id
-    and booking_status = 'booked';
-
-  if booked_count >= coalesce(target_session.capacity, 0) then
-    return null;
-  end if;
-
-  select *
-  into next_waitlisted_booking
-  from public.class_bookings
-  where class_session_id = p_session_id
-    and booking_status = 'waitlist'
-  order by waitlist_position asc nulls last, created_at asc, id asc
-  limit 1
-  for update;
-
-  if next_waitlisted_booking.id is null then
-    return null;
-  end if;
-
-  update public.class_bookings
-  set
-    booking_status = 'booked',
-    waitlist_position = null,
-    cancelled_at = null,
-    cancel_reason = null,
-    status_changed_at = timezone('utc', now()),
-    booking_source = 'system'
-  where id = next_waitlisted_booking.id
-  returning * into promoted_booking;
-
-  perform public.resequence_class_waitlist(p_session_id);
-
-  return promoted_booking;
-end;
-$$;
+-- Phase 12 repair: finish the tail of bookings_and_waitlists with the corrected uuid aggregation,
+-- then add the notifications workspace.
 
 create or replace function public.list_bookable_class_sessions(
   p_start_date date default current_date,
@@ -759,3 +605,461 @@ for all
 to authenticated
 using (public.is_staff())
 with check (public.is_staff());
+
+-- Phase 12: notifications and communication
+create table if not exists public.notification_preferences (
+  user_id uuid primary key references public.profiles(id) on delete cascade,
+  email_enabled boolean not null default true,
+  sms_enabled boolean not null default false,
+  whatsapp_enabled boolean not null default false,
+  push_enabled boolean not null default true,
+  class_reminders_enabled boolean not null default true,
+  billing_reminders_enabled boolean not null default true,
+  workout_reminders_enabled boolean not null default true,
+  marketing_enabled boolean not null default false,
+  quiet_hours_start time,
+  quiet_hours_end time,
+  created_at timestamp with time zone not null default timezone('utc', now()),
+  updated_at timestamp with time zone not null default timezone('utc', now())
+);
+
+create table if not exists public.member_notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  notification_type text not null default 'info',
+  title text not null,
+  message text not null,
+  action_label text,
+  action_path text,
+  delivery_channel text not null default 'in_app',
+  source_module text not null default 'manual',
+  source_record_id uuid,
+  metadata jsonb not null default '{}'::jsonb,
+  is_read boolean not null default false,
+  read_at timestamp with time zone,
+  expires_at timestamp with time zone,
+  created_by uuid references public.profiles(id) on delete set null,
+  created_at timestamp with time zone not null default timezone('utc', now()),
+  updated_at timestamp with time zone not null default timezone('utc', now()),
+  constraint member_notifications_type_check check (
+    notification_type in (
+      'info',
+      'success',
+      'warning',
+      'error',
+      'billing',
+      'class',
+      'workout',
+      'progress',
+      'nutrition',
+      'attendance',
+      'system',
+      'marketing'
+    )
+  ),
+  constraint member_notifications_delivery_channel_check check (
+    delivery_channel in ('in_app', 'email', 'sms', 'whatsapp', 'push', 'system')
+  )
+);
+
+insert into public.notification_preferences (user_id)
+select p.id
+from public.profiles p
+on conflict (user_id) do nothing;
+
+create index if not exists member_notifications_user_created_at_idx
+  on public.member_notifications (user_id, created_at desc);
+
+create index if not exists member_notifications_user_unread_idx
+  on public.member_notifications (user_id, created_at desc)
+  where is_read = false;
+
+drop trigger if exists set_notification_preferences_updated_at on public.notification_preferences;
+create trigger set_notification_preferences_updated_at
+before update on public.notification_preferences
+for each row execute function public.set_updated_at();
+
+drop trigger if exists set_member_notifications_updated_at on public.member_notifications;
+create trigger set_member_notifications_updated_at
+before update on public.member_notifications
+for each row execute function public.set_updated_at();
+
+alter table public.notification_preferences enable row level security;
+alter table public.member_notifications enable row level security;
+
+create or replace function public.list_notification_targets(
+  p_query text default null,
+  p_limit integer default 30
+)
+returns table (
+  id uuid,
+  full_name text,
+  email text,
+  phone text,
+  role text,
+  membership_status text,
+  is_active boolean,
+  plan_name text
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null or not public.is_staff() then
+    raise exception 'Staff access required';
+  end if;
+
+  return query
+  select
+    p.id,
+    p.full_name,
+    p.email,
+    p.phone,
+    p.role,
+    p.membership_status,
+    p.is_active,
+    mp.name as plan_name
+  from public.profiles p
+  left join public.membership_plans mp
+    on mp.id = p.plan_id
+  where (
+    nullif(btrim(coalesce(p_query, '')), '') is null
+    or p.full_name ilike '%' || btrim(p_query) || '%'
+    or p.email ilike '%' || btrim(p_query) || '%'
+    or coalesce(p.phone, '') ilike '%' || btrim(p_query) || '%'
+  )
+  order by coalesce(p.full_name, p.email), p.created_at desc
+  limit least(greatest(coalesce(p_limit, 30), 1), 100);
+end;
+$$;
+
+revoke all on function public.list_notification_targets(text, integer) from public;
+grant execute on function public.list_notification_targets(text, integer) to authenticated;
+
+create or replace function public.list_staff_notifications(
+  p_query text default null,
+  p_status text default 'all',
+  p_type text default null,
+  p_limit integer default 120
+)
+returns table (
+  id uuid,
+  user_id uuid,
+  recipient_name text,
+  recipient_email text,
+  recipient_role text,
+  membership_status text,
+  notification_type text,
+  title text,
+  message text,
+  action_label text,
+  action_path text,
+  delivery_channel text,
+  source_module text,
+  metadata jsonb,
+  is_read boolean,
+  read_at timestamp with time zone,
+  created_by uuid,
+  created_by_name text,
+  created_at timestamp with time zone,
+  updated_at timestamp with time zone
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null or not public.is_staff() then
+    raise exception 'Staff access required';
+  end if;
+
+  return query
+  select
+    notifications.id,
+    notifications.user_id,
+    coalesce(recipient.full_name, recipient.email, 'Member') as recipient_name,
+    recipient.email as recipient_email,
+    recipient.role as recipient_role,
+    recipient.membership_status,
+    notifications.notification_type,
+    notifications.title,
+    notifications.message,
+    notifications.action_label,
+    notifications.action_path,
+    notifications.delivery_channel,
+    notifications.source_module,
+    notifications.metadata,
+    notifications.is_read,
+    notifications.read_at,
+    notifications.created_by,
+    coalesce(creator.full_name, creator.email) as created_by_name,
+    notifications.created_at,
+    notifications.updated_at
+  from public.member_notifications notifications
+  join public.profiles recipient
+    on recipient.id = notifications.user_id
+  left join public.profiles creator
+    on creator.id = notifications.created_by
+  where (
+    nullif(btrim(coalesce(p_query, '')), '') is null
+    or recipient.full_name ilike '%' || btrim(p_query) || '%'
+    or recipient.email ilike '%' || btrim(p_query) || '%'
+    or notifications.title ilike '%' || btrim(p_query) || '%'
+    or notifications.message ilike '%' || btrim(p_query) || '%'
+  )
+    and (
+      p_status is null
+      or p_status = 'all'
+      or (p_status = 'unread' and notifications.is_read = false)
+      or (p_status = 'read' and notifications.is_read = true)
+    )
+    and (p_type is null or notifications.notification_type = p_type)
+  order by notifications.created_at desc
+  limit least(greatest(coalesce(p_limit, 120), 1), 300);
+end;
+$$;
+
+revoke all on function public.list_staff_notifications(text, text, text, integer) from public;
+grant execute on function public.list_staff_notifications(text, text, text, integer) to authenticated;
+
+create or replace function public.staff_send_notification(
+  p_target_user_id uuid default null,
+  p_target_role text default 'member',
+  p_title text default null,
+  p_message text default null,
+  p_notification_type text default 'info',
+  p_action_label text default null,
+  p_action_path text default null,
+  p_delivery_channel text default 'in_app',
+  p_source_module text default 'manual',
+  p_include_inactive boolean default false
+)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  cleaned_role text;
+  cleaned_title text;
+  cleaned_message text;
+  cleaned_type text;
+  cleaned_action_label text;
+  cleaned_action_path text;
+  cleaned_delivery_channel text;
+  cleaned_source_module text;
+  inserted_count integer := 0;
+begin
+  if auth.uid() is null or not public.is_staff() then
+    raise exception 'Staff access required';
+  end if;
+
+  cleaned_role := coalesce(nullif(btrim(coalesce(p_target_role, '')), ''), 'member');
+  cleaned_title := nullif(btrim(coalesce(p_title, '')), '');
+  cleaned_message := nullif(btrim(coalesce(p_message, '')), '');
+  cleaned_type := coalesce(nullif(btrim(coalesce(p_notification_type, '')), ''), 'info');
+  cleaned_action_label := nullif(btrim(coalesce(p_action_label, '')), '');
+  cleaned_action_path := nullif(btrim(coalesce(p_action_path, '')), '');
+  cleaned_delivery_channel := coalesce(nullif(btrim(coalesce(p_delivery_channel, '')), ''), 'in_app');
+  cleaned_source_module := coalesce(nullif(btrim(coalesce(p_source_module, '')), ''), 'manual');
+
+  if cleaned_title is null then
+    raise exception 'Notification title is required.';
+  end if;
+
+  if cleaned_message is null then
+    raise exception 'Notification message is required.';
+  end if;
+
+  if cleaned_role not in ('member', 'staff', 'admin', 'all') then
+    raise exception 'Unsupported notification audience.';
+  end if;
+
+  if p_target_user_id is not null then
+    insert into public.member_notifications (
+      user_id,
+      notification_type,
+      title,
+      message,
+      action_label,
+      action_path,
+      delivery_channel,
+      source_module,
+      created_by
+    )
+    select
+      recipient.id,
+      cleaned_type,
+      cleaned_title,
+      cleaned_message,
+      cleaned_action_label,
+      cleaned_action_path,
+      cleaned_delivery_channel,
+      cleaned_source_module,
+      auth.uid()
+    from public.profiles recipient
+    where recipient.id = p_target_user_id
+      and (p_include_inactive or recipient.is_active);
+
+    get diagnostics inserted_count = row_count;
+    return inserted_count;
+  end if;
+
+  insert into public.member_notifications (
+    user_id,
+    notification_type,
+    title,
+    message,
+    action_label,
+    action_path,
+    delivery_channel,
+    source_module,
+    created_by
+  )
+  select
+    recipient.id,
+    cleaned_type,
+    cleaned_title,
+    cleaned_message,
+    cleaned_action_label,
+    cleaned_action_path,
+    cleaned_delivery_channel,
+    cleaned_source_module,
+    auth.uid()
+  from public.profiles recipient
+  where (p_include_inactive or recipient.is_active)
+    and (cleaned_role = 'all' or recipient.role = cleaned_role);
+
+  get diagnostics inserted_count = row_count;
+  return inserted_count;
+end;
+$$;
+
+revoke all on function public.staff_send_notification(uuid, text, text, text, text, text, text, text, text, boolean) from public;
+grant execute on function public.staff_send_notification(uuid, text, text, text, text, text, text, text, text, boolean) to authenticated;
+
+create or replace function public.mark_my_notification_read(
+  p_notification_id uuid,
+  p_is_read boolean default true
+)
+returns public.member_notifications
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  saved_notification public.member_notifications;
+begin
+  if auth.uid() is null then
+    raise exception 'Authenticated user required';
+  end if;
+
+  if p_notification_id is null then
+    raise exception 'Notification id is required';
+  end if;
+
+  update public.member_notifications
+  set
+    is_read = coalesce(p_is_read, true),
+    read_at = case
+      when coalesce(p_is_read, true) then timezone('utc', now())
+      else null
+    end,
+    updated_at = timezone('utc', now())
+  where id = p_notification_id
+    and user_id = auth.uid()
+  returning * into saved_notification;
+
+  if saved_notification.id is null then
+    raise exception 'Notification not found.';
+  end if;
+
+  return saved_notification;
+end;
+$$;
+
+revoke all on function public.mark_my_notification_read(uuid, boolean) from public;
+grant execute on function public.mark_my_notification_read(uuid, boolean) to authenticated;
+
+create or replace function public.mark_all_my_notifications_read()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  updated_count integer := 0;
+begin
+  if auth.uid() is null then
+    raise exception 'Authenticated user required';
+  end if;
+
+  update public.member_notifications
+  set
+    is_read = true,
+    read_at = coalesce(read_at, timezone('utc', now())),
+    updated_at = timezone('utc', now())
+  where user_id = auth.uid()
+    and is_read = false;
+
+  get diagnostics updated_count = row_count;
+  return updated_count;
+end;
+$$;
+
+revoke all on function public.mark_all_my_notifications_read() from public;
+grant execute on function public.mark_all_my_notifications_read() to authenticated;
+
+drop policy if exists "Users can read own notification preferences" on public.notification_preferences;
+create policy "Users can read own notification preferences"
+on public.notification_preferences
+for select
+to authenticated
+using (user_id = auth.uid());
+
+drop policy if exists "Users can insert own notification preferences" on public.notification_preferences;
+create policy "Users can insert own notification preferences"
+on public.notification_preferences
+for insert
+to authenticated
+with check (user_id = auth.uid());
+
+drop policy if exists "Users can update own notification preferences" on public.notification_preferences;
+create policy "Users can update own notification preferences"
+on public.notification_preferences
+for update
+to authenticated
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
+
+drop policy if exists "Users can read own member notifications" on public.member_notifications;
+create policy "Users can read own member notifications"
+on public.member_notifications
+for select
+to authenticated
+using (user_id = auth.uid());
+
+drop policy if exists "Users can update own member notifications" on public.member_notifications;
+create policy "Users can update own member notifications"
+on public.member_notifications
+for update
+to authenticated
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
+
+drop policy if exists "Staff can insert member notifications" on public.member_notifications;
+create policy "Staff can insert member notifications"
+on public.member_notifications
+for insert
+to authenticated
+with check (public.is_staff());
+
+drop policy if exists "Staff can read member notifications" on public.member_notifications;
+create policy "Staff can read member notifications"
+on public.member_notifications
+for select
+to authenticated
+using (public.is_staff());

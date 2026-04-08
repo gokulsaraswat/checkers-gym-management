@@ -24,6 +24,7 @@ const authOnlyPaths = new Set([
   PATHS.workoutPlan,
   PATHS.schedule,
   PATHS.bookings,
+  PATHS.notifications,
   PATHS.membership,
   PATHS.account,
 ]);

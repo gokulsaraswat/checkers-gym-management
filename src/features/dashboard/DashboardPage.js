@@ -36,6 +36,7 @@ import {
   fetchBillingInvoices,
   fetchBillingPayments,
   fetchBillingProfile,
+  fetchMyNotifications,
   fetchMealLogs,
   fetchNutritionAssignments,
   fetchNutritionCheckins,
@@ -58,6 +59,7 @@ import UpcomingClassesCard from './components/UpcomingClassesCard';
 import WorkoutPlanSummaryCard from './components/WorkoutPlanSummaryCard';
 import NutritionSummaryCard from './components/NutritionSummaryCard';
 import BillingSummaryCard from './components/BillingSummaryCard';
+import NotificationsSummaryCard from './components/NotificationsSummaryCard';
 import {
   buildDashboardAlerts,
   buildProgressSummary,
@@ -72,6 +74,7 @@ import {
 } from './dashboardHelpers';
 import { buildNutritionAssignmentSummary, sortMealLogs, sortNutritionAssignments, sortNutritionCheckins } from '../nutrition/nutritionHelpers';
 import { buildBillingSummary, sortBillingInvoices, sortBillingPayments } from '../billing/billingHelpers';
+import { buildNotificationSummary, sortNotificationsNewestFirst } from '../notifications/notificationsHelpers';
 
 const createEmptyWorkoutForm = () => ({
   id: '',
@@ -107,6 +110,7 @@ const DashboardPage = () => {
   const [nutritionMealLogs, setNutritionMealLogs] = useState([]);
   const [nutritionCheckins, setNutritionCheckins] = useState([]);
   const [billingProfile, setBillingProfile] = useState(null);
+  const [notifications, setNotifications] = useState([]);
   const [billingInvoices, setBillingInvoices] = useState([]);
   const [billingPayments, setBillingPayments] = useState([]);
   const [upcomingClasses, setUpcomingClasses] = useState([]);
@@ -140,6 +144,7 @@ const DashboardPage = () => {
         billingProfileRow,
         billingInvoiceRows,
         billingPaymentRows,
+        notificationRows,
       ] = await Promise.all([
         fetchWorkouts(user.id),
         fetchProgressCheckpoints(user.id),
@@ -151,6 +156,7 @@ const DashboardPage = () => {
         fetchBillingProfile(user.id),
         fetchBillingInvoices({ memberId: user.id, limit: 12 }),
         fetchBillingPayments({ memberId: user.id, limit: 12 }),
+        fetchMyNotifications(user.id, { limit: 6 }),
       ]);
 
       setWorkouts(sortWorkoutRows(workoutRows));
@@ -163,6 +169,7 @@ const DashboardPage = () => {
       setBillingProfile(billingProfileRow);
       setBillingInvoices(sortBillingInvoices(billingInvoiceRows));
       setBillingPayments(sortBillingPayments(billingPaymentRows));
+      setNotifications(sortNotificationsNewestFirst(notificationRows));
     } catch (error) {
       setFeedback({ type: 'error', message: error.message || 'Unable to load your dashboard.' });
     } finally {
@@ -188,6 +195,10 @@ const DashboardPage = () => {
   const billingSummary = useMemo(
     () => buildBillingSummary(profile || {}, billingProfile, billingInvoices, billingPayments),
     [billingInvoices, billingPayments, billingProfile, profile],
+  );
+  const notificationSummary = useMemo(
+    () => buildNotificationSummary(notifications),
+    [notifications],
   );
   const profileCompleteness = useMemo(() => getProfileCompleteness(profile || {}), [profile]);
   const dashboardAlerts = useMemo(() => buildDashboardAlerts({
@@ -515,6 +526,10 @@ const DashboardPage = () => {
 
             <Grid item xs={12} lg={4}>
               <BillingSummaryCard summary={billingSummary} />
+            </Grid>
+
+            <Grid item xs={12} lg={4}>
+              <NotificationsSummaryCard summary={notificationSummary} />
             </Grid>
 
             <Grid item xs={12}>
