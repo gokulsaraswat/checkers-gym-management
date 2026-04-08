@@ -155,6 +155,7 @@ const Navbar = () => {
           {isStaffRole(profile?.role) ? (
             <>
               <NavLink to={PATHS.staff} style={linkStyle}>Staff</NavLink>
+              <NavLink to={PATHS.staffTools} style={linkStyle}>Staff tools</NavLink>
               <NavLink to={PATHS.staffNotifications} style={linkStyle}>Staff notifications</NavLink>
             </>
           ) : null}

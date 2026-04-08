@@ -17,6 +17,7 @@ import {
   Typography,
 } from '@mui/material';
 import {
+  AssignmentInd,
   Badge,
   CalendarMonth,
   DoorFront,
@@ -215,6 +216,15 @@ const StaffHomePage = () => {
             sx={{ borderRadius: 999, alignSelf: 'flex-start' }}
           >
             Manage bookings
+          </Button>
+          <Button
+            component={RouterLink}
+            to={PATHS.staffTools}
+            variant="outlined"
+            startIcon={<AssignmentInd />}
+            sx={{ borderRadius: 999, alignSelf: 'flex-start' }}
+          >
+            Staff tools
           </Button>
           <Button
             component={RouterLink}

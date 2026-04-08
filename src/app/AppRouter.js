@@ -19,6 +19,7 @@ import MembershipProfilePage from '../features/members/MemberProfilePage';
 import MemberDetailPage from '../features/members/MemberDetailPage';
 import AccountPage from '../features/account/AccountPage';
 import StaffHomePage from '../features/staff/StaffHomePage';
+import StaffToolsPage from '../features/staff/StaffToolsPage';
 import StaffProgressPage from '../features/progress/StaffProgressPage';
 import StaffNutritionPage from '../features/nutrition/StaffNutritionPage';
 import StaffSchedulePage from '../features/classes/StaffSchedulePage';
@@ -63,6 +64,7 @@ const AppRouter = () => (
 
       <Route element={<StaffRoute />}>
         <Route path={PATHS.staff} element={<StaffHomePage />} />
+        <Route path={PATHS.staffTools} element={<StaffToolsPage />} />
         <Route path={PATHS.staffProgress} element={<StaffProgressPage />} />
         <Route path={PATHS.staffNutrition} element={<StaffNutritionPage />} />
         <Route path={PATHS.staffSchedule} element={<StaffSchedulePage />} />

@@ -473,6 +473,122 @@ const memberNotificationSelect = `
   updated_at
 `;
 
+const staffDirectorySelect = `
+  id,
+  email,
+  full_name,
+  phone,
+  role,
+  is_active,
+  member_since,
+  created_at,
+  updated_at
+`;
+
+const staffMemberAssignmentSelect = `
+  id,
+  staff_id,
+  member_id,
+  assignment_role,
+  focus_area,
+  status,
+  starts_on,
+  ends_on,
+  notes,
+  assigned_by,
+  created_at,
+  updated_at,
+  staff:profiles!staff_member_assignments_staff_id_fkey (
+    id,
+    email,
+    full_name,
+    phone,
+    role,
+    is_active
+  ),
+  member:profiles!staff_member_assignments_member_id_fkey (
+    id,
+    email,
+    full_name,
+    phone,
+    membership_status,
+    plan_id,
+    is_active
+  )
+`;
+
+const staffShiftReportSelect = `
+  id,
+  staff_id,
+  shift_date,
+  shift_type,
+  hours_worked,
+  member_check_ins,
+  pt_sessions_completed,
+  classes_coached,
+  lead_follow_ups,
+  summary,
+  follow_up,
+  energy_score,
+  needs_manager_review,
+  created_by,
+  created_at,
+  updated_at,
+  staff:profiles!staff_shift_reports_staff_id_fkey (
+    id,
+    email,
+    full_name,
+    role,
+    is_active
+  )
+`;
+
+const staffCompensationProfileSelect = `
+  staff_id,
+  monthly_retainer,
+  commission_rate_membership,
+  commission_rate_pt,
+  per_session_bonus,
+  payout_cycle,
+  is_active,
+  notes,
+  updated_by,
+  created_at,
+  updated_at,
+  staff:profiles!staff_compensation_profiles_staff_id_fkey (
+    id,
+    email,
+    full_name,
+    role,
+    is_active
+  )
+`;
+
+const staffCommissionEntrySelect = `
+  id,
+  staff_id,
+  source_module,
+  source_reference,
+  description,
+  amount,
+  currency_code,
+  status,
+  earned_on,
+  payout_due_on,
+  paid_on,
+  notes,
+  created_by,
+  created_at,
+  updated_at,
+  staff:profiles!staff_commission_entries_staff_id_fkey (
+    id,
+    email,
+    full_name,
+    role,
+    is_active
+  )
+`;
+
 const ensureSupabase = () => {
   if (!isSupabaseConfigured || !supabase) {
     throw missingConfigError();
@@ -2712,6 +2828,350 @@ export const sendStaffNotification = async (payload = {}) => {
   unwrap(error, 'Unable to send the notification.');
   emitNotificationsChanged();
   return Number(data || 0);
+};
+
+export const fetchStaffDirectory = async (query = '', includeInactive = false, limit = 80) => {
+  const client = ensureSupabase();
+  let request = client
+    .from('profiles')
+    .select(staffDirectorySelect)
+    .in('role', ['staff', 'admin'])
+    .order('full_name', { ascending: true });
+
+  if (!includeInactive) {
+    request = request.eq('is_active', true);
+  }
+
+  const cleanedQuery = normaliseOptionalText(query);
+  if (cleanedQuery) {
+    request = request.or(`full_name.ilike.%${cleanedQuery}%,email.ilike.%${cleanedQuery}%,phone.ilike.%${cleanedQuery}%`);
+  }
+
+  if (limit) {
+    request = request.limit(limit);
+  }
+
+  const { data, error } = await request;
+
+  unwrap(error, 'Unable to load staff directory.');
+  return data ?? [];
+};
+
+export const fetchStaffClientAssignments = async ({
+  staffId = null,
+  memberId = null,
+  status = 'all',
+  assignmentRole = 'all',
+  limit = 120,
+} = {}) => {
+  const client = ensureSupabase();
+  let request = client
+    .from('staff_member_assignments')
+    .select(staffMemberAssignmentSelect)
+    .order('starts_on', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (staffId) {
+    request = request.eq('staff_id', staffId);
+  }
+
+  if (memberId) {
+    request = request.eq('member_id', memberId);
+  }
+
+  if (status && status !== 'all') {
+    request = request.eq('status', status);
+  }
+
+  if (assignmentRole && assignmentRole !== 'all') {
+    request = request.eq('assignment_role', assignmentRole);
+  }
+
+  if (limit) {
+    request = request.limit(limit);
+  }
+
+  const { data, error } = await request;
+
+  unwrap(error, 'Unable to load staff assignments.');
+  return data ?? [];
+};
+
+export const saveStaffClientAssignment = async (assignment = {}) => {
+  const client = ensureSupabase();
+
+  const staffId = pickFirstDefined(assignment, ['staff_id', 'staffId']);
+  const memberId = pickFirstDefined(assignment, ['member_id', 'memberId']);
+
+  if (!staffId) {
+    throw new Error('Select a staff account before saving the assignment.');
+  }
+
+  if (!memberId) {
+    throw new Error('Select a member before saving the assignment.');
+  }
+
+  const payload = {
+    staff_id: staffId,
+    member_id: memberId,
+    assignment_role: assignment.assignment_role || 'coach',
+    focus_area: normaliseOptionalText(assignment.focus_area),
+    status: assignment.status || 'active',
+    starts_on: normaliseOptionalDate(assignment.starts_on) || todayIsoDate(),
+    ends_on: normaliseOptionalDate(assignment.ends_on),
+    notes: normaliseOptionalText(assignment.notes),
+    assigned_by: assignment.assigned_by || null,
+  };
+
+  let request;
+
+  if (assignment.id) {
+    request = client
+      .from('staff_member_assignments')
+      .update(payload)
+      .eq('id', assignment.id)
+      .select(staffMemberAssignmentSelect)
+      .single();
+  } else {
+    request = client
+      .from('staff_member_assignments')
+      .insert([payload])
+      .select(staffMemberAssignmentSelect)
+      .single();
+  }
+
+  const { data, error } = await request;
+
+  unwrap(error, 'Unable to save the staff assignment.');
+  return data;
+};
+
+export const closeStaffClientAssignment = async (
+  assignmentId,
+  status = 'completed',
+  endsOn = todayIsoDate(),
+) => {
+  if (!assignmentId) {
+    throw new Error('Assignment id is required.');
+  }
+
+  const client = ensureSupabase();
+  const { data, error } = await client
+    .from('staff_member_assignments')
+    .update({
+      status: status || 'completed',
+      ends_on: normaliseOptionalDate(endsOn) || todayIsoDate(),
+    })
+    .eq('id', assignmentId)
+    .select(staffMemberAssignmentSelect)
+    .single();
+
+  unwrap(error, 'Unable to close the staff assignment.');
+  return data;
+};
+
+export const fetchStaffShiftReports = async ({
+  staffId = null,
+  limit = 30,
+} = {}) => {
+  const client = ensureSupabase();
+  let request = client
+    .from('staff_shift_reports')
+    .select(staffShiftReportSelect)
+    .order('shift_date', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (staffId) {
+    request = request.eq('staff_id', staffId);
+  }
+
+  if (limit) {
+    request = request.limit(limit);
+  }
+
+  const { data, error } = await request;
+
+  unwrap(error, 'Unable to load shift reports.');
+  return data ?? [];
+};
+
+export const saveStaffShiftReport = async (report = {}) => {
+  const client = ensureSupabase();
+
+  const staffId = pickFirstDefined(report, ['staff_id', 'staffId']);
+
+  if (!staffId) {
+    throw new Error('Staff profile is required before saving the shift report.');
+  }
+
+  const payload = {
+    staff_id: staffId,
+    shift_date: normaliseOptionalDate(report.shift_date) || todayIsoDate(),
+    shift_type: report.shift_type || 'general',
+    hours_worked: normaliseOptionalNumber(report.hours_worked),
+    member_check_ins: normaliseOptionalInteger(report.member_check_ins) || 0,
+    pt_sessions_completed: normaliseOptionalInteger(report.pt_sessions_completed) || 0,
+    classes_coached: normaliseOptionalInteger(report.classes_coached) || 0,
+    lead_follow_ups: normaliseOptionalInteger(report.lead_follow_ups) || 0,
+    summary: normaliseOptionalText(report.summary),
+    follow_up: normaliseOptionalText(report.follow_up),
+    energy_score: normaliseOptionalInteger(report.energy_score),
+    needs_manager_review: normaliseBoolean(report.needs_manager_review) ?? false,
+    created_by: report.created_by || null,
+  };
+
+  let request;
+
+  if (report.id) {
+    request = client
+      .from('staff_shift_reports')
+      .update(payload)
+      .eq('id', report.id)
+      .select(staffShiftReportSelect)
+      .single();
+  } else {
+    request = client
+      .from('staff_shift_reports')
+      .insert([payload])
+      .select(staffShiftReportSelect)
+      .single();
+  }
+
+  const { data, error } = await request;
+
+  unwrap(error, 'Unable to save the shift report.');
+  return data;
+};
+
+export const fetchStaffCompensationProfile = async (staffId) => {
+  if (!staffId) {
+    return null;
+  }
+
+  const client = ensureSupabase();
+  const { data, error } = await client
+    .from('staff_compensation_profiles')
+    .select(staffCompensationProfileSelect)
+    .eq('staff_id', staffId)
+    .maybeSingle();
+
+  unwrap(error, 'Unable to load the compensation profile.');
+  return data ?? null;
+};
+
+export const saveStaffCompensationProfile = async (staffId, profile = {}) => {
+  if (!staffId) {
+    throw new Error('Staff profile is required before saving compensation.');
+  }
+
+  const client = ensureSupabase();
+  const payload = {
+    staff_id: staffId,
+    monthly_retainer: normaliseOptionalNumber(profile.monthly_retainer) || 0,
+    commission_rate_membership: normaliseOptionalNumber(profile.commission_rate_membership) || 0,
+    commission_rate_pt: normaliseOptionalNumber(profile.commission_rate_pt) || 0,
+    per_session_bonus: normaliseOptionalNumber(profile.per_session_bonus) || 0,
+    payout_cycle: profile.payout_cycle || 'monthly',
+    is_active: normaliseBoolean(profile.is_active) ?? true,
+    notes: normaliseOptionalText(profile.notes),
+    updated_by: profile.updated_by || null,
+  };
+
+  const { data, error } = await client
+    .from('staff_compensation_profiles')
+    .upsert([payload], { onConflict: 'staff_id' })
+    .select(staffCompensationProfileSelect)
+    .single();
+
+  unwrap(error, 'Unable to save the compensation profile.');
+  return data;
+};
+
+export const fetchStaffCommissionEntries = async ({
+  staffId = null,
+  status = 'all',
+  limit = 80,
+} = {}) => {
+  const client = ensureSupabase();
+  let request = client
+    .from('staff_commission_entries')
+    .select(staffCommissionEntrySelect)
+    .order('earned_on', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (staffId) {
+    request = request.eq('staff_id', staffId);
+  }
+
+  if (status && status !== 'all') {
+    request = request.eq('status', status);
+  }
+
+  if (limit) {
+    request = request.limit(limit);
+  }
+
+  const { data, error } = await request;
+
+  unwrap(error, 'Unable to load commission entries.');
+  return data ?? [];
+};
+
+export const saveStaffCommissionEntry = async (entry = {}) => {
+  const client = ensureSupabase();
+
+  const staffId = pickFirstDefined(entry, ['staff_id', 'staffId']);
+
+  if (!staffId) {
+    throw new Error('Staff profile is required before saving commission.');
+  }
+
+  if (!normaliseOptionalText(entry.description)) {
+    throw new Error('Description is required for commission entries.');
+  }
+
+  const nextStatus = entry.status || 'pending';
+  const earnedOn = normaliseOptionalDate(entry.earned_on) || todayIsoDate();
+  const paidOn = nextStatus === 'paid'
+    ? (normaliseOptionalDate(entry.paid_on) || todayIsoDate())
+    : normaliseOptionalDate(entry.paid_on);
+
+  const payload = {
+    staff_id: staffId,
+    source_module: entry.source_module || 'manual',
+    source_reference: normaliseOptionalText(entry.source_reference),
+    description: normaliseOptionalText(entry.description),
+    amount: normaliseOptionalNumber(entry.amount) || 0,
+    currency_code: normaliseOptionalText(entry.currency_code) || 'INR',
+    status: nextStatus,
+    earned_on: earnedOn,
+    payout_due_on: normaliseOptionalDate(entry.payout_due_on),
+    paid_on: paidOn,
+    notes: normaliseOptionalText(entry.notes),
+    created_by: entry.created_by || null,
+  };
+
+  let request;
+
+  if (entry.id) {
+    request = client
+      .from('staff_commission_entries')
+      .update(payload)
+      .eq('id', entry.id)
+      .select(staffCommissionEntrySelect)
+      .single();
+  } else {
+    request = client
+      .from('staff_commission_entries')
+      .insert([payload])
+      .select(staffCommissionEntrySelect)
+      .single();
+  }
+
+  const { data, error } = await request;
+
+  unwrap(error, 'Unable to save the commission entry.');
+  return data;
 };
 
 export const fetchAdminActivity = async ({ memberId = null, limit = 12 } = {}) => {

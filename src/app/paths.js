@@ -15,6 +15,7 @@ export const PATHS = {
   membership: '/membership',
   account: '/account',
   staff: '/staff',
+  staffTools: '/staff/tools',
   staffProgress: '/staff/progress',
   staffNutrition: '/staff/nutrition',
   staffSchedule: '/staff/schedule',
