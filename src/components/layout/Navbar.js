@@ -1,12 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
+  alpha,
   AppBar,
   Badge,
+  Box,
   Button,
   Chip,
+  Divider,
+  Drawer,
+  IconButton,
+  List,
+  ListItemButton,
+  ListItemText,
   Stack,
   Toolbar,
+  Tooltip,
+  Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
+import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { Link as RouterLink, NavLink, useLocation, useNavigate } from 'react-router-dom';
 
 import { getRoleBadgeLabel, isStaffRole } from '../../app/auth/access';
@@ -14,22 +28,20 @@ import { PATHS } from '../../app/paths';
 import Logo from '../../assets/images/Logo.png';
 import { useAuth } from '../../context/AuthContext';
 import { fetchUnreadNotificationCount } from '../../services/gymService';
-
-const linkStyle = ({ isActive }) => ({
-  textDecoration: 'none',
-  color: '#1f2937',
-  fontWeight: 700,
-  borderBottom: isActive ? '3px solid #ff2625' : '3px solid transparent',
-  paddingBottom: '6px',
-});
+import ThemeModeToggle from './ThemeModeToggle';
 
 const Navbar = () => {
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
   const { user, profile, signOut, isConfigured } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   const handleExercisesClick = () => {
+    setMobileMenuOpen(false);
+
     if (location.pathname !== PATHS.home) {
       navigate(PATHS.home);
       return;
@@ -40,8 +52,10 @@ const Navbar = () => {
 
   const handleSignOut = async () => {
     await signOut();
+    setMobileMenuOpen(false);
     navigate(PATHS.home);
   };
+
   useEffect(() => {
     let active = true;
 
@@ -78,131 +92,298 @@ const Navbar = () => {
     };
   }, [isConfigured, location.pathname, user]);
 
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
-  return (
-    <AppBar
-      position="sticky"
-      elevation={0}
-      color="transparent"
+  const createLinkStyle = ({ isActive }) => ({
+    textDecoration: 'none',
+    color: theme.palette.text.primary,
+    fontWeight: 700,
+    borderBottom: isActive ? `3px solid ${theme.palette.primary.main}` : '3px solid transparent',
+    paddingBottom: '6px',
+  });
+
+  const memberLinks = useMemo(() => (
+    user
+      ? [
+          { label: 'Dashboard', to: PATHS.dashboard },
+          { label: 'Progress', to: PATHS.progress },
+          { label: 'Nutrition', to: PATHS.nutrition },
+          { label: 'Workout plan', to: PATHS.workoutPlan },
+          { label: 'Schedule', to: PATHS.schedule },
+          { label: 'Bookings', to: PATHS.bookings },
+          {
+            label: 'Notifications',
+            to: PATHS.notifications,
+            badge: unreadNotificationCount,
+          },
+          { label: 'Billing', to: PATHS.billing },
+          { label: 'Membership', to: PATHS.membership },
+          { label: 'Account', to: PATHS.account },
+        ]
+      : []
+  ), [unreadNotificationCount, user]);
+
+  const staffLinks = useMemo(() => (
+    isStaffRole(profile?.role)
+      ? [
+          { label: 'Staff', to: PATHS.staff },
+          { label: 'Staff tools', to: PATHS.staffTools },
+          { label: 'Staff notifications', to: PATHS.staffNotifications },
+          { label: 'Staff POS', to: PATHS.staffPos },
+        ]
+      : []
+  ), [profile?.role]);
+
+  const adminLinks = useMemo(() => (
+    profile?.role === 'admin'
+      ? [
+          { label: 'Admin', to: PATHS.admin },
+          { label: 'CRM', to: PATHS.adminCrm },
+          { label: 'POS', to: PATHS.adminPos },
+          { label: 'Reports', to: PATHS.adminReports },
+        ]
+      : []
+  ), [profile?.role]);
+
+  const renderDesktopLink = (item) => {
+    const labelContent = item.badge ? (
+      <Badge
+        color="error"
+        badgeContent={item.badge}
+        max={9}
+        sx={{ '& .MuiBadge-badge': { fontWeight: 700 } }}
+      >
+        <span>{item.label}</span>
+      </Badge>
+    ) : item.label;
+
+    return (
+      <NavLink key={item.to || item.label} to={item.to} style={createLinkStyle}>
+        {labelContent}
+      </NavLink>
+    );
+  };
+
+  const renderDrawerLink = (item) => (
+    <ListItemButton
+      key={item.to || item.label}
+      component={item.to ? RouterLink : 'button'}
+      to={item.to}
+      onClick={item.onClick}
       sx={{
-        backdropFilter: 'blur(16px)',
-        background: 'rgba(255, 251, 252, 0.92)',
-        borderRadius: 4,
-        top: 12,
-        zIndex: 20,
-        mb: 3,
+        borderRadius: 3,
+        mb: 0.5,
+        bgcolor: location.pathname === item.to ? alpha(theme.palette.primary.main, 0.14) : 'transparent',
       }}
     >
-      <Toolbar
+      <ListItemText
+        primaryTypographyProps={{ fontWeight: 700 }}
+        primary={item.badge ? `${item.label} (${item.badge})` : item.label}
+      />
+    </ListItemButton>
+  );
+
+  const groupedDrawerLinks = [
+    {
+      title: 'Explore',
+      items: [
+        { label: 'Home', to: PATHS.home },
+        { label: 'Exercises', onClick: handleExercisesClick },
+      ],
+    },
+    user ? { title: 'Member', items: memberLinks } : null,
+    staffLinks.length ? { title: 'Staff', items: staffLinks } : null,
+    adminLinks.length ? { title: 'Admin', items: adminLinks } : null,
+  ].filter(Boolean);
+
+  return (
+    <>
+      <AppBar
+        position="sticky"
+        elevation={0}
+        color="transparent"
         sx={{
-          px: { xs: 1, sm: 2 },
-          py: 1.25,
-          minHeight: '82px !important',
-          display: 'flex',
-          justifyContent: 'space-between',
-          gap: 2,
-          flexWrap: 'wrap',
+          backdropFilter: 'blur(16px)',
+          borderRadius: 4,
+          top: 12,
+          zIndex: 20,
+          mb: 3,
         }}
       >
-        <Stack direction="row" spacing={2} alignItems="center">
-          <RouterLink to={PATHS.home}>
-            <img src={Logo} alt="Checkers Gym logo" style={{ width: '54px', height: '54px' }} />
-          </RouterLink>
-          {user ? (
-            <Chip
-              label={getRoleBadgeLabel(profile?.role)}
-              sx={{ bgcolor: '#fff0f0', color: '#ff2625', fontWeight: 700 }}
-            />
-          ) : null}
+        <Toolbar
+          sx={{
+            px: { xs: 1, sm: 2 },
+            py: 1.25,
+            minHeight: '82px !important',
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: 2,
+            flexWrap: 'nowrap',
+          }}
+        >
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ minWidth: 0 }}>
+            {!isDesktop ? (
+              <Tooltip title="Open navigation menu">
+                <IconButton
+                  color="inherit"
+                  aria-label="Open navigation menu"
+                  onClick={() => setMobileMenuOpen(true)}
+                  sx={{ border: '1px solid', borderColor: 'divider' }}
+                >
+                  <MenuRoundedIcon />
+                </IconButton>
+              </Tooltip>
+            ) : null}
+            <RouterLink to={PATHS.home} style={{ flexShrink: 0 }}>
+              <img src={Logo} alt="Checkers Gym logo" style={{ width: '54px', height: '54px' }} />
+            </RouterLink>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="subtitle1" fontWeight={800} noWrap>
+                Checkers Gym
+              </Typography>
+              {user ? (
+                <Chip
+                  label={getRoleBadgeLabel(profile?.role)}
+                  size="small"
+                  sx={{
+                    mt: 0.5,
+                    bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.22 : 0.12),
+                    color: theme.palette.primary.main,
+                    fontWeight: 700,
+                  }}
+                />
+              ) : null}
+            </Box>
+          </Stack>
+
+          {isDesktop ? (
+            <Stack
+              direction="row"
+              spacing={{ xs: 1.5, sm: 2.5 }}
+              alignItems="center"
+              flexWrap="wrap"
+              justifyContent="flex-end"
+            >
+              <NavLink end to={PATHS.home} style={createLinkStyle}>Home</NavLink>
+              <Button onClick={handleExercisesClick} sx={{ color: 'text.primary', fontWeight: 700 }}>
+                Exercises
+              </Button>
+              {memberLinks.map(renderDesktopLink)}
+              {staffLinks.map(renderDesktopLink)}
+              {adminLinks.map(renderDesktopLink)}
+              <ThemeModeToggle />
+              {user ? (
+                <Button
+                  variant="contained"
+                  onClick={handleSignOut}
+                  sx={{
+                    textTransform: 'none',
+                    borderRadius: 999,
+                    px: 2.5,
+                  }}
+                >
+                  Logout
+                </Button>
+              ) : (
+                <Button
+                  component={RouterLink}
+                  to={PATHS.auth}
+                  variant="contained"
+                  sx={{
+                    textTransform: 'none',
+                    borderRadius: 999,
+                    px: 2.5,
+                  }}
+                >
+                  Join now
+                </Button>
+              )}
+            </Stack>
+          ) : (
+            <Stack direction="row" spacing={1} alignItems="center">
+              <ThemeModeToggle />
+              {user ? (
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={handleSignOut}
+                  sx={{ borderRadius: 999, px: 2 }}
+                >
+                  Logout
+                </Button>
+              ) : (
+                <Button
+                  component={RouterLink}
+                  to={PATHS.auth}
+                  variant="contained"
+                  size="small"
+                  sx={{ borderRadius: 999, px: 2 }}
+                >
+                  Join
+                </Button>
+              )}
+            </Stack>
+          )}
+        </Toolbar>
+      </AppBar>
+
+      <Drawer
+        anchor="left"
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        PaperProps={{
+          sx: {
+            width: 320,
+            px: 2,
+            py: 2.5,
+          },
+        }}
+      >
+        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <img src={Logo} alt="Checkers Gym logo" style={{ width: '42px', height: '42px' }} />
+            <Box>
+              <Typography fontWeight={800}>Checkers Gym</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Quick access menu
+              </Typography>
+            </Box>
+          </Stack>
+          <IconButton onClick={() => setMobileMenuOpen(false)} aria-label="Close navigation menu">
+            <CloseRoundedIcon />
+          </IconButton>
         </Stack>
 
-        <Stack
-          direction="row"
-          spacing={{ xs: 1.5, sm: 3 }}
-          alignItems="center"
-          flexWrap="wrap"
-          justifyContent="flex-end"
-        >
-          <NavLink end to={PATHS.home} style={linkStyle}>Home</NavLink>
-          <Button onClick={handleExercisesClick} sx={{ color: '#1f2937', fontWeight: 700, textTransform: 'none' }}>
-            Exercises
-          </Button>
+        <ThemeModeToggle edge />
 
+        <Divider sx={{ my: 2 }} />
+
+        {groupedDrawerLinks.map((group) => (
+          <Box key={group.title} sx={{ mb: 2 }}>
+            <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 1.1 }}>
+              {group.title}
+            </Typography>
+            <List disablePadding sx={{ mt: 1 }}>
+              {group.items.map(renderDrawerLink)}
+            </List>
+          </Box>
+        ))}
+
+        <Box sx={{ mt: 'auto', pt: 2 }}>
           {user ? (
-            <>
-              <NavLink to={PATHS.dashboard} style={linkStyle}>Dashboard</NavLink>
-              <NavLink to={PATHS.progress} style={linkStyle}>Progress</NavLink>
-              <NavLink to={PATHS.nutrition} style={linkStyle}>Nutrition</NavLink>
-              <NavLink to={PATHS.workoutPlan} style={linkStyle}>Workout plan</NavLink>
-              <NavLink to={PATHS.schedule} style={linkStyle}>Schedule</NavLink>
-              <NavLink to={PATHS.bookings} style={linkStyle}>Bookings</NavLink>
-              <NavLink to={PATHS.notifications} style={linkStyle}>
-                <Badge
-                  color="error"
-                  badgeContent={unreadNotificationCount}
-                  max={9}
-                  sx={{ '& .MuiBadge-badge': { fontWeight: 700 } }}
-                >
-                  <span>Notifications</span>
-                </Badge>
-              </NavLink>
-              <NavLink to={PATHS.billing} style={linkStyle}>Billing</NavLink>
-              <NavLink to={PATHS.membership} style={linkStyle}>Membership</NavLink>
-              <NavLink to={PATHS.account} style={linkStyle}>Account</NavLink>
-            </>
-          ) : null}
-
-          {isStaffRole(profile?.role) ? (
-            <>
-              <NavLink to={PATHS.staff} style={linkStyle}>Staff</NavLink>
-              <NavLink to={PATHS.staffTools} style={linkStyle}>Staff tools</NavLink>
-              <NavLink to={PATHS.staffNotifications} style={linkStyle}>Staff notifications</NavLink>
-              <NavLink to={PATHS.staffPos} style={linkStyle}>Staff POS</NavLink>
-            </>
-          ) : null}
-
-          {profile?.role === 'admin' ? (
-            <>
-              <NavLink to={PATHS.admin} style={linkStyle}>Admin</NavLink>
-              <NavLink to={PATHS.adminCrm} style={linkStyle}>CRM</NavLink>
-              <NavLink to={PATHS.adminPos} style={linkStyle}>POS</NavLink>
-              <NavLink to={PATHS.adminReports} style={linkStyle}>Reports</NavLink>
-            </>
-          ) : null}
-
-          {user ? (
-            <Button
-              variant="contained"
-              onClick={handleSignOut}
-              sx={{
-                bgcolor: '#ff2625',
-                textTransform: 'none',
-                borderRadius: 999,
-                px: 2.5,
-                '&:hover': { bgcolor: '#df1d1d' },
-              }}
-            >
+            <Button fullWidth variant="contained" onClick={handleSignOut}>
               Logout
             </Button>
           ) : (
-            <Button
-              component={RouterLink}
-              to={PATHS.auth}
-              variant="contained"
-              sx={{
-                bgcolor: '#ff2625',
-                textTransform: 'none',
-                borderRadius: 999,
-                px: 2.5,
-                '&:hover': { bgcolor: '#df1d1d' },
-              }}
-            >
+            <Button fullWidth variant="contained" component={RouterLink} to={PATHS.auth}>
               Join now
             </Button>
           )}
-        </Stack>
-      </Toolbar>
-    </AppBar>
+        </Box>
+      </Drawer>
+    </>
   );
 };
 

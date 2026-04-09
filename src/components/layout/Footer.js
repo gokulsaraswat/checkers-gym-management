@@ -10,8 +10,11 @@ const Footer = () => (
       mt: 10,
       mb: 4,
       borderRadius: 6,
-      bgcolor: '#fff3f4',
+      bgcolor: 'background.paper',
+      border: '1px solid',
+      borderColor: 'divider',
       overflow: 'hidden',
+      boxShadow: '0 18px 42px rgba(15, 23, 42, 0.08)',
     }}
   >
     <Stack gap={2} sx={{ alignItems: 'center', textAlign: 'center' }} px={4} py={4}>

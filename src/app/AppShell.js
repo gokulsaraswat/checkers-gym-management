@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom';
 
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
+import InstallAppPrompt from '../components/layout/InstallAppPrompt';
 
 const AppShell = () => (
   <Box
@@ -16,6 +17,7 @@ const AppShell = () => (
     }}
   >
     <Navbar />
+    <InstallAppPrompt />
     <Outlet />
     <Footer />
   </Box>

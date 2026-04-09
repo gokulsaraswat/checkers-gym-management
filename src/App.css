@@ -1,13 +1,49 @@
+:root {
+  --app-bg: #fff8f8;
+  --app-text: #0f172a;
+  --app-text-muted: #475569;
+  --app-surface: #ffffff;
+  --app-surface-soft: #fff3f4;
+  --app-border: rgba(15, 23, 42, 0.08);
+  --app-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+  --app-shadow-soft: 0 14px 30px rgba(15, 23, 42, 0.06);
+  --app-primary: #ff2625;
+}
+
+body[data-color-mode='dark'] {
+  --app-bg: #07111f;
+  --app-text: #e2e8f0;
+  --app-text-muted: #94a3b8;
+  --app-surface: #0f172a;
+  --app-surface-soft: #111c30;
+  --app-border: rgba(148, 163, 184, 0.18);
+  --app-shadow: 0 18px 44px rgba(2, 6, 23, 0.42);
+  --app-shadow-soft: 0 12px 28px rgba(2, 6, 23, 0.34);
+  --app-primary: #ff6b6a;
+}
+
 body {
   font-family: 'Josefin Sans', sans-serif;
-  background-color: #fffbfc;
-  color: #1f2937;
+  background-color: var(--app-bg);
+  color: var(--app-text);
+  transition: background-color 180ms ease, color 180ms ease;
 }
 
 * {
   padding: 0;
   margin: 0;
   box-sizing: border-box;
+}
+
+body *,
+body *::before,
+body *::after {
+  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
 }
 
 a {
@@ -36,7 +72,7 @@ img {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #ff2625;
+  color: var(--app-primary);
   font-size: 25px;
   border-radius: 4px;
   position: absolute;
@@ -65,12 +101,13 @@ img {
   width: 729px;
   height: 742px;
   border-radius: 32px;
-  background: #fff;
+  background: var(--app-surface);
   object-fit: cover;
+  border: 1px solid var(--app-border);
 }
 
 .hero-banner-typo {
-  color: #ff2625;
+  color: var(--app-primary);
   z-index: 0;
   pointer-events: none;
 }
@@ -90,8 +127,10 @@ img {
 .exercise-card {
   width: 400px;
   height: 445px;
-  background: #fff;
-  border-top: 4px solid #ff2625;
+  background: var(--app-surface);
+  border-top: 4px solid var(--app-primary);
+  border: 1px solid var(--app-border);
+  border-top-width: 4px;
   border-bottom-left-radius: 20px;
   border-top-right-radius: 20px;
   text-decoration: none;
@@ -101,7 +140,7 @@ img {
   padding-bottom: 10px;
   transform: scale(1, 1);
   transition: 0.25s all ease-in-out;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--app-shadow);
 }
 
 .exercise-card img {
@@ -113,7 +152,9 @@ img {
 .bodyPart-card {
   transform: scale(1, 1);
   transition: 0.25s all ease-in-out;
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--app-shadow-soft);
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
 }
 
 .exercise-card:hover,
@@ -122,8 +163,8 @@ img {
 }
 
 .search-btn:hover {
-  color: #ff2625 !important;
-  border: 1px solid #ff2625 !important;
+  color: var(--app-primary) !important;
+  border: 1px solid var(--app-primary) !important;
 }
 
 .exercise-video {
@@ -143,8 +184,9 @@ img {
 
 .surface-card {
   border-radius: 28px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow);
+  background: var(--app-surface);
 }
 
 @media screen and (max-width: 1200px) {
@@ -174,6 +216,12 @@ img {
   .exercise-video {
     width: 320px;
     min-height: 280px;
+  }
+}
+
+@media screen and (max-width: 900px) {
+  .react-horizontal-scrolling-menu--scroll-container {
+    width: 100%;
   }
 }
 

@@ -350,35 +350,35 @@ begin
   end if;
 
   if to_regclass('public.profiles') is not null then
-    execute $$
+    execute $ops$
       select count(*)::bigint
       from public.profiles
       where role = 'member'
-    $$ into v_total_members;
+    $ops$ into v_total_members;
 
-    execute $$
+    execute $ops$
       select count(*)::bigint
       from public.profiles
       where role = 'member'
         and membership_status = 'active'
-    $$ into v_active_members;
+    $ops$ into v_active_members;
 
-    execute $$
+    execute $ops$
       select count(*)::bigint
       from public.profiles
       where role = 'member'
         and membership_end_date is not null
         and membership_end_date >= current_date
         and membership_end_date <= current_date + interval '30 days'
-    $$ into v_expiring_members_30d;
+    $ops$ into v_expiring_members_30d;
   end if;
 
   if to_regclass('public.billing_invoices') is not null then
-    execute $$
+    execute $ops$
       select count(*)::bigint
       from public.billing_invoices
       where invoice_status in ('issued', 'overdue', 'partially_paid')
-    $$ into v_unpaid_invoices;
+    $ops$ into v_unpaid_invoices;
   end if;
 
   if to_regclass('public.gym_branches') is not null then
