@@ -27,11 +27,13 @@ import StaffBookingsPage from '../features/bookings/StaffBookingsPage';
 import StaffNotificationsPage from '../features/notifications/StaffNotificationsPage';
 import StaffWorkoutProgramsPage from '../features/workouts/StaffWorkoutProgramsPage';
 import StaffBillingPage from '../features/billing/StaffBillingPage';
+import StaffPosPage from '../features/pos/StaffPosPage';
 import AdminPage from '../features/admin/AdminPage';
 import AdminPlansPage from '../features/plans/AdminPlansPage';
 import AdminFinancePage from '../features/finance/AdminFinancePage';
 import AdminReportsPage from '../features/reports/AdminReportsPage';
 import AdminCrmPage from '../features/crm/AdminCrmPage';
+import AdminPosPage from '../features/pos/AdminPosPage';
 import GuestRoute from '../routes/GuestRoute';
 import ProtectedRoute from '../routes/ProtectedRoute';
 import StaffRoute from '../routes/StaffRoute';
@@ -76,6 +78,7 @@ const AppRouter = () => (
         <Route path={PATHS.staffNotifications} element={<StaffNotificationsPage />} />
         <Route path={PATHS.staffWorkouts} element={<StaffWorkoutProgramsPage />} />
         <Route path={PATHS.staffBilling} element={<StaffBillingPage />} />
+        <Route path={PATHS.staffPos} element={<StaffPosPage />} />
       </Route>
 
       <Route element={<AdminRoute />}>
@@ -84,6 +87,7 @@ const AppRouter = () => (
         <Route path={PATHS.adminFinance} element={<AdminFinancePage />} />
         <Route path={PATHS.adminReports} element={<AdminReportsPage />} />
         <Route path={PATHS.adminCrm} element={<AdminCrmPage />} />
+        <Route path={PATHS.adminPos} element={<AdminPosPage />} />
         <Route path={PATHS.memberDetail} element={<MemberDetailPage />} />
       </Route>
 

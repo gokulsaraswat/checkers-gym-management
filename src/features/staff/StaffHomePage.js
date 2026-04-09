@@ -29,6 +29,7 @@ import {
   PersonSearch,
   Refresh,
   ReceiptLong,
+  PointOfSale,
   Campaign,
   TrendingUp,
 } from '@mui/icons-material';
@@ -112,7 +113,7 @@ const StaffHomePage = () => {
   }, [isConfigured]);
 
   useEffect(() => {
-    loadDeskData('', true);
+    void loadDeskData('', true);
   }, [loadDeskData]);
 
   const stats = useMemo(
@@ -261,6 +262,15 @@ const StaffHomePage = () => {
             sx={{ borderRadius: 999, alignSelf: 'flex-start' }}
           >
             Manage billing
+          </Button>
+          <Button
+            component={RouterLink}
+            to={PATHS.staffPos}
+            variant="outlined"
+            startIcon={<PointOfSale />}
+            sx={{ borderRadius: 999, alignSelf: 'flex-start' }}
+          >
+            Staff POS
           </Button>
           <Button
             component={RouterLink}

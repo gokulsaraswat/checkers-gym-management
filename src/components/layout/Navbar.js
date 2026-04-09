@@ -157,6 +157,7 @@ const Navbar = () => {
               <NavLink to={PATHS.staff} style={linkStyle}>Staff</NavLink>
               <NavLink to={PATHS.staffTools} style={linkStyle}>Staff tools</NavLink>
               <NavLink to={PATHS.staffNotifications} style={linkStyle}>Staff notifications</NavLink>
+              <NavLink to={PATHS.staffPos} style={linkStyle}>Staff POS</NavLink>
             </>
           ) : null}
 
@@ -164,6 +165,7 @@ const Navbar = () => {
             <>
               <NavLink to={PATHS.admin} style={linkStyle}>Admin</NavLink>
               <NavLink to={PATHS.adminCrm} style={linkStyle}>CRM</NavLink>
+              <NavLink to={PATHS.adminPos} style={linkStyle}>POS</NavLink>
               <NavLink to={PATHS.adminReports} style={linkStyle}>Reports</NavLink>
             </>
           ) : null}

@@ -4145,3 +4145,310 @@ export const archiveCrmLead = async (leadId, isArchived = true, actorId = null) 
   unwrap(error, 'Unable to update the CRM lead.');
   return data;
 };
+
+const inventoryItemSelect = `
+  id,
+  sku,
+  name,
+  category,
+  description,
+  unit_price,
+  cost_price,
+  current_stock,
+  reorder_level,
+  is_stock_tracked,
+  is_active,
+  created_by,
+  updated_by,
+  created_at,
+  updated_at
+`;
+
+const inventoryMovementSelect = `
+  id,
+  inventory_item_id,
+  movement_type,
+  quantity_delta,
+  previous_stock,
+  next_stock,
+  reference_sale_id,
+  reference_note,
+  created_by,
+  created_at,
+  inventory_item:inventory_items (
+    id,
+    sku,
+    name,
+    category,
+    is_stock_tracked
+  )
+`;
+
+const posSaleSelect = `
+  id,
+  sale_number,
+  customer_id,
+  customer_name,
+  customer_email,
+  sale_status,
+  payment_status,
+  payment_method,
+  subtotal_amount,
+  discount_amount,
+  tax_amount,
+  total_amount,
+  received_amount,
+  change_amount,
+  notes,
+  sold_by,
+  sold_at,
+  created_at,
+  updated_at,
+  customer:profiles!pos_sales_customer_id_fkey (
+    id,
+    full_name,
+    email,
+    phone
+  ),
+  seller:profiles!pos_sales_sold_by_fkey (
+    id,
+    full_name,
+    email
+  ),
+  items:pos_sale_items (
+    id,
+    sale_id,
+    inventory_item_id,
+    item_name,
+    item_category,
+    quantity,
+    unit_price,
+    unit_cost,
+    line_discount,
+    line_total,
+    stock_impact,
+    created_at,
+    inventory_item:inventory_items (
+      id,
+      sku,
+      name,
+      category,
+      is_stock_tracked
+    )
+  )
+`;
+
+export const fetchInventoryItems = async ({
+  category = 'all',
+  includeInactive = false,
+  limit = 160,
+} = {}) => {
+  const client = ensureSupabase();
+  let request = client
+    .from('inventory_items')
+    .select(inventoryItemSelect)
+    .order('name', { ascending: true });
+
+  if (category && category !== 'all') {
+    request = request.eq('category', category);
+  }
+
+  if (!includeInactive) {
+    request = request.eq('is_active', true);
+  }
+
+  if (limit) {
+    request = request.limit(limit);
+  }
+
+  const { data, error } = await request;
+  unwrap(error, 'Unable to load inventory items.');
+  return data ?? [];
+};
+
+export const saveInventoryItem = async (item = {}, actorId = null) => {
+  const client = ensureSupabase();
+  const payload = {
+    sku: normaliseOptionalText(item.sku) || null,
+    name: String(item.name ?? '').trim(),
+    category: normaliseOptionalText(item.category) || 'supplement',
+    description: normaliseOptionalText(item.description) || null,
+    unit_price: Math.max(0, Number(normaliseOptionalNumber(item.unit_price) || 0)),
+    cost_price: Math.max(0, Number(normaliseOptionalNumber(item.cost_price) || 0)),
+    reorder_level: Math.max(0, normaliseOptionalInteger(item.reorder_level) || 0),
+    is_stock_tracked: normaliseBoolean(item.is_stock_tracked) ?? true,
+    is_active: normaliseBoolean(item.is_active) ?? true,
+    updated_by: actorId || null,
+  };
+
+  if (!payload.name) {
+    throw new Error('Inventory item name is required.');
+  }
+
+  if (!payload.is_stock_tracked) {
+    payload.reorder_level = 0;
+  }
+
+  const openingStock = Math.max(0, normaliseOptionalInteger(item.opening_stock) || 0);
+
+  let saved = null;
+  let error = null;
+
+  if (item.id) {
+    ({ data: saved, error } = await client
+      .from('inventory_items')
+      .update(payload)
+      .eq('id', item.id)
+      .select(inventoryItemSelect)
+      .single());
+  } else {
+    ({ data: saved, error } = await client
+      .from('inventory_items')
+      .insert([{
+        ...payload,
+        current_stock: payload.is_stock_tracked ? openingStock : 0,
+        created_by: actorId || null,
+      }])
+      .select(inventoryItemSelect)
+      .single());
+  }
+
+  unwrap(error, 'Unable to save the inventory item.');
+
+  if (!item.id && payload.is_stock_tracked && openingStock > 0) {
+    const { error: movementError } = await client
+      .from('pos_stock_movements')
+      .insert([{
+        inventory_item_id: saved.id,
+        movement_type: 'opening_stock',
+        quantity_delta: openingStock,
+        previous_stock: 0,
+        next_stock: openingStock,
+        reference_note: 'Opening stock set during item creation',
+        created_by: actorId || null,
+      }]);
+
+    unwrap(movementError, 'Inventory item was saved, but the opening stock movement failed.');
+  }
+
+  return saved;
+};
+
+export const fetchInventoryMovements = async ({
+  itemId = null,
+  limit = 80,
+} = {}) => {
+  const client = ensureSupabase();
+  let request = client
+    .from('pos_stock_movements')
+    .select(inventoryMovementSelect)
+    .order('created_at', { ascending: false });
+
+  if (itemId) {
+    request = request.eq('inventory_item_id', itemId);
+  }
+
+  if (limit) {
+    request = request.limit(limit);
+  }
+
+  const { data, error } = await request;
+  unwrap(error, 'Unable to load inventory movement history.');
+  return data ?? [];
+};
+
+export const recordInventoryAdjustment = async (itemId, adjustment = {}) => {
+  if (!itemId) {
+    throw new Error('Select an inventory item first.');
+  }
+
+  const quantityDelta = normaliseOptionalInteger(pickFirstDefined(adjustment, ['quantityDelta', 'quantity_delta']));
+  if (!quantityDelta) {
+    throw new Error('Quantity delta must be a non-zero whole number.');
+  }
+
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('adjust_inventory_stock', {
+    p_item_id: itemId,
+    p_quantity_delta: quantityDelta,
+    p_movement_type: normaliseOptionalText(pickFirstDefined(adjustment, ['movementType', 'movement_type'])) || 'adjustment',
+    p_reference_note: normaliseOptionalText(pickFirstDefined(adjustment, ['referenceNote', 'reference_note'])),
+  });
+
+  unwrap(error, 'Unable to record the inventory adjustment.');
+  return data;
+};
+
+export const fetchPosSales = async ({
+  startDate = null,
+  endDate = null,
+  paymentMethod = 'all',
+  limit = 80,
+} = {}) => {
+  const client = ensureSupabase();
+  let request = client
+    .from('pos_sales')
+    .select(posSaleSelect)
+    .order('sold_at', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (startDate) {
+    request = request.gte('sold_at', new Date(startDate).toISOString());
+  }
+
+  if (endDate) {
+    const inclusiveEnd = new Date(`${endDate}T23:59:59.999Z`).toISOString();
+    request = request.lte('sold_at', inclusiveEnd);
+  }
+
+  if (paymentMethod && paymentMethod !== 'all') {
+    request = request.eq('payment_method', paymentMethod);
+  }
+
+  if (limit) {
+    request = request.limit(limit);
+  }
+
+  const { data, error } = await request;
+  unwrap(error, 'Unable to load POS sales.');
+  return data ?? [];
+};
+
+export const createPosSale = async (sale = {}) => {
+  const client = ensureSupabase();
+  const lineItems = (Array.isArray(sale.items) ? sale.items : []).map((item) => ({
+    inventory_item_id: normaliseOptionalText(pickFirstDefined(item, ['inventory_item_id', 'inventoryItemId'])),
+    quantity: Math.max(1, normaliseOptionalInteger(item.quantity) || 1),
+  })).filter((item) => item.inventory_item_id);
+
+  if (!lineItems.length) {
+    throw new Error('Add at least one sale line item.');
+  }
+
+  const { data, error } = await client.rpc('record_pos_sale', {
+    p_customer_id: normaliseOptionalText(pickFirstDefined(sale, ['customerId', 'customer_id'])) || null,
+    p_customer_name: normaliseOptionalText(pickFirstDefined(sale, ['customerName', 'customer_name'])) || null,
+    p_customer_email: normaliseOptionalText(pickFirstDefined(sale, ['customerEmail', 'customer_email'])) || null,
+    p_payment_method: normaliseOptionalText(pickFirstDefined(sale, ['paymentMethod', 'payment_method'])) || 'cash',
+    p_discount_amount: Math.max(0, Number(normaliseOptionalNumber(pickFirstDefined(sale, ['discountAmount', 'discount_amount'])) || 0)),
+    p_tax_amount: Math.max(0, Number(normaliseOptionalNumber(pickFirstDefined(sale, ['taxAmount', 'tax_amount'])) || 0)),
+    p_notes: normaliseOptionalText(sale.notes),
+    p_items: lineItems,
+  });
+
+  unwrap(error, 'Unable to complete the POS sale.');
+
+  const saleId = data?.id || data;
+  if (!saleId) {
+    return data;
+  }
+
+  const { data: refreshedSale, error: refreshError } = await client
+    .from('pos_sales')
+    .select(posSaleSelect)
+    .eq('id', saleId)
+    .single();
+
+  unwrap(refreshError, 'Sale recorded, but the saved receipt could not be loaded.');
+  return refreshedSale;
+};

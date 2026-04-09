@@ -23,11 +23,13 @@ export const PATHS = {
   staffNotifications: '/staff/notifications',
   staffWorkouts: '/staff/workouts',
   staffBilling: '/staff/billing',
+  staffPos: '/staff/pos',
   admin: '/admin',
   adminPlans: '/admin/plans',
   adminFinance: '/admin/finance',
   adminReports: '/admin/reports',
   adminCrm: '/admin/crm',
+  adminPos: '/admin/pos',
   memberDetail: '/admin/members/:memberId',
   exerciseDetail: '/exercise/:id',
 };
