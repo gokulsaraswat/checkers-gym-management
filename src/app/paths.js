@@ -26,6 +26,7 @@ export const PATHS = {
   admin: '/admin',
   adminPlans: '/admin/plans',
   adminFinance: '/admin/finance',
+  adminReports: '/admin/reports',
   memberDetail: '/admin/members/:memberId',
   exerciseDetail: '/exercise/:id',
 };

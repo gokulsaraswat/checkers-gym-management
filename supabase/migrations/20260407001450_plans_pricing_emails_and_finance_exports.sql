@@ -16,9 +16,24 @@ set
   currency_code = coalesce(nullif(btrim(currency_code), ''), 'INR'),
   display_order = coalesce(display_order, 0);
 
-create unique index if not exists membership_plans_plan_code_uidx
-  on public.membership_plans (plan_code)
-  where plan_code is not null;
+alter table public.membership_plans
+  alter column plan_code set not null;
+
+drop index if exists public.membership_plans_plan_code_uidx;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.membership_plans'::regclass
+      and conname = 'membership_plans_plan_code_key'
+  ) then
+    alter table public.membership_plans
+      add constraint membership_plans_plan_code_key unique (plan_code);
+  end if;
+end;
+$$;
 
 create table if not exists public.membership_add_ons (
   id uuid primary key default gen_random_uuid(),

@@ -30,6 +30,7 @@ import StaffBillingPage from '../features/billing/StaffBillingPage';
 import AdminPage from '../features/admin/AdminPage';
 import AdminPlansPage from '../features/plans/AdminPlansPage';
 import AdminFinancePage from '../features/finance/AdminFinancePage';
+import AdminReportsPage from '../features/reports/AdminReportsPage';
 import GuestRoute from '../routes/GuestRoute';
 import ProtectedRoute from '../routes/ProtectedRoute';
 import StaffRoute from '../routes/StaffRoute';
@@ -80,6 +81,7 @@ const AppRouter = () => (
         <Route path={PATHS.admin} element={<AdminPage />} />
         <Route path={PATHS.adminPlans} element={<AdminPlansPage />} />
         <Route path={PATHS.adminFinance} element={<AdminFinancePage />} />
+        <Route path={PATHS.adminReports} element={<AdminReportsPage />} />
         <Route path={PATHS.memberDetail} element={<MemberDetailPage />} />
       </Route>
 

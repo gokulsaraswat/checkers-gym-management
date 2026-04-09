@@ -43,7 +43,9 @@ import {
   Tooltip,
 } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
+import { Link as RouterLink } from 'react-router-dom';
 
+import { PATHS } from '../../app/paths';
 import LoadingScreen from '../../components/common/LoadingScreen';
 import MetricCard from '../../components/common/MetricCard';
 import SetupNotice from '../../components/common/SetupNotice';
@@ -390,6 +392,16 @@ const AdminFinancePage = () => {
           This patch gives admin a structured finance cockpit: issue renewal runs, email bills,
           track money in and money out, monitor expiring memberships, and export clean Excel or PDF reports.
         </Typography>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+          <Button
+            component={RouterLink}
+            to={PATHS.adminReports}
+            variant="outlined"
+            sx={{ textTransform: 'none', borderRadius: 999, alignSelf: 'flex-start' }}
+          >
+            Open reports and analytics
+          </Button>
+        </Stack>
       </Stack>
 
       <Paper sx={{ ...sectionCardSx, mb: 3 }}>

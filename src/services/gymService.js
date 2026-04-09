@@ -3658,3 +3658,176 @@ export const generateDueMembershipInvoicesWithEmail = async ({
 
   return invoices;
 };
+
+export const fetchClassBookingsBySessionIds = async (sessionIds = [], limit = 5000) => {
+  const ids = Array.from(new Set((sessionIds || []).filter(Boolean)));
+
+  if (!ids.length) {
+    return [];
+  }
+
+  const client = ensureSupabase();
+  let query = client
+    .from('class_bookings')
+    .select('*')
+    .in('class_session_id', ids)
+    .order('created_at', { ascending: false });
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+  unwrap(error, 'Unable to load class bookings for reports.');
+  return data ?? [];
+};
+
+export const fetchFinanceTargets = async ({ year = null, limit = 24 } = {}) => {
+  const client = ensureSupabase();
+  let query = client
+    .from('finance_targets')
+    .select('*')
+    .order('target_month', { ascending: false });
+
+  if (year) {
+    query = query
+      .gte('target_month', `${year}-01-01`)
+      .lte('target_month', `${year}-12-31`);
+  }
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+  unwrap(error, 'Unable to load finance targets.');
+  return data ?? [];
+};
+
+export const saveFinanceTarget = async (target = {}, actorId = null) => {
+  const client = ensureSupabase();
+  const targetMonth = normaliseOptionalDate(target.target_month || target.targetMonth);
+
+  if (!targetMonth) {
+    throw new Error('Target month is required.');
+  }
+
+  const payload = {
+    target_month: targetMonth,
+    collections_target: Math.max(0, Number(target.collections_target || target.collectionsTarget || 0)),
+    expense_cap: Math.max(0, Number(target.expense_cap || target.expenseCap || 0)),
+    active_members_target: Math.max(0, Number(target.active_members_target || target.activeMembersTarget || 0)),
+    renewals_target: Math.max(0, Number(target.renewals_target || target.renewalsTarget || 0)),
+    notes: normaliseOptionalText(target.notes),
+    updated_by: actorId || null,
+  };
+
+  let data = null;
+  let error = null;
+
+  if (target.id) {
+    ({ data, error } = await client
+      .from('finance_targets')
+      .update(payload)
+      .eq('id', target.id)
+      .select('*')
+      .single());
+  } else {
+    payload.created_by = actorId || null;
+    ({ data, error } = await client
+      .from('finance_targets')
+      .upsert([payload], { onConflict: 'target_month' })
+      .select('*')
+      .single());
+  }
+
+  unwrap(error, 'Unable to save the finance target.');
+  return data;
+};
+
+export const deleteFinanceTarget = async (targetId) => {
+  if (!targetId) {
+    return;
+  }
+
+  const client = ensureSupabase();
+  const { error } = await client
+    .from('finance_targets')
+    .delete()
+    .eq('id', targetId);
+
+  unwrap(error, 'Unable to delete the finance target.');
+};
+
+export const fetchReportPresets = async ({ scope = 'admin_reports', limit = 24 } = {}) => {
+  const client = ensureSupabase();
+  let query = client
+    .from('report_presets')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (scope) {
+    query = query.eq('scope', scope);
+  }
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+  unwrap(error, 'Unable to load report presets.');
+  return data ?? [];
+};
+
+export const saveReportPreset = async (preset = {}, actorId = null) => {
+  const client = ensureSupabase();
+  const name = String(preset.name ?? '').trim();
+
+  if (!name) {
+    throw new Error('Preset name is required.');
+  }
+
+  const payload = {
+    name,
+    scope: preset.scope || 'admin_reports',
+    filters: preset.filters || {},
+    export_sections: preset.export_sections || preset.exportSections || [],
+    updated_by: actorId || null,
+  };
+
+  let data = null;
+  let error = null;
+
+  if (preset.id) {
+    ({ data, error } = await client
+      .from('report_presets')
+      .update(payload)
+      .eq('id', preset.id)
+      .select('*')
+      .single());
+  } else {
+    payload.created_by = actorId || null;
+    ({ data, error } = await client
+      .from('report_presets')
+      .insert([payload])
+      .select('*')
+      .single());
+  }
+
+  unwrap(error, 'Unable to save the report preset.');
+  return data;
+};
+
+export const deleteReportPreset = async (presetId) => {
+  if (!presetId) {
+    return;
+  }
+
+  const client = ensureSupabase();
+  const { error } = await client
+    .from('report_presets')
+    .delete()
+    .eq('id', presetId);
+
+  unwrap(error, 'Unable to delete the report preset.');
+};

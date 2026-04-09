@@ -42,7 +42,6 @@ const Navbar = () => {
     await signOut();
     navigate(PATHS.home);
   };
-
   useEffect(() => {
     let active = true;
 
@@ -67,10 +66,10 @@ const Navbar = () => {
     };
 
     const handleNotificationsChanged = () => {
-      syncUnreadCount();
+      void syncUnreadCount();
     };
 
-    syncUnreadCount();
+    void syncUnreadCount();
     window.addEventListener('gym:notifications-changed', handleNotificationsChanged);
 
     return () => {
@@ -78,6 +77,7 @@ const Navbar = () => {
       window.removeEventListener('gym:notifications-changed', handleNotificationsChanged);
     };
   }, [isConfigured, location.pathname, user]);
+
 
   return (
     <AppBar
@@ -161,7 +161,10 @@ const Navbar = () => {
           ) : null}
 
           {profile?.role === 'admin' ? (
-            <NavLink to={PATHS.admin} style={linkStyle}>Admin</NavLink>
+            <>
+              <NavLink to={PATHS.admin} style={linkStyle}>Admin</NavLink>
+              <NavLink to={PATHS.adminReports} style={linkStyle}>Reports</NavLink>
+            </>
           ) : null}
 
           {user ? (
