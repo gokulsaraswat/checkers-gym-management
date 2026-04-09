@@ -382,7 +382,7 @@ const AdminPage = () => {
             </Typography>
             <Typography color="text.secondary" maxWidth="920px">
               This phase turns the admin area into a real operations workspace: create members, filter the roster,
-              suspend or reactivate accounts, maintain staff roles, launch the pricing catalog, open the finance export center, and review owner-ready reports.
+              suspend or reactivate accounts, maintain staff roles, launch the pricing catalog, open the finance export center, review owner-ready reports, and keep the CRM lead pipeline moving every day.
             </Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
               <Button
@@ -400,6 +400,14 @@ const AdminPage = () => {
                 sx={{ textTransform: 'none', borderRadius: 999, alignSelf: 'flex-start' }}
               >
                 Finance and exports
+              </Button>
+              <Button
+                component={RouterLink}
+                to={PATHS.adminCrm}
+                variant="outlined"
+                sx={{ textTransform: 'none', borderRadius: 999, alignSelf: 'flex-start' }}
+              >
+                CRM and leads
               </Button>
               <Button
                 component={RouterLink}

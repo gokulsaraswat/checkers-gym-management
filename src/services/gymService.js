@@ -3831,3 +3831,317 @@ export const deleteReportPreset = async (presetId) => {
 
   unwrap(error, 'Unable to delete the report preset.');
 };
+
+const crmLeadSelect = `
+  id,
+  full_name,
+  email,
+  phone,
+  source,
+  stage,
+  assigned_to,
+  preferred_contact_method,
+  interested_plan_id,
+  interested_add_on_codes,
+  estimated_value,
+  expected_close_date,
+  next_follow_up_at,
+  last_contacted_at,
+  trial_scheduled_at,
+  branch_name,
+  notes,
+  tags,
+  converted_member_id,
+  won_at,
+  lost_at,
+  lost_reason,
+  is_archived,
+  created_by,
+  updated_by,
+  created_at,
+  updated_at,
+  plan:membership_plans!crm_leads_interested_plan_id_fkey (
+    id,
+    name,
+    plan_code,
+    price,
+    currency_code,
+    duration_months,
+    billing_cycle
+  ),
+  assignee:profiles!crm_leads_assigned_to_fkey (
+    id,
+    email,
+    full_name,
+    role,
+    is_active
+  ),
+  converter:profiles!crm_leads_converted_member_id_fkey (
+    id,
+    email,
+    full_name,
+    role,
+    is_active
+  )
+`;
+
+const crmLeadInteractionSelect = `
+  id,
+  lead_id,
+  interaction_type,
+  summary,
+  outcome,
+  interaction_at,
+  next_follow_up_at,
+  created_by,
+  created_at,
+  updated_at,
+  lead:crm_leads!crm_lead_interactions_lead_id_fkey (
+    id,
+    full_name,
+    email,
+    phone,
+    stage,
+    next_follow_up_at,
+    assigned_to
+  ),
+  actor:profiles!crm_lead_interactions_created_by_fkey (
+    id,
+    email,
+    full_name,
+    role,
+    is_active
+  )
+`;
+
+const normaliseOptionalTextArray = (value) => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const list = Array.isArray(value)
+    ? value
+    : String(value || '').split(',');
+
+  return Array.from(new Set(list
+    .map((item) => String(item || '').trim())
+    .filter(Boolean)));
+};
+
+export const fetchCrmLeads = async ({
+  stage = 'all',
+  source = 'all',
+  ownerId = null,
+  query = '',
+  includeArchived = false,
+  limit = 160,
+} = {}) => {
+  const client = ensureSupabase();
+  let request = client
+    .from('crm_leads')
+    .select(crmLeadSelect)
+    .order('next_follow_up_at', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: false });
+
+  if (stage && stage !== 'all') {
+    request = request.eq('stage', stage);
+  }
+
+  if (source && source !== 'all') {
+    request = request.eq('source', source);
+  }
+
+  if (ownerId && ownerId !== 'all') {
+    request = request.eq('assigned_to', ownerId);
+  }
+
+  if (!includeArchived) {
+    request = request.eq('is_archived', false);
+  }
+
+  const trimmedQuery = String(query || '').trim();
+  if (trimmedQuery) {
+    request = request.or(`full_name.ilike.%${trimmedQuery}%,email.ilike.%${trimmedQuery}%,phone.ilike.%${trimmedQuery}%,branch_name.ilike.%${trimmedQuery}%`);
+  }
+
+  if (limit) {
+    request = request.limit(limit);
+  }
+
+  const { data, error } = await request;
+  unwrap(error, 'Unable to load CRM leads.');
+  return data ?? [];
+};
+
+export const fetchCrmLeadInteractions = async ({
+  leadId = null,
+  limit = 120,
+} = {}) => {
+  const client = ensureSupabase();
+  let request = client
+    .from('crm_lead_interactions')
+    .select(crmLeadInteractionSelect)
+    .order('interaction_at', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (leadId) {
+    request = request.eq('lead_id', leadId);
+  }
+
+  if (limit) {
+    request = request.limit(limit);
+  }
+
+  const { data, error } = await request;
+  unwrap(error, 'Unable to load CRM interactions.');
+  return data ?? [];
+};
+
+export const saveCrmLead = async (lead = {}, actorId = null) => {
+  const client = ensureSupabase();
+  const payload = {
+    full_name: String(pickFirstDefined(lead, ['full_name', 'fullName']) ?? '').trim(),
+    email: normaliseOptionalText(lead.email),
+    phone: normaliseOptionalText(lead.phone),
+    source: normaliseOptionalText(lead.source) || 'walk_in',
+    stage: normaliseOptionalText(lead.stage) || 'new',
+    assigned_to: normaliseOptionalText(pickFirstDefined(lead, ['assigned_to', 'assignedTo'])) || null,
+    preferred_contact_method: normaliseOptionalText(pickFirstDefined(lead, ['preferred_contact_method', 'preferredContactMethod'])) || 'phone',
+    interested_plan_id: normaliseOptionalText(pickFirstDefined(lead, ['interested_plan_id', 'interestedPlanId'])) || null,
+    interested_add_on_codes: normaliseOptionalTextArray(pickFirstDefined(lead, ['interested_add_on_codes', 'interestedAddOnCodes'])) || [],
+    estimated_value: Math.max(0, Number(normaliseOptionalNumber(pickFirstDefined(lead, ['estimated_value', 'estimatedValue'])) || 0)),
+    expected_close_date: normaliseOptionalDate(pickFirstDefined(lead, ['expected_close_date', 'expectedCloseDate'])),
+    next_follow_up_at: normaliseOptionalTimestamp(pickFirstDefined(lead, ['next_follow_up_at', 'nextFollowUpAt'])),
+    trial_scheduled_at: normaliseOptionalTimestamp(pickFirstDefined(lead, ['trial_scheduled_at', 'trialScheduledAt'])),
+    branch_name: normaliseOptionalText(pickFirstDefined(lead, ['branch_name', 'branchName'])),
+    notes: normaliseOptionalText(lead.notes),
+    tags: normaliseOptionalTextArray(lead.tags) || [],
+    lost_reason: normaliseOptionalText(pickFirstDefined(lead, ['lost_reason', 'lostReason'])),
+    updated_by: actorId || null,
+  };
+
+  if (!payload.full_name) {
+    throw new Error('Lead full name is required.');
+  }
+
+  if (payload.stage === 'won') {
+    payload.won_at = new Date().toISOString();
+    payload.lost_at = null;
+    payload.lost_reason = null;
+  } else if (payload.stage === 'lost') {
+    payload.lost_at = new Date().toISOString();
+  }
+
+  let data = null;
+  let error = null;
+
+  if (lead.id) {
+    ({ data, error } = await client
+      .from('crm_leads')
+      .update(payload)
+      .eq('id', lead.id)
+      .select(crmLeadSelect)
+      .single());
+  } else {
+    payload.created_by = actorId || null;
+    ({ data, error } = await client
+      .from('crm_leads')
+      .insert([payload])
+      .select(crmLeadSelect)
+      .single());
+  }
+
+  unwrap(error, 'Unable to save the CRM lead.');
+  return data;
+};
+
+export const saveCrmLeadInteraction = async (interaction = {}, actorId = null) => {
+  const client = ensureSupabase();
+  const leadId = normaliseOptionalText(pickFirstDefined(interaction, ['lead_id', 'leadId']));
+
+  if (!leadId) {
+    throw new Error('Lead id is required.');
+  }
+
+  const payload = {
+    lead_id: leadId,
+    interaction_type: normaliseOptionalText(pickFirstDefined(interaction, ['interaction_type', 'interactionType'])) || 'note',
+    summary: String(interaction.summary ?? '').trim(),
+    outcome: normaliseOptionalText(interaction.outcome),
+    interaction_at: normaliseOptionalTimestamp(pickFirstDefined(interaction, ['interaction_at', 'interactionAt'])) || new Date().toISOString(),
+    next_follow_up_at: normaliseOptionalTimestamp(pickFirstDefined(interaction, ['next_follow_up_at', 'nextFollowUpAt'])),
+    created_by: actorId || null,
+  };
+
+  if (!payload.summary) {
+    throw new Error('Interaction summary is required.');
+  }
+
+  const { data, error } = await client
+    .from('crm_lead_interactions')
+    .insert([payload])
+    .select(crmLeadInteractionSelect)
+    .single();
+
+  unwrap(error, 'Unable to save the CRM interaction.');
+  return data;
+};
+
+export const updateCrmLeadStage = async (leadId, stage, actorId = null, extras = {}) => {
+  if (!leadId) {
+    throw new Error('Lead id is required.');
+  }
+
+  const client = ensureSupabase();
+  const payload = {
+    stage,
+    updated_by: actorId || null,
+  };
+
+  if (hasOwn(extras, 'next_follow_up_at') || hasOwn(extras, 'nextFollowUpAt')) {
+    payload.next_follow_up_at = normaliseOptionalTimestamp(pickFirstDefined(extras, ['next_follow_up_at', 'nextFollowUpAt']));
+  }
+
+  if (stage === 'won') {
+    payload.won_at = new Date().toISOString();
+    payload.lost_at = null;
+    payload.lost_reason = null;
+    payload.is_archived = false;
+  }
+
+  if (stage === 'lost') {
+    payload.lost_at = new Date().toISOString();
+    payload.won_at = null;
+    payload.lost_reason = normaliseOptionalText(pickFirstDefined(extras, ['lost_reason', 'lostReason'])) || null;
+  }
+
+  const { data, error } = await client
+    .from('crm_leads')
+    .update(payload)
+    .eq('id', leadId)
+    .select(crmLeadSelect)
+    .single();
+
+  unwrap(error, 'Unable to update the CRM lead stage.');
+  return data;
+};
+
+export const archiveCrmLead = async (leadId, isArchived = true, actorId = null) => {
+  if (!leadId) {
+    throw new Error('Lead id is required.');
+  }
+
+  const client = ensureSupabase();
+  const { data, error } = await client
+    .from('crm_leads')
+    .update({
+      is_archived: Boolean(isArchived),
+      updated_by: actorId || null,
+    })
+    .eq('id', leadId)
+    .select(crmLeadSelect)
+    .single();
+
+  unwrap(error, 'Unable to update the CRM lead.');
+  return data;
+};

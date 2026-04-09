@@ -163,6 +163,7 @@ const Navbar = () => {
           {profile?.role === 'admin' ? (
             <>
               <NavLink to={PATHS.admin} style={linkStyle}>Admin</NavLink>
+              <NavLink to={PATHS.adminCrm} style={linkStyle}>CRM</NavLink>
               <NavLink to={PATHS.adminReports} style={linkStyle}>Reports</NavLink>
             </>
           ) : null}
