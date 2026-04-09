@@ -29,7 +29,7 @@ import {
 } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
 
-import { getAdminMemberDetailPath } from '../../app/paths';
+import { getAdminMemberDetailPath, PATHS } from '../../app/paths';
 import LoadingScreen from '../../components/common/LoadingScreen';
 import MetricCard from '../../components/common/MetricCard';
 import SetupNotice from '../../components/common/SetupNotice';
@@ -98,7 +98,23 @@ const emptyFilters = {
   sort: 'recent',
 };
 
-const currency = (value) => `$${Number(value || 0).toFixed(2)}`;
+const currency = (value) => {
+  const amount = Number(value || 0);
+
+  if (!Number.isFinite(amount)) {
+    return '—';
+  }
+
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch (error) {
+    return `INR ${amount.toFixed(2)}`;
+  }
+};
 
 const AdminPage = () => {
   const { loading, profile } = useAuth();
@@ -134,7 +150,7 @@ const AdminPage = () => {
   };
 
   useEffect(() => {
-    loadAdminData();
+    void loadAdminData();
   }, []);
 
   const stats = useMemo(
@@ -362,12 +378,30 @@ const AdminPage = () => {
               Admin command center
             </Typography>
             <Typography variant="h3" fontWeight={800} sx={{ fontSize: { xs: '32px', md: '46px' } }}>
-              Fully manage members, plans, and access
+              Fully manage members, plans, access, and finance
             </Typography>
             <Typography color="text.secondary" maxWidth="920px">
               This phase turns the admin area into a real operations workspace: create members, filter the roster,
-              suspend or reactivate accounts, maintain staff roles, and review recent admin activity.
+              suspend or reactivate accounts, maintain staff roles, launch the pricing catalog, and open the finance export center.
             </Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+              <Button
+                component={RouterLink}
+                to={PATHS.adminPlans}
+                variant="contained"
+                sx={{ textTransform: 'none', borderRadius: 999, bgcolor: '#ff2625', '&:hover': { bgcolor: '#df1d1d' }, alignSelf: 'flex-start' }}
+              >
+                Pricing catalog and renewals
+              </Button>
+              <Button
+                component={RouterLink}
+                to={PATHS.adminFinance}
+                variant="outlined"
+                sx={{ textTransform: 'none', borderRadius: 999, alignSelf: 'flex-start' }}
+              >
+                Finance and exports
+              </Button>
+            </Stack>
           </Stack>
 
           <Grid container spacing={3} mb={1}>
@@ -749,7 +783,7 @@ const AdminPage = () => {
                                 size="small"
                                 value={member.role}
                                 onChange={(event) => {
-                                  handleMemberUpdate(
+                                  void handleMemberUpdate(
                                     member.id,
                                     { role: event.target.value },
                                     `Changed role for ${member.full_name || member.email}.`,
@@ -771,7 +805,7 @@ const AdminPage = () => {
                                 size="small"
                                 value={member.plan_id || ''}
                                 onChange={(event) => {
-                                  handleMemberUpdate(
+                                  void handleMemberUpdate(
                                     member.id,
                                     { planId: event.target.value || null },
                                     `Updated plan assignment for ${member.full_name || member.email}.`,
@@ -795,7 +829,7 @@ const AdminPage = () => {
                                   size="small"
                                   value={member.membership_status}
                                   onChange={(event) => {
-                                    handleMemberUpdate(
+                                    void handleMemberUpdate(
                                       member.id,
                                       { membershipStatus: event.target.value },
                                       `Updated membership status for ${member.full_name || member.email}.`,
@@ -823,7 +857,7 @@ const AdminPage = () => {
                                   <Switch
                                     checked={Boolean(member.is_active)}
                                     onChange={(event) => {
-                                      handleMemberUpdate(
+                                      void handleMemberUpdate(
                                         member.id,
                                         { isActive: event.target.checked },
                                         event.target.checked
@@ -871,7 +905,7 @@ const AdminPage = () => {
                                   size="small"
                                   variant="outlined"
                                   onClick={() => {
-                                    handleQuickAction(
+                                    void handleQuickAction(
                                       member,
                                       member.is_active && member.membership_status !== 'suspended' ? 'suspend' : 'reactivate',
                                     );
@@ -885,7 +919,7 @@ const AdminPage = () => {
                                   size="small"
                                   variant="outlined"
                                   onClick={() => {
-                                    handleQuickAction(member, 'expire');
+                                    void handleQuickAction(member, 'expire');
                                   }}
                                   sx={{ textTransform: 'none', borderRadius: 999 }}
                                 >
@@ -897,7 +931,7 @@ const AdminPage = () => {
                                   color="error"
                                   startIcon={<DeleteOutline />}
                                   onClick={() => {
-                                    handleDeleteMember(member);
+                                    void handleDeleteMember(member);
                                   }}
                                   sx={{ textTransform: 'none', borderRadius: 999 }}
                                 >
@@ -1022,13 +1056,7 @@ const AdminPage = () => {
                             disabled={savingPlan}
                             sx={{ textTransform: 'none', borderRadius: 999, bgcolor: '#ff2625', '&:hover': { bgcolor: '#df1d1d' } }}
                           >
-                            {(() => {
-                              if (savingPlan) {
-                                return 'Saving...';
-                              }
-
-                              return planForm.id ? 'Update plan' : 'Create plan';
-                            })()}
+                            {savingPlan ? 'Saving...' : (planForm.id ? 'Update plan' : 'Create plan')}
                           </Button>
                         </Stack>
                       </Grid>
@@ -1084,7 +1112,7 @@ const AdminPage = () => {
                                   size="small"
                                   color="error"
                                   onClick={() => {
-                                    handleDeletePlan(plan.id);
+                                    void handleDeletePlan(plan.id);
                                   }}
                                   sx={{ textTransform: 'none', borderRadius: 999 }}
                                 >

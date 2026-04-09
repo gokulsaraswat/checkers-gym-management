@@ -92,6 +92,7 @@ const memberClassBookingSelect = `
   )
 `;
 
+
 const exerciseLibrarySelect = `
   id,
   name,
@@ -224,6 +225,8 @@ const workoutAssignmentSelect = `
     )
   )
 `;
+
+
 
 const nutritionTemplateSelect = `
   id,
@@ -437,6 +440,7 @@ const billingPaymentSelect = `
   )
 `;
 
+
 const notificationPreferenceSelect = `
   user_id,
   email_enabled,
@@ -605,17 +609,9 @@ const unwrap = (error, fallbackMessage) => {
 
 const hasOwn = (value, key) => Object.prototype.hasOwnProperty.call(value, key);
 
-const pickFirstDefined = (value, keys) => keys.reduce((accumulator, key) => {
-  if (accumulator !== undefined) {
-    return accumulator;
-  }
-
-  if (hasOwn(value, key)) {
-    return value[key];
-  }
-
-  return undefined;
-}, undefined);
+const pickFirstDefined = (value, keys) => keys.reduce((accumulator, key) => (
+  accumulator !== undefined ? accumulator : (hasOwn(value, key) ? value[key] : undefined)
+), undefined);
 
 const normaliseOptionalText = (value) => {
   if (value === undefined) {
@@ -685,6 +681,7 @@ const normaliseOptionalNumber = (value) => {
   return numericValue;
 };
 
+
 const normaliseOptionalInteger = (value) => {
   const numericValue = normaliseOptionalNumber(value);
 
@@ -705,6 +702,7 @@ const normaliseBoolean = (value) => {
 
 const todayIsoDate = () => new Date().toISOString().slice(0, 10);
 
+
 const sortNestedWorkoutProgram = (program = {}) => ({
   ...program,
   days: [...(program.days || [])]
@@ -720,6 +718,7 @@ const sortNestedWorkoutAssignment = (assignment = {}) => ({
   ...assignment,
   program: assignment.program ? sortNestedWorkoutProgram(assignment.program) : assignment.program,
 });
+
 
 const sortNestedNutritionTemplate = (template = {}) => ({
   ...template,
@@ -1022,6 +1021,7 @@ export const updateMember = async (memberId, changes, options = {}) => {
   return fetchMemberById(memberId);
 };
 
+
 export const fetchWorkouts = async (userId) => {
   const client = ensureSupabase();
   const { data, error } = await client
@@ -1090,6 +1090,7 @@ export const saveWorkout = async (userId, workout) => {
 };
 
 export const deleteWorkout = async (workoutId) => {
+
   const client = ensureSupabase();
   const { error } = await client
     .from('workouts')
@@ -1098,6 +1099,8 @@ export const deleteWorkout = async (workoutId) => {
 
   unwrap(error, 'Unable to delete workout.');
 };
+
+
 
 export const fetchExerciseLibrary = async ({ includeInactive = true } = {}) => {
   const client = ensureSupabase();
@@ -1313,7 +1316,7 @@ export const saveWorkoutProgram = async (program = {}, actorId = null) => {
 
   unwrap(deleteDaysError, 'Unable to refresh the workout program days.');
 
-  const dayRows = await Promise.all(programDays.map(async (day) => {
+  for (const day of programDays) {
     const { data: dayRow, error: dayError } = await client
       .from('workout_program_days')
       .insert([{
@@ -1328,10 +1331,7 @@ export const saveWorkoutProgram = async (program = {}, actorId = null) => {
       .single();
 
     unwrap(dayError, 'Unable to save one of the workout program days.');
-    return { day, dayRow };
-  }));
 
-  await Promise.all(dayRows.map(async ({ day, dayRow }) => {
     const exerciseRows = day.exercises.map((exercise) => ({
       ...exercise,
       program_day_id: dayRow.id,
@@ -1342,7 +1342,7 @@ export const saveWorkoutProgram = async (program = {}, actorId = null) => {
       .insert(exerciseRows);
 
     unwrap(exerciseError, 'Unable to save the exercise prescriptions for this day.');
-  }));
+  }
 
   const { data: refreshedProgram, error: refreshedProgramError } = await client
     .from('workout_programs')
@@ -1399,6 +1399,8 @@ export const saveWorkoutAssignment = async (assignment = {}, actorId = null) => 
   unwrap(error, 'Unable to save the workout assignment.');
   return sortNestedWorkoutAssignment(data);
 };
+
+
 
 export const fetchNutritionTemplates = async ({
   includeArchived = true,
@@ -2311,6 +2313,7 @@ export const deleteMemberNote = async (noteId) => {
   unwrap(error, 'Unable to delete member note.');
 };
 
+
 export const fetchMemberAttendanceVisits = async (memberId, limit = 20) => {
   const client = ensureSupabase();
   let query = client
@@ -2404,6 +2407,7 @@ export const recordStaffCheckOut = async (memberId, options = {}) => {
   unwrap(error, 'Unable to check this member out.');
   return data;
 };
+
 
 export const fetchBillingProfile = async (userId) => {
   const client = ensureSupabase();
@@ -2677,6 +2681,7 @@ export const generateDueMembershipInvoices = async ({ dueDate = todayIsoDate(), 
   return data ?? [];
 };
 
+
 export const emitNotificationsChanged = () => {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('gym:notifications-changed'));
@@ -2829,6 +2834,7 @@ export const sendStaffNotification = async (payload = {}) => {
   emitNotificationsChanged();
   return Number(data || 0);
 };
+
 
 export const fetchStaffDirectory = async (query = '', includeInactive = false, limit = 80) => {
   const client = ensureSupabase();
@@ -3174,6 +3180,7 @@ export const saveStaffCommissionEntry = async (entry = {}) => {
   return data;
 };
 
+
 export const fetchAdminActivity = async ({ memberId = null, limit = 12 } = {}) => {
   const client = ensureSupabase();
   let query = client
@@ -3232,4 +3239,422 @@ export const invokeAdminMemberAction = async (action, payload) => {
   }
 
   return data;
+};
+
+const membershipPlanCatalogSelect = `
+  id,
+  name,
+  plan_code,
+  description,
+  price,
+  billing_cycle,
+  duration_weeks,
+  duration_months,
+  currency_code,
+  display_order,
+  is_active,
+  created_at,
+  updated_at
+`;
+
+const membershipAddOnSelect = `
+  id,
+  add_on_code,
+  name,
+  description,
+  category,
+  price,
+  billing_frequency,
+  currency_code,
+  sort_order,
+  is_active,
+  created_at,
+  updated_at
+`;
+
+const memberAddOnSubscriptionSelect = `
+  id,
+  member_id,
+  add_on_id,
+  status,
+  start_date,
+  end_date,
+  next_billing_date,
+  price_override,
+  notes,
+  assigned_by,
+  created_at,
+  updated_at,
+  add_on:membership_add_ons (
+    id,
+    add_on_code,
+    name,
+    category,
+    price,
+    billing_frequency,
+    currency_code,
+    is_active
+  )
+`;
+
+const operatingExpenseSelect = `
+  id,
+  expense_date,
+  expense_category,
+  description,
+  vendor_name,
+  amount,
+  currency_code,
+  payment_method,
+  branch_name,
+  notes,
+  recorded_by,
+  created_at,
+  updated_at
+`;
+
+const billingEmailLogSelect = `
+  id,
+  invoice_id,
+  member_id,
+  recipient_email,
+  trigger_source,
+  delivery_status,
+  provider_name,
+  provider_message_id,
+  subject,
+  error_message,
+  sent_at,
+  created_at,
+  updated_at,
+  invoice:billing_invoices (
+    id,
+    invoice_number,
+    invoice_type,
+    status,
+    total_amount,
+    currency_code,
+    due_date
+  ),
+  member:profiles!billing_email_log_member_id_fkey (
+    id,
+    email,
+    full_name
+  )
+`;
+
+export const fetchMembershipPlanCatalog = async () => {
+  const client = ensureSupabase();
+  const { data, error } = await client
+    .from('membership_plans')
+    .select(membershipPlanCatalogSelect)
+    .order('display_order', { ascending: true })
+    .order('duration_months', { ascending: true })
+    .order('price', { ascending: true });
+
+  unwrap(error, 'Unable to load the membership pricing catalog.');
+  return data ?? [];
+};
+
+export const saveMembershipPlanCatalog = async (plan = {}) => {
+  const client = ensureSupabase();
+  const payload = {
+    name: String(plan.name ?? '').trim(),
+    plan_code: normaliseOptionalText(plan.plan_code) || null,
+    description: normaliseOptionalText(plan.description) || null,
+    price: Math.max(0, Number(plan.price || 0)),
+    billing_cycle: plan.billing_cycle || 'month',
+    duration_weeks: Math.max(1, normaliseOptionalInteger(plan.duration_weeks) || Math.max(Number(plan.duration_months || 1) * 4, 4)),
+    duration_months: Math.max(1, normaliseOptionalInteger(plan.duration_months) || 1),
+    currency_code: normaliseOptionalText(plan.currency_code) || 'INR',
+    display_order: Math.max(0, normaliseOptionalInteger(plan.display_order) || 0),
+    is_active: normaliseBoolean(plan.is_active) ?? true,
+  };
+
+  if (!payload.name) {
+    throw new Error('Plan name is required.');
+  }
+
+  let data = null;
+  let error = null;
+
+  if (plan.id) {
+    ({ data, error } = await client
+      .from('membership_plans')
+      .update(payload)
+      .eq('id', plan.id)
+      .select(membershipPlanCatalogSelect)
+      .single());
+  } else {
+    ({ data, error } = await client
+      .from('membership_plans')
+      .insert([payload])
+      .select(membershipPlanCatalogSelect)
+      .single());
+  }
+
+  unwrap(error, 'Unable to save the membership plan.');
+  return data;
+};
+
+export const fetchMembershipAddOns = async () => {
+  const client = ensureSupabase();
+  const { data, error } = await client
+    .from('membership_add_ons')
+    .select(membershipAddOnSelect)
+    .order('sort_order', { ascending: true })
+    .order('price', { ascending: true });
+
+  unwrap(error, 'Unable to load membership add-ons.');
+  return data ?? [];
+};
+
+export const saveMembershipAddOn = async (addOn = {}) => {
+  const client = ensureSupabase();
+  const payload = {
+    add_on_code: normaliseOptionalText(addOn.add_on_code) || null,
+    name: String(addOn.name ?? '').trim(),
+    description: normaliseOptionalText(addOn.description) || null,
+    category: addOn.category || 'general',
+    price: Math.max(0, Number(addOn.price || 0)),
+    billing_frequency: addOn.billing_frequency || 'recurring',
+    currency_code: normaliseOptionalText(addOn.currency_code) || 'INR',
+    sort_order: Math.max(0, normaliseOptionalInteger(addOn.sort_order) || 0),
+    is_active: normaliseBoolean(addOn.is_active) ?? true,
+  };
+
+  if (!payload.name) {
+    throw new Error('Add-on name is required.');
+  }
+
+  let data = null;
+  let error = null;
+
+  if (addOn.id) {
+    ({ data, error } = await client
+      .from('membership_add_ons')
+      .update(payload)
+      .eq('id', addOn.id)
+      .select(membershipAddOnSelect)
+      .single());
+  } else {
+    ({ data, error } = await client
+      .from('membership_add_ons')
+      .insert([payload])
+      .select(membershipAddOnSelect)
+      .single());
+  }
+
+  unwrap(error, 'Unable to save the add-on.');
+  return data;
+};
+
+export const fetchMemberAddOnSubscriptions = async (memberId) => {
+  if (!memberId) {
+    return [];
+  }
+
+  const client = ensureSupabase();
+  const { data, error } = await client
+    .from('member_add_on_subscriptions')
+    .select(memberAddOnSubscriptionSelect)
+    .eq('member_id', memberId)
+    .order('status', { ascending: true })
+    .order('start_date', { ascending: false });
+
+  unwrap(error, 'Unable to load the member add-on subscriptions.');
+  return data ?? [];
+};
+
+export const sendBillingInvoiceEmail = async (invoiceId, options = {}) => {
+  if (!invoiceId) {
+    throw new Error('Invoice id is required before sending email.');
+  }
+
+  const client = ensureSupabase();
+  const { data, error } = await client.functions.invoke('send-billing-email', {
+    body: {
+      invoiceId,
+      recipientEmail: normaliseOptionalText(options.recipientEmail),
+      triggerSource: options.triggerSource || 'manual',
+    },
+  });
+
+  if (error) {
+    const parsedError = await parseFunctionError(error);
+    throw new Error(parsedError || 'Unable to send billing email.');
+  }
+
+  if (data?.error) {
+    throw new Error(data.error);
+  }
+
+  return data;
+};
+
+export const issueMembershipBundleInvoice = async ({
+  memberId,
+  planId,
+  addOnIds = [],
+  startDate = todayIsoDate(),
+  dueDate = todayIsoDate(),
+  discountAmount = 0,
+  notes = null,
+  sendEmail = true,
+} = {}) => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('issue_membership_bundle_invoice', {
+    p_member_id: memberId,
+    p_plan_id: planId,
+    p_start_date: startDate,
+    p_add_on_ids: addOnIds,
+    p_discount_amount: Math.max(0, Number(discountAmount || 0)),
+    p_due_date: dueDate,
+    p_notes: normaliseOptionalText(notes),
+  });
+
+  unwrap(error, 'Unable to issue the membership bundle invoice.');
+
+  if (sendEmail && data?.id) {
+    try {
+      await sendBillingInvoiceEmail(data.id, {
+        triggerSource: 'new_plan',
+      });
+    } catch (emailError) {
+      return {
+        ...data,
+        email_delivery_error: emailError.message || 'Unable to send the invoice email.',
+      };
+    }
+  }
+
+  return data;
+};
+
+export const fetchOperatingExpenses = async ({
+  startDate = null,
+  endDate = null,
+  category = 'all',
+  limit = 120,
+} = {}) => {
+  const client = ensureSupabase();
+  let query = client
+    .from('operating_expenses')
+    .select(operatingExpenseSelect)
+    .order('expense_date', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (startDate) {
+    query = query.gte('expense_date', startDate);
+  }
+
+  if (endDate) {
+    query = query.lte('expense_date', endDate);
+  }
+
+  if (category && category !== 'all') {
+    query = query.eq('expense_category', category);
+  }
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+  unwrap(error, 'Unable to load operating expenses.');
+  return data ?? [];
+};
+
+export const saveOperatingExpense = async (expense = {}, actorId = null) => {
+  const client = ensureSupabase();
+  const payload = {
+    expense_date: normaliseOptionalDate(expense.expense_date) || todayIsoDate(),
+    expense_category: expense.expense_category || 'misc',
+    description: String(expense.description ?? '').trim(),
+    vendor_name: normaliseOptionalText(expense.vendor_name),
+    amount: Math.max(0, Number(expense.amount || 0)),
+    currency_code: normaliseOptionalText(expense.currency_code) || 'INR',
+    payment_method: normaliseOptionalText(expense.payment_method) || 'upi',
+    branch_name: normaliseOptionalText(expense.branch_name),
+    notes: normaliseOptionalText(expense.notes),
+    recorded_by: actorId || null,
+  };
+
+  if (!payload.description) {
+    throw new Error('Expense description is required.');
+  }
+
+  if (!payload.amount || payload.amount <= 0) {
+    throw new Error('Expense amount must be greater than zero.');
+  }
+
+  let data = null;
+  let error = null;
+
+  if (expense.id) {
+    ({ data, error } = await client
+      .from('operating_expenses')
+      .update(payload)
+      .eq('id', expense.id)
+      .select(operatingExpenseSelect)
+      .single());
+  } else {
+    ({ data, error } = await client
+      .from('operating_expenses')
+      .insert([payload])
+      .select(operatingExpenseSelect)
+      .single());
+  }
+
+  unwrap(error, 'Unable to save the expense.');
+  return data;
+};
+
+export const fetchBillingEmailLog = async ({
+  invoiceId = null,
+  memberId = null,
+  limit = 80,
+} = {}) => {
+  const client = ensureSupabase();
+  let query = client
+    .from('billing_email_log')
+    .select(billingEmailLogSelect)
+    .order('created_at', { ascending: false });
+
+  if (invoiceId) {
+    query = query.eq('invoice_id', invoiceId);
+  }
+
+  if (memberId) {
+    query = query.eq('member_id', memberId);
+  }
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+
+  const { data, error } = await query;
+  unwrap(error, 'Unable to load billing email activity.');
+  return data ?? [];
+};
+
+export const generateDueMembershipInvoicesWithEmail = async ({
+  dueDate = todayIsoDate(),
+  memberId = null,
+  sendEmails = false,
+  triggerSource = 'renewal',
+} = {}) => {
+  const invoices = await generateDueMembershipInvoices({ dueDate, memberId });
+
+  if (sendEmails && invoices.length) {
+    await Promise.all(invoices.map(async (invoice) => {
+      try {
+        await sendBillingInvoiceEmail(invoice.id, { triggerSource });
+      } catch (error) {
+        console.error('Unable to deliver renewal invoice email', error);
+      }
+    }));
+  }
+
+  return invoices;
 };

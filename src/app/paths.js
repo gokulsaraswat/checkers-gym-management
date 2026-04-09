@@ -24,6 +24,8 @@ export const PATHS = {
   staffWorkouts: '/staff/workouts',
   staffBilling: '/staff/billing',
   admin: '/admin',
+  adminPlans: '/admin/plans',
+  adminFinance: '/admin/finance',
   memberDetail: '/admin/members/:memberId',
   exerciseDetail: '/exercise/:id',
 };
