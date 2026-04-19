@@ -17,44 +17,117 @@ const ThemeModeContext = createContext({
   toggleMode: () => {},
 });
 
-const getInitialMode = () => {
-  if (typeof window === 'undefined') {
-    return 'light';
+const isBrowser = () => typeof window !== 'undefined';
+
+const getStoredMode = () => {
+  if (!isBrowser()) {
+    return null;
   }
 
   const storedMode = window.localStorage.getItem(STORAGE_KEY);
+
   if (storedMode === 'light' || storedMode === 'dark') {
     return storedMode;
   }
 
+  return null;
+};
+
+const getInitialMode = () => {
+  const storedMode = getStoredMode();
+
+  if (storedMode) {
+    return storedMode;
+  }
+
+  if (!isBrowser()) {
+    return 'light';
+  }
+
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+};
+
+const applyThemeMetadata = (mode) => {
+  if (!isBrowser()) {
+    return;
+  }
+
+  document.body.dataset.colorMode = mode;
+  document.documentElement.dataset.colorMode = mode;
+  document.documentElement.style.colorScheme = mode;
+
+  const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+  if (metaThemeColor) {
+    metaThemeColor.setAttribute('content', getMetaThemeColor(mode));
+  }
+
+  window.dispatchEvent(new CustomEvent('gym:theme-mode-changed', { detail: { mode } }));
+};
+
+const temporarilyDisableTransitions = () => {
+  if (!isBrowser()) {
+    return () => {};
+  }
+
+  const style = document.createElement('style');
+  style.setAttribute('data-theme-mode-guard', 'true');
+  style.innerHTML = '*{transition:none !important;}';
+  document.head.appendChild(style);
+
+  return () => {
+    window.getComputedStyle(document.body);
+    requestAnimationFrame(() => {
+      if (style.parentNode) {
+        style.parentNode.removeChild(style);
+      }
+    });
+  };
 };
 
 export const ThemeModeProvider = ({ children }) => {
   const [mode, setMode] = useState(getInitialMode);
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (!isBrowser()) {
       return undefined;
     }
 
     window.localStorage.setItem(STORAGE_KEY, mode);
-    document.body.dataset.colorMode = mode;
-    document.documentElement.dataset.colorMode = mode;
+    const cleanup = temporarilyDisableTransitions();
+    applyThemeMetadata(mode);
 
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', getMetaThemeColor(mode));
+    return cleanup;
+  }, [mode]);
+
+  useEffect(() => {
+    if (!isBrowser()) {
+      return undefined;
     }
 
-    return undefined;
-  }, [mode]);
+    const handleStorage = (event) => {
+      if (event.key !== STORAGE_KEY) {
+        return;
+      }
+
+      if (event.newValue === 'light' || event.newValue === 'dark') {
+        setMode(event.newValue);
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
 
   const value = useMemo(() => ({
     mode,
     isDarkMode: mode === 'dark',
     setMode,
-    toggleMode: () => setMode((currentMode) => (currentMode === 'dark' ? 'light' : 'dark')),
+    toggleMode: () => {
+      setMode((currentMode) => (currentMode === 'dark' ? 'light' : 'dark'));
+    },
   }), [mode]);
 
   const theme = useMemo(() => createAppTheme(mode), [mode]);

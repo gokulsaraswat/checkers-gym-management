@@ -5,21 +5,27 @@ import { Outlet } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import InstallAppPrompt from '../components/layout/InstallAppPrompt';
+import { appShellMaxWidth, layoutGutters } from '../theme/responsiveTokens';
 
 const AppShell = () => (
-  <Box
-    className="app-shell"
-    sx={{
-      width: '100%',
-      maxWidth: '1488px',
-      mx: 'auto',
-      px: { xs: 1.5, sm: 2.5 },
-    }}
-  >
-    <Navbar />
-    <InstallAppPrompt />
-    <Outlet />
-    <Footer />
+  <Box className="app-shell">
+    <Box
+      sx={{
+        width: '100%',
+        maxWidth: `${appShellMaxWidth}px`,
+        mx: 'auto',
+        px: layoutGutters,
+      }}
+    >
+      <Navbar />
+      <Box sx={{ mb: { xs: 2, md: 3 } }}>
+        <InstallAppPrompt />
+      </Box>
+      <Box component="main" className="app-shell__content" sx={{ minHeight: 'calc(100vh - 220px)' }}>
+        <Outlet />
+      </Box>
+      <Footer />
+    </Box>
   </Box>
 );
 

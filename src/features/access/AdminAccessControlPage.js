@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import LaunchRoundedIcon from '@mui/icons-material/LaunchRounded';
 import {
   Alert,
   Box,
@@ -12,7 +13,9 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import AccessLogsCard from './AccessLogsCard';
+import { Link as RouterLink } from 'react-router-dom';
+
+import { PATHS } from '../../app/paths';
 import {
   getAccessControlSnapshot,
   listAccessPoints,
@@ -21,6 +24,11 @@ import {
   upsertAccessPoint,
   upsertWaiverTemplate,
 } from './accessClient';
+import AccessLogsCard from './AccessLogsCard';
+import {
+  formatAccessRefreshLabel,
+  normalizeAccessError,
+} from './accessStabilizationHelpers';
 
 function SnapshotCard({ label, value, helper }) {
   return (
@@ -53,7 +61,19 @@ const emptyWaiver = {
   is_active: true,
 };
 
+function normalizePositiveInteger(value, fallbackValue) {
+  const parsedValue = Number(value);
+
+  if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
+    return fallbackValue;
+  }
+
+  return Math.round(parsedValue);
+}
+
 export default function AdminAccessControlPage() {
+  const [loading, setLoading] = useState(true);
+  const [lastLoadedAt, setLastLoadedAt] = useState('');
   const [snapshot, setSnapshot] = useState({});
   const [accessPoints, setAccessPoints] = useState([]);
   const [waiverTemplates, setWaiverTemplates] = useState([]);
@@ -64,7 +84,9 @@ export default function AdminAccessControlPage() {
   const [successMessage, setSuccessMessage] = useState('');
 
   const loadPage = useCallback(async () => {
+    setLoading(true);
     setError('');
+
     try {
       const [snapshotData, points, waivers, logs] = await Promise.all([
         getAccessControlSnapshot(14),
@@ -72,12 +94,16 @@ export default function AdminAccessControlPage() {
         listWaiverTemplates(),
         listRecentAccessEvents(14),
       ]);
+
       setSnapshot(snapshotData || {});
-      setAccessPoints(points);
-      setWaiverTemplates(waivers);
-      setRecentLogs(logs);
+      setAccessPoints(points || []);
+      setWaiverTemplates(waivers || []);
+      setRecentLogs(logs || []);
+      setLastLoadedAt(new Date().toISOString());
     } catch (fetchError) {
-      setError(fetchError.message || 'Failed to load access control admin data.');
+      setError(normalizeAccessError(fetchError, 'Failed to load access control admin data.'));
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -86,47 +112,113 @@ export default function AdminAccessControlPage() {
   }, [loadPage]);
 
   const handleSaveAccessPoint = async () => {
+    const normalizedDraft = {
+      branch_name: accessPointDraft.branch_name.trim() || 'Main Branch',
+      name: accessPointDraft.name.trim(),
+      point_type: accessPointDraft.point_type.trim() || 'front_desk',
+      description: accessPointDraft.description.trim(),
+      offline_code: accessPointDraft.offline_code.trim().toUpperCase(),
+      is_active: Boolean(accessPointDraft.is_active),
+    };
+
+    if (!normalizedDraft.name) {
+      setError('Point name is required.');
+      return;
+    }
+
     setError('');
     setSuccessMessage('');
+
     try {
-      await upsertAccessPoint(accessPointDraft);
+      await upsertAccessPoint(normalizedDraft);
       setSuccessMessage('Access point saved.');
       setAccessPointDraft(emptyAccessPoint);
       await loadPage();
     } catch (saveError) {
-      setError(saveError.message || 'Failed to save access point.');
+      setError(normalizeAccessError(saveError, 'Failed to save access point.'));
     }
   };
 
   const handleSaveWaiver = async () => {
+    const normalizedTitle = waiverDraft.title.trim();
+    const normalizedVersionCode = waiverDraft.version_code.trim();
+
+    if (!normalizedTitle || !normalizedVersionCode) {
+      setError('Waiver title and version code are required.');
+      return;
+    }
+
     setError('');
     setSuccessMessage('');
+
     try {
       await upsertWaiverTemplate({
         ...waiverDraft,
-        renewal_days: waiverDraft.requires_renewal ? Number(waiverDraft.renewal_days || 365) : null,
+        title: normalizedTitle,
+        version_code: normalizedVersionCode,
+        summary: waiverDraft.summary.trim(),
+        renewal_days: waiverDraft.requires_renewal
+          ? normalizePositiveInteger(waiverDraft.renewal_days, 365)
+          : null,
       });
       setSuccessMessage('Waiver template saved.');
       setWaiverDraft(emptyWaiver);
       await loadPage();
     } catch (saveError) {
-      setError(saveError.message || 'Failed to save waiver template.');
+      setError(normalizeAccessError(saveError, 'Failed to save waiver template.'));
     }
   };
 
   return (
     <Box sx={{ px: { xs: 2, md: 4 }, py: 3 }}>
-      <Stack spacing={2} mb={3}>
-        <Typography variant="h4" fontWeight={800}>
-          Access control and compliance
-        </Typography>
-        <Typography color="text.secondary">
-          Track entry approvals, manage gate points, and keep waiver/compliance requirements ready for staffed or unstaffed access flows.
-        </Typography>
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        spacing={2}
+        justifyContent="space-between"
+        alignItems={{ xs: 'flex-start', md: 'center' }}
+        mb={3}
+      >
+        <Stack spacing={1}>
+          <Typography variant="h4" fontWeight={800}>
+            Access control and compliance
+          </Typography>
+          <Typography color="text.secondary">
+            Track entry approvals, manage gate points, and keep waiver/compliance requirements ready for staffed or unstaffed access flows. Launch the scanner console when you need a live QR check-in desk.
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {formatAccessRefreshLabel(lastLoadedAt, 'Waiting for the first access admin sync.')}
+          </Typography>
+        </Stack>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+          <Button
+            component={RouterLink}
+            to={PATHS.staffAccess}
+            startIcon={<LaunchRoundedIcon />}
+            variant="contained"
+          >
+            Scanner console
+          </Button>
+          <Button
+            component={RouterLink}
+            to={PATHS.adminAccessHardware}
+            startIcon={<LaunchRoundedIcon />}
+            variant="outlined"
+          >
+            Hardware layer
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={loadPage}
+            disabled={loading}
+          >
+            Refresh
+          </Button>
+        </Stack>
       </Stack>
 
       {error ? <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert> : null}
       {successMessage ? <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert> : null}
+      {loading ? <Alert severity="info" sx={{ mb: 2 }}>Refreshing access control admin data...</Alert> : null}
 
       <Grid container spacing={2} mb={3}>
         <Grid item xs={12} sm={6} lg={3}><SnapshotCard label="Allowed entries" value={snapshot.allowedCount} helper="Last 14 days" /></Grid>
@@ -141,6 +233,11 @@ export default function AdminAccessControlPage() {
             <Card>
               <CardContent>
                 <Typography variant="h6" fontWeight={700} gutterBottom>Configured access points</Typography>
+                {!accessPoints.length ? (
+                  <Alert severity="info" sx={{ mb: 3 }}>
+                    No access points are configured yet. Save the first staffed entry point below.
+                  </Alert>
+                ) : null}
                 <Stack spacing={1.5} mb={3}>
                   {accessPoints.map((point) => (
                     <Stack key={point.id} direction={{ xs: 'column', md: 'row' }} spacing={1} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }}>
@@ -166,13 +263,20 @@ export default function AdminAccessControlPage() {
                     </Stack>
                   </Grid>
                 </Grid>
-                <Button variant="contained" sx={{ mt: 2 }} onClick={handleSaveAccessPoint} disabled={!accessPointDraft.branch_name || !accessPointDraft.name}>Save access point</Button>
+                <Button variant="contained" sx={{ mt: 2 }} onClick={handleSaveAccessPoint} disabled={loading || !accessPointDraft.branch_name.trim() || !accessPointDraft.name.trim()}>
+                  Save access point
+                </Button>
               </CardContent>
             </Card>
 
             <Card>
               <CardContent>
                 <Typography variant="h6" fontWeight={700} gutterBottom>Liability waiver templates</Typography>
+                {!waiverTemplates.length ? (
+                  <Alert severity="info" sx={{ mb: 3 }}>
+                    No waiver templates are configured yet. Add the current active waiver version below.
+                  </Alert>
+                ) : null}
                 <Stack spacing={1.5} mb={3}>
                   {waiverTemplates.map((template) => (
                     <Box key={template.id}>
@@ -195,7 +299,9 @@ export default function AdminAccessControlPage() {
                     </Stack>
                   </Grid>
                 </Grid>
-                <Button variant="contained" sx={{ mt: 2 }} onClick={handleSaveWaiver} disabled={!waiverDraft.title || !waiverDraft.version_code}>Save waiver template</Button>
+                <Button variant="contained" sx={{ mt: 2 }} onClick={handleSaveWaiver} disabled={loading || !waiverDraft.title.trim() || !waiverDraft.version_code.trim()}>
+                  Save waiver template
+                </Button>
               </CardContent>
             </Card>
           </Stack>

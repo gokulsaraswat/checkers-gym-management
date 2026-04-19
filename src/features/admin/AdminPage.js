@@ -21,6 +21,7 @@ import {
 } from '@mui/material';
 import {
   AdminPanelSettings,
+  Article,
   AssignmentTurnedIn,
   DeleteOutline,
   Group,
@@ -416,6 +417,15 @@ const AdminPage = () => {
                 sx={{ textTransform: 'none', borderRadius: 999, alignSelf: 'flex-start' }}
               >
                 CRM and leads
+              </Button>
+              <Button
+                component={RouterLink}
+                to={PATHS.adminBlog}
+                variant="outlined"
+                startIcon={<Article />}
+                sx={{ textTransform: 'none', borderRadius: 999, alignSelf: 'flex-start' }}
+              >
+                Blog moderation
               </Button>
               <Button
                 component={RouterLink}

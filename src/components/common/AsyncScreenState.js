@@ -1,37 +1,82 @@
-import PropTypes from 'prop-types'
-import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material'
+import PropTypes from 'prop-types';
+import { alpha } from '@mui/material/styles';
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  Stack,
+  Typography,
+  useTheme,
+} from '@mui/material';
 
 export default function AsyncScreenState({
   loading,
   error,
   title,
   description,
-  loadingLabel = 'Loading…',
+  loadingLabel,
   empty,
   children,
 }) {
+  const theme = useTheme();
+
   if (loading) {
     return (
       <Stack
         alignItems="center"
         justifyContent="center"
-        spacing={2}
-        sx={{ minHeight: 220, py: 6 }}
+        spacing={2.5}
+        sx={{
+          minHeight: 220,
+          py: 6,
+          px: 3,
+          textAlign: 'center',
+          borderRadius: 4,
+          border: '1px solid',
+          borderColor: 'divider',
+          bgcolor: alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.78 : 0.82),
+        }}
       >
-        <CircularProgress />
-        <Typography variant="body2" color="text.secondary">
-          {loadingLabel}
-        </Typography>
+        <Box
+          sx={{
+            width: 72,
+            height: 72,
+            borderRadius: '50%',
+            display: 'grid',
+            placeItems: 'center',
+            border: '1px solid',
+            borderColor: alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.32 : 0.18),
+            bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.14 : 0.06),
+          }}
+        >
+          <CircularProgress size={34} thickness={4.2} />
+        </Box>
+        <Stack spacing={0.75}>
+          <Typography variant="subtitle1" fontWeight={700}>
+            {loadingLabel}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Please wait while the latest data is prepared.
+          </Typography>
+        </Stack>
       </Stack>
-    )
+    );
   }
 
   if (error) {
     return (
-      <Alert severity="error" sx={{ borderRadius: 3 }}>
+      <Alert
+        severity="error"
+        variant="outlined"
+        sx={{
+          borderRadius: 4,
+          bgcolor: alpha(theme.palette.error.main, theme.palette.mode === 'dark' ? 0.14 : 0.05),
+          borderColor: alpha(theme.palette.error.main, theme.palette.mode === 'dark' ? 0.32 : 0.18),
+        }}
+      >
         {error}
       </Alert>
-    )
+    );
   }
 
   if (empty) {
@@ -40,11 +85,11 @@ export default function AsyncScreenState({
         sx={{
           border: '1px dashed',
           borderColor: 'divider',
-          borderRadius: 3,
-          px: 3,
-          py: 5,
+          borderRadius: 4,
+          px: { xs: 2.5, md: 3.5 },
+          py: { xs: 4, md: 5 },
           textAlign: 'center',
-          bgcolor: 'background.paper',
+          bgcolor: alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.78 : 0.84),
         }}
       >
         <Typography variant="h6" gutterBottom>
@@ -56,10 +101,10 @@ export default function AsyncScreenState({
           </Typography>
         ) : null}
       </Box>
-    )
+    );
   }
 
-  return children
+  return children;
 }
 
 AsyncScreenState.propTypes = {
@@ -70,7 +115,7 @@ AsyncScreenState.propTypes = {
   loading: PropTypes.bool,
   loadingLabel: PropTypes.string,
   title: PropTypes.string,
-}
+};
 
 AsyncScreenState.defaultProps = {
   children: null,
@@ -80,4 +125,4 @@ AsyncScreenState.defaultProps = {
   loading: false,
   loadingLabel: 'Loading…',
   title: 'Nothing to show',
-}
+};

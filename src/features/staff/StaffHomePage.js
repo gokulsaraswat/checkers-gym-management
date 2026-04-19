@@ -17,6 +17,7 @@ import {
   Typography,
 } from '@mui/material';
 import {
+  Article,
   AssignmentInd,
   Badge,
   CalendarMonth,
@@ -253,6 +254,15 @@ const StaffHomePage = () => {
             sx={{ borderRadius: 999, alignSelf: 'flex-start' }}
           >
             Program workouts
+          </Button>
+          <Button
+            component={RouterLink}
+            to={PATHS.staffBlog}
+            variant="outlined"
+            startIcon={<Article />}
+            sx={{ borderRadius: 999, alignSelf: 'flex-start' }}
+          >
+            Write articles
           </Button>
           <Button
             component={RouterLink}
