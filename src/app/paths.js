@@ -7,6 +7,7 @@ export const PATHS = {
   feedback: '/feedback',
   gymMap: '/gym-map',
   blog: '/blog',
+  tools: '/tools',
   blogPost: '/blog/:slug',
   auth: '/auth',
   forgotPassword: '/forgot-password',

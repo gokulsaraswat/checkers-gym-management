@@ -123,6 +123,7 @@ const Navbar = () => {
   const publicDesktopLinks = [
     { label: 'Home', to: PATHS.home },
     { label: 'Gallery', to: PATHS.gallery },
+    { label: 'Tools', to: PATHS.tools },
     { label: 'Events', to: PATHS.events },
     { label: 'Blog', to: PATHS.blog },
     { label: 'Contact', to: PATHS.contact },
@@ -133,6 +134,7 @@ const Navbar = () => {
     { label: 'Home', to: PATHS.home },
     { label: 'Gallery', to: PATHS.gallery },
     { label: 'Testimonials', to: PATHS.testimonials },
+    { label: 'Tools', to: PATHS.tools },
     { label: 'Events', to: PATHS.events },
     { label: 'Blog', to: PATHS.blog },
     { label: 'Contact', to: PATHS.contact },
@@ -489,7 +491,7 @@ const Navbar = () => {
 
         <Stack spacing={1.25} sx={{ pt: 1.5 }}>
           <Typography variant="body2" color="text.secondary">
-            Public website pages, cleaner contact routes, and theme-aware controls across screen sizes.
+            Public website pages, quick utility tools, cleaner contact routes, and theme-aware controls across screen sizes.
           </Typography>
           {user ? (
             <Button fullWidth variant="contained" onClick={handleSignOut}>

@@ -241,3 +241,222 @@ img {
     border-radius: 24px;
   }
 }
+
+.homepage-shell {
+  position: relative;
+}
+
+.homepage-hero-card {
+  isolation: isolate;
+}
+
+.homepage-hero-art {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.98;
+}
+
+.homepage-hero-chip .MuiChip-icon {
+  color: inherit;
+}
+
+.homepage-hero-visual {
+  position: relative;
+  overflow: hidden;
+}
+
+.homepage-media-poster {
+  position: relative;
+  min-height: 240px;
+  border-radius: 26px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.homepage-media-poster__image,
+.homepage-visual-story-card__backdrop {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+.homepage-media-poster__content {
+  position: relative;
+  min-height: 240px;
+  justify-content: flex-end;
+  padding: 24px;
+}
+
+.homepage-slide-indicator {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.homepage-slide-indicator:hover,
+.homepage-slide-indicator.is-active {
+  transform: translateY(-2px);
+}
+
+.homepage-highlight-card,
+.homepage-explorer-card,
+.homepage-quick-link-card,
+.homepage-mini-visual-card,
+.homepage-event-card,
+.homepage-visual-story-card {
+  backdrop-filter: blur(8px);
+}
+
+.homepage-visual-story-card {
+  isolation: isolate;
+}
+
+.homepage-quick-link-card {
+  border: 1px solid var(--app-border);
+  background: rgba(255, 255, 255, 0.58);
+}
+
+body[data-color-mode='dark'] .homepage-quick-link-card {
+  background: rgba(16, 26, 47, 0.72);
+}
+
+.homepage-loader-shell {
+  position: relative;
+}
+
+.homepage-spinner-orb {
+  box-shadow: var(--app-shadow-soft);
+  animation: homepagePulse 2.4s ease-in-out infinite;
+}
+
+.hero-banner-typo {
+  opacity: 0.12;
+}
+
+.hero-banner-img {
+  filter: saturate(1.04) contrast(1.02);
+  box-shadow: 0 28px 64px rgba(15, 23, 42, 0.14);
+}
+
+body[data-color-mode='dark'] .hero-banner-typo {
+  opacity: 0.18;
+}
+
+body[data-color-mode='dark'] .hero-banner-img {
+  filter: brightness(0.92) saturate(0.88);
+}
+
+.exercise-card {
+  overflow: hidden;
+  min-height: 460px;
+  border-radius: 24px;
+  padding-bottom: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, var(--app-surface) 100%);
+}
+
+body[data-color-mode='dark'] .exercise-card {
+  background: linear-gradient(180deg, rgba(16, 26, 47, 0.96) 0%, var(--app-surface) 100%);
+}
+
+.exercise-card img {
+  height: 320px;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  transition: transform 0.28s ease;
+}
+
+.exercise-card:hover img {
+  transform: scale(1.03);
+}
+
+.bodyPart-card {
+  border-radius: 24px !important;
+  overflow: hidden;
+}
+
+.exercise-video {
+  gap: 18px;
+  padding: 14px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, var(--app-surface) 100%);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow-soft);
+}
+
+body[data-color-mode='dark'] .exercise-video {
+  background: linear-gradient(180deg, rgba(16, 26, 47, 0.94) 0%, var(--app-surface) 100%);
+}
+
+.exercise-video img {
+  min-height: 220px;
+}
+
+.surface-card {
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.surface-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 22px 52px rgba(15, 23, 42, 0.12);
+}
+
+body[data-color-mode='dark'] .surface-card:hover {
+  box-shadow: 0 22px 52px rgba(2, 6, 23, 0.4);
+}
+
+@keyframes homepagePulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+@media screen and (max-width: 1200px) {
+  .homepage-media-poster,
+  .homepage-media-poster__content {
+    min-height: 220px;
+  }
+
+  .exercise-card {
+    min-height: 436px;
+  }
+}
+
+@media screen and (max-width: 900px) {
+  .homepage-media-poster,
+  .homepage-media-poster__content {
+    min-height: 200px;
+  }
+
+  .exercise-card {
+    min-height: 420px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .homepage-media-poster,
+  .homepage-media-poster__content {
+    min-height: 180px;
+  }
+
+  .homepage-media-poster__content {
+    padding: 18px;
+  }
+
+  .exercise-card {
+    min-height: 400px;
+  }
+
+  .exercise-card img {
+    height: 260px;
+  }
+
+  .exercise-video {
+    padding: 10px;
+  }
+}

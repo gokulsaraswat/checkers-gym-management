@@ -32,6 +32,7 @@ import StaffAccessControlPage from '../features/access/StaffAccessControlPage';
 import StaffBlogEditorPage from '../features/blog/StaffBlogEditorPage';
 import BlogPage from '../features/blog/BlogPage';
 import BlogPostPage from '../features/blog/BlogPostPage';
+import UtilityToolsPage from '../features/publicSite/UtilityToolsPage';
 import GalleryPage from '../features/publicSite/GalleryPage';
 import TestimonialsPage from '../features/publicSite/TestimonialsPage';
 import EventsPage from '../features/publicSite/EventsPage';
@@ -64,6 +65,7 @@ const AppRouter = () => (
       <Route path={PATHS.contact} element={<ContactPage />} />
       <Route path={PATHS.feedback} element={<FeedbackPage />} />
       <Route path={PATHS.gymMap} element={<GymMapPage />} />
+      <Route path={PATHS.tools} element={<UtilityToolsPage />} />
       <Route path={PATHS.blog} element={<BlogPage />} />
       <Route path={PATHS.blogPost} element={<BlogPostPage />} />
       <Route path={PATHS.exerciseDetail} element={<ExerciseDetailPage />} />

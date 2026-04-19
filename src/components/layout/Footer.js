@@ -55,12 +55,14 @@ const Footer = () => {
     ? [
         { label: 'Dashboard', to: PATHS.dashboard },
         { label: 'Blog', to: PATHS.blog },
+        { label: 'Tools', to: PATHS.tools },
         { label: 'Events', to: PATHS.events },
         { label: 'Contact', to: PATHS.contact },
       ]
     : [
         { label: 'Home', to: PATHS.home },
         { label: 'Gallery', to: PATHS.gallery },
+        { label: 'Tools', to: PATHS.tools },
         { label: 'Blog', to: PATHS.blog },
         { label: 'Contact', to: PATHS.contact },
       ];
@@ -89,6 +91,7 @@ const Footer = () => {
         : [
             { label: 'Events page', to: PATHS.events },
             { label: 'Testimonials', to: PATHS.testimonials },
+            { label: 'Tools', to: PATHS.tools },
             { label: 'Feedback', to: PATHS.feedback },
             { label: 'Gym map', to: PATHS.gymMap },
           ];
@@ -96,6 +99,7 @@ const Footer = () => {
   const publicSiteLinks = [
     { label: 'Gallery', to: PATHS.gallery },
     { label: 'Testimonials', to: PATHS.testimonials },
+    { label: 'Tools', to: PATHS.tools },
     { label: 'Events', to: PATHS.events },
     { label: 'Feedback', to: PATHS.feedback },
   ];
@@ -149,12 +153,12 @@ const Footer = () => {
 
             <Typography color="text.secondary" maxWidth="60ch">
               A cleaner public shell for gallery stories, member trust signals, community events,
-              contact routes, and first-visit orientation—without mixing public visitors into the
+              contact routes, and first-visit utility tools—without mixing public visitors into the
               private product workflows.
             </Typography>
 
             <Stack direction="row" flexWrap="wrap" gap={1}>
-              {['Gallery', 'Testimonials', 'Events', 'Feedback'].map((label) => (
+              {['Gallery', 'Testimonials', 'Tools', 'Events', 'Feedback'].map((label) => (
                 <Chip
                   key={label}
                   size="small"

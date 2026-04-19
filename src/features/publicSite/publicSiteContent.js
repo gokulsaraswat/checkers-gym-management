@@ -7,8 +7,8 @@ const toIsoDate = (offsetDays) => {
 export const publicWebsiteHighlights = [
   {
     label: 'Public pages',
-    value: '6',
-    caption: 'Gallery, stories, events, contact, feedback, and map.',
+    value: '7',
+    caption: 'Gallery, stories, tools, events, contact, feedback, and map.',
   },
   {
     label: 'Seeded content',
@@ -277,6 +277,10 @@ export const publicFaqs = [
   {
     question: 'Can these pages work without new backend tables?',
     answer: 'Yes. This patch is intentionally frontend-first so the public website can expand before heavier operations or content workflows are introduced.',
+  },
+  {
+    question: 'Are the utility tools medical advice?',
+    answer: 'No. The BMI, calorie, hydration, and starter split tools are lightweight coaching estimates meant for quick planning before deeper in-gym guidance.',
   },
 ];
 

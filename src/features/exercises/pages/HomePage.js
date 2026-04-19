@@ -3,166 +3,273 @@ import {
   Alert,
   Box,
   Button,
+  Chip,
   Grid,
   Paper,
   Stack,
   Typography,
 } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import {
-  AdminPanelSettings,
-  FitnessCenter,
-  MonitorHeart,
+  AutoAwesomeRounded,
+  BoltRounded,
+  CalendarMonthRounded,
+  CalculateRounded,
+  InsightsRounded,
+  LocalDrinkRounded,
+  MonitorWeightRounded,
 } from '@mui/icons-material';
 import { Link as RouterLink } from 'react-router-dom';
 
-import HeroBanner from '../../../components/HeroBanner';
 import Exercises from '../../../components/Exercises';
 import SearchExercises from '../../../components/SearchExercises';
 import SetupNotice from '../../../components/common/SetupNotice';
-import { useAuth } from '../../../context/AuthContext';
-import { getPostAuthPath } from '../../../app/auth/access';
 import { PATHS } from '../../../app/paths';
+import { getPostAuthPath } from '../../../app/auth/access';
+import { useAuth } from '../../../context/AuthContext';
 import { isRapidApiConfigured } from '../../../utils/fetchData';
+import HomepageHeroSlider from '../../publicSite/HomepageHeroSlider';
+import HomepageMediaShowcase from '../../publicSite/HomepageMediaShowcase';
+import { publicWebsiteHighlights } from '../../publicSite/publicSiteContent';
 
-const featureCards = [
+const utilityCards = [
   {
-    title: 'Member dashboard',
-    description: 'Logged-in members can check their active plan, membership status, and recent workout history.',
-    icon: FitnessCenter,
+    title: 'BMI checks',
+    description: 'A simple first-look estimate that helps visitors frame progress conversations before they sign up.',
+    icon: MonitorWeightRounded,
   },
   {
-    title: 'Workout tracking',
-    description: 'Track sessions with multiple exercise rows, notes, and completion status from one dashboard.',
-    icon: MonitorHeart,
+    title: 'Calorie planning',
+    description: 'Estimate maintenance calories, goal-based targets, and a practical protein starting point.',
+    icon: CalculateRounded,
   },
   {
-    title: 'Admin control',
-    description: 'Admins can manage plans, update member roles, and create or remove members securely.',
-    icon: AdminPanelSettings,
+    title: 'Hydration and routine cues',
+    description: 'Use quick movement, hydration, and split suggestions without mixing public visitors into member workflows.',
+    icon: LocalDrinkRounded,
   },
 ];
 
 const HomePage = () => {
+  const theme = useTheme();
   const [exercises, setExercises] = useState([]);
   const [bodyPart, setBodyPart] = useState('all');
   const { user, profile } = useAuth();
 
-  const dashboardPath = useMemo(() => (
-    getPostAuthPath(profile?.role)
-  ), [profile?.role]);
+  const dashboardPath = useMemo(() => getPostAuthPath(profile?.role), [profile?.role]);
+
+  const primaryCtaLabel = useMemo(() => {
+    if (!user) {
+      return 'Open login / signup';
+    }
+
+    if (profile?.role === 'admin') {
+      return 'Open admin panel';
+    }
+
+    return 'Open dashboard';
+  }, [profile?.role, user]);
+
+  const scrollToExplorer = () => {
+    document.getElementById('homepage-explorer')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
-    <Box>
-      <HeroBanner />
+    <Box className="homepage-shell">
+      <HomepageHeroSlider
+        primaryCtaLabel={primaryCtaLabel}
+        primaryCtaPath={user ? dashboardPath : PATHS.auth}
+        onExploreClick={scrollToExplorer}
+      />
 
-      <Box sx={{ px: { xs: 1, sm: 2 }, mt: { xs: 4, md: 6 } }}>
-        <SetupNotice title="Supabase unlocks the member and admin app" />
+      <Box sx={{ px: { xs: 1, sm: 2 }, mt: { xs: 3, md: 5 } }}>
+        <Stack spacing={{ xs: 3.5, md: 5 }}>
+          <SetupNotice title="Supabase unlocks the member and admin app" />
 
-        {!isRapidApiConfigured ? (
-          <Alert severity="info" sx={{ mb: 3, borderRadius: 3 }}>
-            RapidAPI is optional here. The exercise explorer is currently running in demo mode until you add
-            <strong> REACT_APP_RAPID_API_KEY</strong>.
-          </Alert>
-        ) : null}
-
-        <Grid container spacing={3}>
-          {featureCards.map(({ title, description, icon: Icon }) => (
-            <Grid item xs={12} md={4} key={title}>
-              <Paper
-                className="surface-card"
-                sx={{
-                  p: 3,
-                  borderRadius: 4,
-                  height: '100%',
-                  background: '#fff',
-                }}
-              >
-                <Stack spacing={2}>
-                  <Box
-                    sx={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: '18px',
-                      display: 'grid',
-                      placeItems: 'center',
-                      bgcolor: '#fff0f0',
-                      color: '#ff2625',
-                    }}
-                  >
-                    <Icon />
-                  </Box>
-                  <Typography variant="h6" fontWeight={800}>
-                    {title}
-                  </Typography>
-                  <Typography color="text.secondary">
-                    {description}
-                  </Typography>
-                </Stack>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
-
-        <Paper
-          className="surface-card"
-          sx={{
-            mt: 3,
-            p: { xs: 3, md: 4 },
-            borderRadius: 4,
-            background: 'linear-gradient(135deg, #fff1f2 0%, #ffffff 100%)',
-          }}
-        >
-          <Stack
-            direction={{ xs: 'column', md: 'row' }}
-            spacing={3}
-            alignItems={{ md: 'center' }}
-            justifyContent="space-between"
-          >
-            <Box maxWidth="760px">
-              <Typography color="#ff2625" fontWeight={700} mb={1}>
-                Upgrade complete
-              </Typography>
-              <Typography variant="h4" fontWeight={800} sx={{ fontSize: { xs: '30px', md: '42px' } }} mb={1.5}>
-                Your static gym site now has the structure for a real member app.
-              </Typography>
-              <Typography color="text.secondary">
-                Use the public homepage to showcase your brand, then move members into the protected dashboard
-                and admin panel for day-to-day gym operations.
-              </Typography>
-            </Box>
-
-            <Button
-              component={RouterLink}
-              to={user ? dashboardPath : PATHS.auth}
-              variant="contained"
+          {!isRapidApiConfigured ? (
+            <Alert
+              severity="info"
               sx={{
-                bgcolor: '#ff2625',
-                textTransform: 'none',
-                borderRadius: 999,
-                px: 3.5,
-                py: 1.5,
-                alignSelf: { xs: 'flex-start', md: 'center' },
-                '&:hover': { bgcolor: '#df1d1d' },
+                borderRadius: 3,
+                bgcolor: alpha(theme.palette.info.main, theme.palette.mode === 'dark' ? 0.14 : 0.08),
               }}
             >
-              {(() => {
-                if (!user) {
-                  return 'Open Login / Signup';
-                }
+              RapidAPI is optional here. The exercise explorer stays available in demo mode until you add
+              <strong> REACT_APP_RAPID_API_KEY</strong>.
+            </Alert>
+          ) : null}
 
-                if (profile?.role === 'admin') {
-                  return 'Open Admin Panel';
-                }
+          <Grid container spacing={2}>
+            {publicWebsiteHighlights.map((highlight) => (
+              <Grid item xs={12} md={4} key={highlight.label}>
+                <Paper
+                  className="homepage-highlight-card surface-card"
+                  sx={{
+                    p: { xs: 2.25, md: 2.5 },
+                    height: '100%',
+                    borderRadius: { xs: 3, md: 4 },
+                  }}
+                >
+                  <Stack spacing={1.2}>
+                    <Typography variant="body2" color="text.secondary">
+                      {highlight.label}
+                    </Typography>
+                    <Typography variant="h4" fontWeight={900}>
+                      {highlight.value}
+                    </Typography>
+                    <Typography color="text.secondary">{highlight.caption}</Typography>
+                  </Stack>
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
 
-                return 'Open Dashboard';
-              })()}
-            </Button>
-          </Stack>
-        </Paper>
+          <HomepageMediaShowcase />
+
+          <Paper
+            id="homepage-explorer"
+            className="homepage-explorer-card surface-card"
+            sx={{
+              p: { xs: 2.5, md: 3.5 },
+              borderRadius: { xs: 4, md: 5 },
+              backgroundImage: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.14 : 0.06)} 0%, ${alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.82 : 0.96)} 100%)`,
+            }}
+          >
+            <Stack spacing={{ xs: 2.25, md: 2.75 }}>
+              <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} justifyContent="space-between">
+                <Box sx={{ maxWidth: '70ch' }}>
+                  <Chip
+                    icon={<AutoAwesomeRounded />}
+                    label="Movement library and homepage polish"
+                    sx={{
+                      mb: 1.25,
+                      fontWeight: 700,
+                      bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.22 : 0.1),
+                    }}
+                  />
+                  <Typography
+                    variant="h4"
+                    fontWeight={900}
+                    sx={{ fontSize: { xs: '1.8rem', md: '2.4rem' }, lineHeight: 1.08, maxWidth: '18ch' }}
+                  >
+                    Keep the homepage polished without hiding the actual exercise utility.
+                  </Typography>
+                  <Typography color="text.secondary" sx={{ mt: 1.25, maxWidth: '62ch' }}>
+                    The homepage now introduces the gym with stronger media storytelling, then drops users into the searchable movement library without making the public experience feel disconnected from the product.
+                  </Typography>
+                </Box>
+
+                <Stack direction={{ xs: 'row', lg: 'column' }} spacing={1.1} flexWrap="wrap" useFlexGap>
+                  <Chip icon={<BoltRounded />} label="Theme-aware hero" />
+                  <Chip icon={<CalendarMonthRounded />} label="Media-forward sections" />
+                  <Chip icon={<InsightsRounded />} label="Cleaner exercise entry point" />
+                </Stack>
+              </Stack>
+
+              <Grid container spacing={1.5}>
+                <Grid item xs={12} md={4}>
+                  <Paper className="homepage-quick-link-card" sx={{ p: 2, borderRadius: 3 }}>
+                    <Stack spacing={0.75}>
+                      <Typography fontWeight={800}>Public discovery</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Use gallery, events, and testimonials together so visitors understand the space before they need the dashboard.
+                      </Typography>
+                      <Button component={RouterLink} to={PATHS.gallery} size="small" sx={{ alignSelf: 'flex-start', textTransform: 'none' }}>
+                        Open gallery
+                      </Button>
+                    </Stack>
+                  </Paper>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Paper className="homepage-quick-link-card" sx={{ p: 2, borderRadius: 3 }}>
+                    <Stack spacing={0.75}>
+                      <Typography fontWeight={800}>Content and trust</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Blog posts, recaps, and testimonials can now support the homepage instead of sitting in separate silos.
+                      </Typography>
+                      <Button component={RouterLink} to={PATHS.blog} size="small" sx={{ alignSelf: 'flex-start', textTransform: 'none' }}>
+                        Open blog
+                      </Button>
+                    </Stack>
+                  </Paper>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Paper className="homepage-quick-link-card" sx={{ p: 2, borderRadius: 3 }}>
+                    <Stack spacing={0.75}>
+                      <Typography fontWeight={800}>Visit planning</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Clear contact routes and floor previews reduce friction for first-time visitors and referrals.
+                      </Typography>
+                      <Button component={RouterLink} to={PATHS.contact} size="small" sx={{ alignSelf: 'flex-start', textTransform: 'none' }}>
+                        Contact the gym
+                      </Button>
+                    </Stack>
+                  </Paper>
+                </Grid>
+              </Grid>
+            </Stack>
+          </Paper>
+
+          <Paper
+            className="homepage-quick-link-card surface-card"
+            sx={{
+              p: { xs: 2.5, md: 3.5 },
+              borderRadius: { xs: 4, md: 5 },
+              backgroundImage: `linear-gradient(135deg, ${alpha(theme.palette.secondary.main, theme.palette.mode === 'dark' ? 0.16 : 0.08)} 0%, ${alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.84 : 0.97)} 100%)`,
+            }}
+          >
+            <Stack spacing={2.5}>
+              <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2.5} justifyContent="space-between">
+                <Box sx={{ maxWidth: '72ch' }}>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 1.25 }}>
+                    <Chip icon={<CalculateRounded />} color="secondary" label="Patch 33 utility tools" sx={{ fontWeight: 700 }} />
+                    <Chip icon={<MonitorWeightRounded />} label="BMI" variant="outlined" />
+                    <Chip icon={<LocalDrinkRounded />} label="Hydration" variant="outlined" />
+                  </Stack>
+                  <Typography variant="h4" fontWeight={900} sx={{ fontSize: { xs: '1.75rem', md: '2.3rem' }, lineHeight: 1.08 }}>
+                    Add practical self-serve tools without mixing the public site into private member workflows.
+                  </Typography>
+                  <Typography color="text.secondary" sx={{ mt: 1.25, maxWidth: '64ch', lineHeight: 1.8 }}>
+                    Patch 33 adds BMI, calorie, hydration, and starter-split utilities so visitors can get quick planning value before a trial, consultation, or blog deep dive.
+                  </Typography>
+                </Box>
+
+                <Stack direction={{ xs: 'column', sm: 'row', lg: 'column' }} spacing={1.25} sx={{ alignSelf: { xs: 'flex-start', lg: 'center' } }}>
+                  <Button component={RouterLink} to={PATHS.tools} variant="contained" color="secondary" sx={{ textTransform: 'none', borderRadius: 999, px: 2.75 }}>
+                    Open tools
+                  </Button>
+                  <Button component={RouterLink} to={PATHS.contact} variant="outlined" sx={{ textTransform: 'none', borderRadius: 999, px: 2.75 }}>
+                    Plan a visit
+                  </Button>
+                </Stack>
+              </Stack>
+
+              <Grid container spacing={1.5}>
+                {utilityCards.map(({ title, description, icon: Icon }) => (
+                  <Grid item xs={12} md={4} key={title}>
+                    <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, height: '100%' }}>
+                      <Stack spacing={1}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Icon color="secondary" />
+                          <Typography fontWeight={800}>{title}</Typography>
+                        </Stack>
+                        <Typography variant="body2" color="text.secondary">
+                          {description}
+                        </Typography>
+                      </Stack>
+                    </Paper>
+                  </Grid>
+                ))}
+              </Grid>
+            </Stack>
+          </Paper>
+        </Stack>
       </Box>
 
-      <SearchExercises setExercises={setExercises} bodyPart={bodyPart} setBodyPart={setBodyPart} />
-      <Exercises setExercises={setExercises} exercises={exercises} bodyPart={bodyPart} />
+      <Box sx={{ mt: { xs: 1.5, md: 3 } }}>
+        <SearchExercises setExercises={setExercises} bodyPart={bodyPart} setBodyPart={setBodyPart} />
+        <Exercises setExercises={setExercises} exercises={exercises} bodyPart={bodyPart} />
+      </Box>
     </Box>
   );
 };
