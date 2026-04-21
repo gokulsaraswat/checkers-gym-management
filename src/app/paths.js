@@ -1,5 +1,6 @@
 export const PATHS = {
   home: '/',
+  notFound: '/404',
   gallery: '/gallery',
   testimonials: '/testimonials',
   events: '/events',

@@ -32,6 +32,7 @@ import StaffAccessControlPage from '../features/access/StaffAccessControlPage';
 import StaffBlogEditorPage from '../features/blog/StaffBlogEditorPage';
 import BlogPage from '../features/blog/BlogPage';
 import BlogPostPage from '../features/blog/BlogPostPage';
+import AppErrorBoundary from '../features/errors/AppErrorBoundary';
 import UtilityToolsPage from '../features/publicSite/UtilityToolsPage';
 import GalleryPage from '../features/publicSite/GalleryPage';
 import TestimonialsPage from '../features/publicSite/TestimonialsPage';
@@ -39,6 +40,7 @@ import EventsPage from '../features/publicSite/EventsPage';
 import ContactPage from '../features/publicSite/ContactPage';
 import FeedbackPage from '../features/publicSite/FeedbackPage';
 import GymMapPage from '../features/publicSite/GymMapPage';
+import NotFoundPage from '../features/publicSite/NotFoundPage';
 import AdminPage from '../features/admin/AdminPage';
 import AdminAccessControlPage from '../features/access/AdminAccessControlPage';
 import AdminAccessHardwarePage from '../features/access/AdminAccessHardwarePage';
@@ -57,7 +59,13 @@ import { PATHS } from './paths';
 
 const AppRouter = () => (
   <Routes>
-    <Route element={<AppShell />}>
+    <Route
+      element={(
+        <AppErrorBoundary>
+          <AppShell />
+        </AppErrorBoundary>
+      )}
+    >
       <Route path={PATHS.home} element={<HomePage />} />
       <Route path={PATHS.gallery} element={<GalleryPage />} />
       <Route path={PATHS.testimonials} element={<TestimonialsPage />} />
@@ -69,6 +77,7 @@ const AppRouter = () => (
       <Route path={PATHS.blog} element={<BlogPage />} />
       <Route path={PATHS.blogPost} element={<BlogPostPage />} />
       <Route path={PATHS.exerciseDetail} element={<ExerciseDetailPage />} />
+      <Route path={PATHS.notFound} element={<NotFoundPage />} />
 
       <Route element={<GuestRoute />}>
         <Route path={PATHS.auth} element={<AuthPage />} />
@@ -119,7 +128,7 @@ const AppRouter = () => (
         <Route path={PATHS.memberDetail} element={<MemberDetailPage />} />
       </Route>
 
-      <Route path="*" element={<Navigate to={PATHS.home} replace />} />
+      <Route path="*" element={<Navigate to={PATHS.notFound} replace />} />
     </Route>
   </Routes>
 );

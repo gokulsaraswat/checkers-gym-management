@@ -1,13 +1,15 @@
 import PropTypes from 'prop-types';
 import { alpha } from '@mui/material/styles';
 import {
-  Alert,
   Box,
   CircularProgress,
   Stack,
   Typography,
   useTheme,
 } from '@mui/material';
+
+import StateFeedbackCard from './StateFeedbackCard';
+import { getErrorMessage } from '../../features/errors/errorStateHelpers';
 
 export default function AsyncScreenState({
   loading,
@@ -17,8 +19,15 @@ export default function AsyncScreenState({
   loadingLabel,
   empty,
   children,
+  errorTitle,
+  errorDescription,
+  onRetry,
+  retryLabel,
+  emptyActionLabel,
+  onEmptyAction,
 }) {
   const theme = useTheme();
+  const resolvedError = getErrorMessage(error);
 
   if (loading) {
     return (
@@ -63,44 +72,26 @@ export default function AsyncScreenState({
     );
   }
 
-  if (error) {
+  if (resolvedError) {
     return (
-      <Alert
+      <StateFeedbackCard
         severity="error"
-        variant="outlined"
-        sx={{
-          borderRadius: 4,
-          bgcolor: alpha(theme.palette.error.main, theme.palette.mode === 'dark' ? 0.14 : 0.05),
-          borderColor: alpha(theme.palette.error.main, theme.palette.mode === 'dark' ? 0.32 : 0.18),
-        }}
-      >
-        {error}
-      </Alert>
+        title={errorTitle}
+        description={errorDescription}
+        details={resolvedError}
+        primaryAction={onRetry ? { label: retryLabel, onClick: onRetry } : null}
+      />
     );
   }
 
   if (empty) {
     return (
-      <Box
-        sx={{
-          border: '1px dashed',
-          borderColor: 'divider',
-          borderRadius: 4,
-          px: { xs: 2.5, md: 3.5 },
-          py: { xs: 4, md: 5 },
-          textAlign: 'center',
-          bgcolor: alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.78 : 0.84),
-        }}
-      >
-        <Typography variant="h6" gutterBottom>
-          {title}
-        </Typography>
-        {description ? (
-          <Typography variant="body2" color="text.secondary">
-            {description}
-          </Typography>
-        ) : null}
-      </Box>
+      <StateFeedbackCard
+        severity="info"
+        title={title}
+        description={description}
+        primaryAction={onEmptyAction ? { label: emptyActionLabel, onClick: onEmptyAction } : null}
+      />
     );
   }
 
@@ -111,9 +102,20 @@ AsyncScreenState.propTypes = {
   children: PropTypes.node,
   description: PropTypes.string,
   empty: PropTypes.bool,
-  error: PropTypes.string,
+  emptyActionLabel: PropTypes.string,
+  error: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.shape({
+      message: PropTypes.string,
+    }),
+  ]),
+  errorDescription: PropTypes.string,
+  errorTitle: PropTypes.string,
   loading: PropTypes.bool,
   loadingLabel: PropTypes.string,
+  onEmptyAction: PropTypes.func,
+  onRetry: PropTypes.func,
+  retryLabel: PropTypes.string,
   title: PropTypes.string,
 };
 
@@ -121,8 +123,14 @@ AsyncScreenState.defaultProps = {
   children: null,
   description: '',
   empty: false,
+  emptyActionLabel: 'Take action',
   error: '',
+  errorDescription: 'Refresh the section or try a safer entry point if the issue continues.',
+  errorTitle: 'We could not load this section',
   loading: false,
   loadingLabel: 'Loading…',
+  onEmptyAction: null,
+  onRetry: null,
+  retryLabel: 'Try again',
   title: 'Nothing to show',
 };
