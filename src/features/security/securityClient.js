@@ -149,3 +149,62 @@ export const fetchSecurityBranches = async () => {
   unwrap(error, 'Unable to load branches for security workflows.');
   return data ?? [];
 };
+
+const normalizeStringArray = (value) => {
+  if (!value) {
+    return [];
+  }
+
+  if (Array.isArray(value)) {
+    return value.filter(Boolean).map((item) => String(item));
+  }
+
+  return [];
+};
+
+const normalizePolicy = (data) => {
+  const row = normalizeSingle(data) || {};
+
+  return {
+    role: row.role || null,
+    requirePasswordReset: Boolean(row.require_password_reset),
+    memberPortalAccess: row.member_portal_access !== false,
+    staffPortalAccess: row.staff_portal_access !== false,
+    adminPortalAccess: row.admin_portal_access !== false,
+    deniedPermissions: normalizeStringArray(row.denied_permissions),
+    allowedPermissions: normalizeStringArray(row.allowed_permissions),
+    notes: row.notes || '',
+    updatedAt: row.updated_at || null,
+  };
+};
+
+export const fetchCurrentUserSecurityPolicy = async () => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('get_current_user_security_policy');
+  unwrap(error, 'Unable to load the current user security policy.');
+  return normalizePolicy(data);
+};
+
+export const logSecurityEvent = async ({
+  actionKey,
+  entityType = 'security_policy',
+  entityId = null,
+  actionSummary = null,
+  metadata = {},
+  severity = 'warn',
+  sourceArea = null,
+}) => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('log_security_event', {
+    p_action_key: actionKey,
+    p_entity_type: entityType,
+    p_entity_id: entityId,
+    p_action_summary: actionSummary,
+    p_metadata: metadata || {},
+    p_severity: severity,
+    p_source_area: sourceArea,
+  });
+
+  unwrap(error, 'Unable to write the security audit event.');
+  return normalizeSingle(data);
+};

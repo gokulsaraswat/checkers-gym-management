@@ -1,6 +1,7 @@
 export const PATHS = {
   home: '/',
   notFound: '/404',
+  securityRestricted: '/security/restricted',
   gallery: '/gallery',
   testimonials: '/testimonials',
   events: '/events',
@@ -37,6 +38,7 @@ export const PATHS = {
   staffAccess: '/staff/access',
   staffBlog: '/staff/blog',
   admin: '/admin',
+  adminSecurity: '/admin/security',
   adminAccess: '/admin/access',
   adminAccessHardware: '/admin/access/hardware',
   adminPlans: '/admin/plans',

@@ -42,6 +42,8 @@ import FeedbackPage from '../features/publicSite/FeedbackPage';
 import GymMapPage from '../features/publicSite/GymMapPage';
 import NotFoundPage from '../features/publicSite/NotFoundPage';
 import AdminPage from '../features/admin/AdminPage';
+import AdminSecurityPage from '../features/security/AdminSecurityPage';
+import SecurityRestrictionPage from '../features/security/SecurityRestrictionPage';
 import AdminAccessControlPage from '../features/access/AdminAccessControlPage';
 import AdminAccessHardwarePage from '../features/access/AdminAccessHardwarePage';
 import AdminPlansPage from '../features/plans/AdminPlansPage';
@@ -78,6 +80,7 @@ const AppRouter = () => (
       <Route path={PATHS.blogPost} element={<BlogPostPage />} />
       <Route path={PATHS.exerciseDetail} element={<ExerciseDetailPage />} />
       <Route path={PATHS.notFound} element={<NotFoundPage />} />
+      <Route path={PATHS.securityRestricted} element={<SecurityRestrictionPage />} />
 
       <Route element={<GuestRoute />}>
         <Route path={PATHS.auth} element={<AuthPage />} />
@@ -117,6 +120,7 @@ const AppRouter = () => (
 
       <Route element={<AdminRoute />}>
         <Route path={PATHS.admin} element={<AdminPage />} />
+        <Route path={PATHS.adminSecurity} element={<AdminSecurityPage />} />
         <Route path={PATHS.adminAccess} element={<AdminAccessControlPage />} />
         <Route path={PATHS.adminAccessHardware} element={<AdminAccessHardwarePage />} />
         <Route path={PATHS.adminPlans} element={<AdminPlansPage />} />

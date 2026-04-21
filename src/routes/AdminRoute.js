@@ -1,15 +1,33 @@
-import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import React, { useEffect, useMemo } from 'react';
+
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 import { getPostAuthPath } from '../app/auth/access';
 import { PATHS } from '../app/paths';
 import LoadingScreen from '../components/common/LoadingScreen';
+
 import { useAuth } from '../context/AuthContext';
+import { buildRestrictionState, evaluateSecurityGate } from '../features/security/securityAccess';
+import { useUserSecurityPolicy } from '../features/security/useUserSecurityPolicy';
 
 const AdminRoute = () => {
   const { user, profile, loading } = useAuth();
+  const location = useLocation();
+  const { policy, loading: securityLoading, logDeniedAccess } = useUserSecurityPolicy();
 
-  if (loading) {
+  const gate = useMemo(() => evaluateSecurityGate({
+    pathname: location.pathname,
+    policy,
+    requiredPortal: 'admin',
+  }), [location.pathname, policy]);
+
+  useEffect(() => {
+    if (!loading && !securityLoading && user && profile?.role === 'admin' && !gate.allowed) {
+      logDeniedAccess(gate, location.pathname);
+    }
+  }, [gate, loading, location.pathname, logDeniedAccess, profile?.role, securityLoading, user]);
+
+  if (loading || securityLoading) {
     return <LoadingScreen message="Checking admin access..." />;
   }
 
@@ -19,6 +37,10 @@ const AdminRoute = () => {
 
   if (profile?.role !== 'admin') {
     return <Navigate to={getPostAuthPath(profile?.role)} replace />;
+  }
+
+  if (!gate.allowed) {
+    return <Navigate to={PATHS.securityRestricted} replace state={buildRestrictionState(gate, location.pathname)} />;
   }
 
   return <Outlet />;
