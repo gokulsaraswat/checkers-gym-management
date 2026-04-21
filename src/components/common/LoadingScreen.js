@@ -13,6 +13,9 @@ const LoadingScreen = ({
   return (
     <Box
       className="homepage-loader-shell"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
       sx={{
         minHeight: compact ? 260 : minHeight,
         width: '100%',

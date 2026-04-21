@@ -67,6 +67,8 @@ const StateFeedbackCard = ({
   return (
     <Paper
       variant="outlined"
+      role={severity === 'error' ? 'alert' : 'status'}
+      aria-live={severity === 'error' ? 'assertive' : 'polite'}
       sx={{
         borderRadius: compact ? 3 : 4,
         px: compact ? 2.25 : { xs: 2.5, md: 3.5 },

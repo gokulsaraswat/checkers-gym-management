@@ -1,4 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { alpha } from '@mui/material/styles';
 import {
   AppBar,
@@ -21,29 +26,40 @@ import {
 } from '@mui/material';
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-import { Link as RouterLink, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import {
+  Link as RouterLink,
+  NavLink,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 
 import { getRoleBadgeLabel, isStaffRole } from '../../app/auth/access';
 import { PATHS } from '../../app/paths';
+import Logo from '../../assets/images/Logo.png';
 import { useAuth } from '../../context/AuthContext';
+import useReducedMotionPreference from '../../features/accessibility/useReducedMotionPreference';
 import { fetchUnreadNotificationCount } from '../../services/gymService';
 import { headerOffsets, layoutGutters } from '../../theme/responsiveTokens';
-import Logo from '../../assets/images/Logo.png';
 import ThemeModeToggle from './ThemeModeToggle';
 
+const drawerId = 'mobile-navigation-drawer';
+const drawerTitleId = 'mobile-navigation-drawer-title';
+
 const getItemKey = (item) => item.to || item.label;
+const getUnreadLabel = (count) => `${count} unread ${count === 1 ? 'notification' : 'notifications'}`;
 
 const Navbar = () => {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
   const isWideDesktop = useMediaQuery(theme.breakpoints.up('xl'));
+  const prefersReducedMotion = useReducedMotionPreference();
   const { user, profile, signOut, isConfigured } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
-  const handleExercisesClick = () => {
+  const handleExercisesClick = useCallback(() => {
     setMobileMenuOpen(false);
 
     if (location.pathname !== PATHS.home) {
@@ -51,14 +67,17 @@ const Navbar = () => {
       return;
     }
 
-    document.getElementById('exercises')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
+    document.getElementById('exercises')?.scrollIntoView({
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      block: 'start',
+    });
+  }, [location.pathname, navigate, prefersReducedMotion]);
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     await signOut();
     setMobileMenuOpen(false);
     navigate(PATHS.home);
-  };
+  }, [navigate, signOut]);
 
   useEffect(() => {
     let active = true;
@@ -73,6 +92,7 @@ const Navbar = () => {
 
       try {
         const count = await fetchUnreadNotificationCount(user.id);
+
         if (active) {
           setUnreadNotificationCount(count);
         }
@@ -100,7 +120,7 @@ const Navbar = () => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
-  const createRailLinkStyle = ({ isActive }) => ({
+  const createRailLinkStyle = useCallback(({ isActive }) => ({
     textDecoration: 'none',
     color: theme.palette.text.primary,
     fontWeight: 700,
@@ -118,9 +138,9 @@ const Navbar = () => {
         ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.32 : 0.22)
         : alpha(theme.palette.text.primary, theme.palette.mode === 'dark' ? 0.1 : 0.06)
     }`,
-  });
+  }), [isWideDesktop, theme.palette.background.paper, theme.palette.mode, theme.palette.primary.main, theme.palette.text.primary]);
 
-  const publicDesktopLinks = [
+  const publicDesktopLinks = useMemo(() => ([
     { label: 'Home', to: PATHS.home },
     { label: 'Gallery', to: PATHS.gallery },
     { label: 'Tools', to: PATHS.tools },
@@ -128,9 +148,9 @@ const Navbar = () => {
     { label: 'Blog', to: PATHS.blog },
     { label: 'Contact', to: PATHS.contact },
     { label: 'Exercises', onClick: handleExercisesClick },
-  ];
+  ]), [handleExercisesClick]);
 
-  const publicDrawerLinks = [
+  const publicDrawerLinks = useMemo(() => ([
     { label: 'Home', to: PATHS.home },
     { label: 'Gallery', to: PATHS.gallery },
     { label: 'Testimonials', to: PATHS.testimonials },
@@ -141,63 +161,70 @@ const Navbar = () => {
     { label: 'Feedback', to: PATHS.feedback },
     { label: 'Gym map', to: PATHS.gymMap },
     { label: 'Exercises', onClick: handleExercisesClick },
-  ];
+  ]), [handleExercisesClick]);
 
-  const memberLinks = useMemo(() => (
-    user
-      ? [
-          { label: 'Dashboard', to: PATHS.dashboard },
-          { label: 'Progress', to: PATHS.progress },
-          { label: 'Nutrition', to: PATHS.nutrition },
-          { label: 'Workout plan', to: PATHS.workoutPlan },
-          { label: 'Schedule', to: PATHS.schedule },
-          { label: 'Bookings', to: PATHS.bookings },
-          {
-            label: 'Notifications',
-            to: PATHS.notifications,
-            badge: unreadNotificationCount,
-          },
-          { label: 'Billing', to: PATHS.billing },
-          { label: 'Membership', to: PATHS.membership },
-          { label: 'Account', to: PATHS.account },
-        ]
-      : []
-  ), [unreadNotificationCount, user]);
+  const memberLinks = useMemo(() => {
+    if (!user) {
+      return [];
+    }
 
-  const staffLinks = useMemo(() => (
-    isStaffRole(profile?.role)
-      ? [
-          { label: 'Staff', to: PATHS.staff },
-          { label: 'Staff tools', to: PATHS.staffTools },
-          { label: 'Access desk', to: PATHS.staffAccess },
-          { label: 'Blog editor', to: PATHS.staffBlog },
-          { label: 'Staff notifications', to: PATHS.staffNotifications },
-          { label: 'Staff POS', to: PATHS.staffPos },
-        ]
-      : []
-  ), [profile?.role]);
+    return [
+      { label: 'Dashboard', to: PATHS.dashboard },
+      { label: 'Progress', to: PATHS.progress },
+      { label: 'Nutrition', to: PATHS.nutrition },
+      { label: 'Workout plan', to: PATHS.workoutPlan },
+      { label: 'Schedule', to: PATHS.schedule },
+      { label: 'Bookings', to: PATHS.bookings },
+      {
+        label: 'Notifications',
+        to: PATHS.notifications,
+        badge: unreadNotificationCount,
+      },
+      { label: 'Billing', to: PATHS.billing },
+      { label: 'Membership', to: PATHS.membership },
+      { label: 'Account', to: PATHS.account },
+    ];
+  }, [unreadNotificationCount, user]);
 
-  const adminLinks = useMemo(() => (
-    profile?.role === 'admin'
-      ? [
-          { label: 'Admin', to: PATHS.admin },
-          { label: 'Access', to: PATHS.adminAccess },
-          { label: 'CRM', to: PATHS.adminCrm },
-          { label: 'POS', to: PATHS.adminPos },
-          { label: 'Reports', to: PATHS.adminReports },
-          { label: 'Blog', to: PATHS.adminBlog },
-        ]
-      : []
-  ), [profile?.role]);
+  const staffLinks = useMemo(() => {
+    if (!isStaffRole(profile?.role)) {
+      return [];
+    }
 
-  const desktopItems = [
+    return [
+      { label: 'Staff', to: PATHS.staff },
+      { label: 'Staff tools', to: PATHS.staffTools },
+      { label: 'Access desk', to: PATHS.staffAccess },
+      { label: 'Blog editor', to: PATHS.staffBlog },
+      { label: 'Staff notifications', to: PATHS.staffNotifications },
+      { label: 'Staff POS', to: PATHS.staffPos },
+    ];
+  }, [profile?.role]);
+
+  const adminLinks = useMemo(() => {
+    if (profile?.role !== 'admin') {
+      return [];
+    }
+
+    return [
+      { label: 'Admin', to: PATHS.admin },
+      { label: 'Access', to: PATHS.adminAccess },
+      { label: 'CRM', to: PATHS.adminCrm },
+      { label: 'POS', to: PATHS.adminPos },
+      { label: 'Reports', to: PATHS.adminReports },
+      { label: 'Blog', to: PATHS.adminBlog },
+    ];
+  }, [profile?.role]);
+
+  const desktopItems = useMemo(() => ([
     ...publicDesktopLinks,
     ...memberLinks,
     ...staffLinks,
     ...adminLinks,
-  ];
+  ]), [adminLinks, memberLinks, publicDesktopLinks, staffLinks]);
 
   const renderRailItem = (item) => {
+    const itemAriaLabel = item.badge ? `${item.label}, ${getUnreadLabel(item.badge)}` : item.label;
     const labelContent = item.badge ? (
       <Badge
         color="error"
@@ -215,6 +242,7 @@ const Navbar = () => {
           key={getItemKey(item)}
           color="inherit"
           onClick={item.onClick}
+          aria-label={itemAriaLabel}
           sx={{
             color: 'text.primary',
             fontWeight: 700,
@@ -235,38 +263,51 @@ const Navbar = () => {
     }
 
     return (
-      <NavLink key={getItemKey(item)} to={item.to} style={createRailLinkStyle}>
+      <NavLink
+        key={getItemKey(item)}
+        to={item.to}
+        style={createRailLinkStyle}
+        aria-label={itemAriaLabel}
+      >
         {labelContent}
       </NavLink>
     );
   };
 
-  const renderDrawerLink = (item) => (
-    <ListItemButton
-      key={getItemKey(item)}
-      component={item.to ? RouterLink : 'button'}
-      to={item.to}
-      onClick={item.onClick}
-      sx={{
-        borderRadius: 3,
-        mb: 0.75,
-        px: 1.25,
-        bgcolor: location.pathname === item.to
-          ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.22 : 0.12)
-          : 'transparent',
-        '&:hover': {
-          bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.14 : 0.08),
-        },
-      }}
-    >
-      <ListItemText
-        primaryTypographyProps={{ fontWeight: 700 }}
-        primary={item.badge ? `${item.label} (${item.badge})` : item.label}
-      />
-    </ListItemButton>
-  );
+  const renderDrawerLink = (item) => {
+    const isSelected = Boolean(item.to && location.pathname === item.to);
+    const itemAriaLabel = item.badge ? `${item.label}, ${getUnreadLabel(item.badge)}` : item.label;
 
-  const groupedDrawerLinks = [
+    return (
+      <ListItemButton
+        key={getItemKey(item)}
+        component={item.to ? RouterLink : 'button'}
+        to={item.to}
+        onClick={item.onClick}
+        selected={isSelected}
+        aria-current={isSelected ? 'page' : undefined}
+        aria-label={itemAriaLabel}
+        sx={{
+          borderRadius: 3,
+          mb: 0.75,
+          px: 1.25,
+          bgcolor: isSelected
+            ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.22 : 0.12)
+            : 'transparent',
+          '&:hover': {
+            bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.14 : 0.08),
+          },
+        }}
+      >
+        <ListItemText
+          primaryTypographyProps={{ fontWeight: 700 }}
+          primary={item.badge ? `${item.label} (${item.badge})` : item.label}
+        />
+      </ListItemButton>
+    );
+  };
+
+  const groupedDrawerLinks = useMemo(() => ([
     {
       title: 'Explore',
       items: publicDrawerLinks,
@@ -274,7 +315,7 @@ const Navbar = () => {
     user ? { title: 'Member', items: memberLinks } : null,
     staffLinks.length ? { title: 'Staff', items: staffLinks } : null,
     adminLinks.length ? { title: 'Admin', items: adminLinks } : null,
-  ].filter(Boolean);
+  ].filter(Boolean)), [adminLinks, memberLinks, publicDrawerLinks, staffLinks, user]);
 
   const roleChip = user ? (
     <Chip
@@ -292,6 +333,7 @@ const Navbar = () => {
   return (
     <>
       <AppBar
+        component="header"
         position="sticky"
         elevation={0}
         color="transparent"
@@ -327,6 +369,9 @@ const Navbar = () => {
                 <IconButton
                   color="inherit"
                   aria-label="Open navigation menu"
+                  aria-controls={mobileMenuOpen ? drawerId : undefined}
+                  aria-expanded={mobileMenuOpen}
+                  aria-haspopup="dialog"
                   onClick={() => setMobileMenuOpen(true)}
                   sx={{ border: '1px solid', borderColor: 'divider' }}
                 >
@@ -335,7 +380,7 @@ const Navbar = () => {
               </Tooltip>
             ) : null}
 
-            <RouterLink to={PATHS.home} style={{ flexShrink: 0, display: 'inline-flex' }}>
+            <RouterLink to={PATHS.home} style={{ flexShrink: 0, display: 'inline-flex' }} aria-label="Open home page">
               <Box
                 component="img"
                 src={Logo}
@@ -368,6 +413,8 @@ const Navbar = () => {
           {isDesktop ? (
             <>
               <Box
+                component="nav"
+                aria-label="Primary navigation"
                 sx={{
                   flex: 1,
                   minWidth: 0,
@@ -435,7 +482,10 @@ const Navbar = () => {
         anchor="left"
         open={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
+        ModalProps={{ keepMounted: true }}
         PaperProps={{
+          id: drawerId,
+          'aria-labelledby': drawerTitleId,
           sx: {
             width: 320,
             maxWidth: '88vw',
@@ -456,7 +506,7 @@ const Navbar = () => {
               sx={{ width: 42, height: 42, borderRadius: 2.5 }}
             />
             <Box sx={{ minWidth: 0 }}>
-              <Typography fontWeight={800} noWrap>
+              <Typography id={drawerTitleId} fontWeight={800} noWrap>
                 Checkers Gym
               </Typography>
               <Typography variant="body2" color="text.secondary" noWrap>
@@ -464,7 +514,11 @@ const Navbar = () => {
               </Typography>
             </Box>
           </Stack>
-          <IconButton onClick={() => setMobileMenuOpen(false)} aria-label="Close navigation menu">
+          <IconButton
+            onClick={() => setMobileMenuOpen(false)}
+            aria-label="Close navigation menu"
+            aria-controls={drawerId}
+          >
             <CloseRoundedIcon />
           </IconButton>
         </Stack>
@@ -478,7 +532,7 @@ const Navbar = () => {
 
         <Box sx={{ flex: 1, overflowY: 'auto', pr: 0.5 }}>
           {groupedDrawerLinks.map((group) => (
-            <Box key={group.title} sx={{ mb: 2 }}>
+            <Box key={group.title} component="nav" aria-label={`${group.title} navigation`} sx={{ mb: 2 }}>
               <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 1.1 }}>
                 {group.title}
               </Typography>

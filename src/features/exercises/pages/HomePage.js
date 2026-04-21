@@ -31,6 +31,7 @@ import { isRapidApiConfigured } from '../../../utils/fetchData';
 import HomepageHeroSlider from '../../publicSite/HomepageHeroSlider';
 import HomepageMediaShowcase from '../../publicSite/HomepageMediaShowcase';
 import { publicWebsiteHighlights } from '../../publicSite/publicSiteContent';
+import useReducedMotionPreference from '../../accessibility/useReducedMotionPreference';
 
 const utilityCards = [
   {
@@ -55,6 +56,7 @@ const HomePage = () => {
   const [exercises, setExercises] = useState([]);
   const [bodyPart, setBodyPart] = useState('all');
   const { user, profile } = useAuth();
+  const prefersReducedMotion = useReducedMotionPreference();
 
   const dashboardPath = useMemo(() => getPostAuthPath(profile?.role), [profile?.role]);
 
@@ -71,11 +73,14 @@ const HomePage = () => {
   }, [profile?.role, user]);
 
   const scrollToExplorer = () => {
-    document.getElementById('homepage-explorer')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('homepage-explorer')?.scrollIntoView({
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      block: 'start',
+    });
   };
 
   return (
-    <Box className="homepage-shell">
+    <Box component="section" className="homepage-shell" aria-label="Homepage content">
       <HomepageHeroSlider
         primaryCtaLabel={primaryCtaLabel}
         primaryCtaPath={user ? dashboardPath : PATHS.auth}

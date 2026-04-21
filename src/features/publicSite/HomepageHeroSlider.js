@@ -20,6 +20,7 @@ import {
 import { Link as RouterLink } from 'react-router-dom';
 
 import { PATHS } from '../../app/paths';
+import useReducedMotionPreference from '../accessibility/useReducedMotionPreference';
 import {
   contactChannels,
   galleryCollections,
@@ -110,16 +111,21 @@ const buildSlides = () => {
 
 const HomepageHeroSlider = ({ primaryCtaLabel, primaryCtaPath, onExploreClick }) => {
   const theme = useTheme();
+  const prefersReducedMotion = useReducedMotionPreference();
   const slides = useMemo(() => buildSlides(), []);
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
+    if (prefersReducedMotion || slides.length <= 1) {
+      return undefined;
+    }
+
     const timerId = window.setInterval(() => {
       setActiveIndex((currentIndex) => (currentIndex + 1) % slides.length);
     }, 6500);
 
     return () => window.clearInterval(timerId);
-  }, [slides.length]);
+  }, [prefersReducedMotion, slides.length]);
 
   const activeSlide = slides[activeIndex];
 
@@ -132,6 +138,9 @@ const HomepageHeroSlider = ({ primaryCtaLabel, primaryCtaPath, onExploreClick })
     <Box sx={{ px: { xs: 1, sm: 2 }, pt: { xs: 2, md: 3 } }}>
       <Paper
         className="homepage-hero-card surface-card"
+        role="region"
+        aria-roledescription="carousel"
+        aria-label="Homepage hero highlights"
         sx={{
           overflow: 'hidden',
           borderRadius: { xs: 4, md: 5 },
@@ -141,6 +150,7 @@ const HomepageHeroSlider = ({ primaryCtaLabel, primaryCtaPath, onExploreClick })
       >
         <Box
           className="homepage-hero-art"
+          aria-hidden="true"
           sx={{
             backgroundImage: [
               `linear-gradient(135deg, ${alpha(theme.palette.background.default, theme.palette.mode === 'dark' ? 0.78 : 0.68)} 5%, ${alpha(theme.palette.background.default, theme.palette.mode === 'dark' ? 0.24 : 0.18)} 45%, ${alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.42 : 0.26)} 100%)`,
@@ -151,6 +161,7 @@ const HomepageHeroSlider = ({ primaryCtaLabel, primaryCtaPath, onExploreClick })
 
         <Stack
           direction={{ xs: 'column', lg: 'row' }}
+          aria-label={`Slide ${activeIndex + 1} of ${slides.length}`}
           spacing={{ xs: 3, md: 4 }}
           sx={{
             position: 'relative',
@@ -159,6 +170,9 @@ const HomepageHeroSlider = ({ primaryCtaLabel, primaryCtaPath, onExploreClick })
           }}
         >
           <Stack spacing={2.25} sx={{ flex: 1.15, minWidth: 0 }}>
+            <Box className="sr-only" aria-live={prefersReducedMotion ? 'polite' : 'off'} aria-atomic="true">
+              {`Slide ${activeIndex + 1} of ${slides.length}: ${activeSlide.title}`}
+            </Box>
             <Chip
               icon={<AutoAwesomeRounded />}
               label={activeSlide.eyebrow}
@@ -273,7 +287,7 @@ const HomepageHeroSlider = ({ primaryCtaLabel, primaryCtaPath, onExploreClick })
 
                   <Stack direction="row" spacing={1}>
                     <IconButton
-                      aria-label="Previous slide"
+                      aria-label={`Show previous slide. Current slide ${activeIndex + 1} of ${slides.length}.`}
                       onClick={() => jumpToSlide(activeIndex - 1)}
                       size="small"
                       sx={{ bgcolor: alpha(theme.palette.background.default, 0.75) }}
@@ -281,7 +295,7 @@ const HomepageHeroSlider = ({ primaryCtaLabel, primaryCtaPath, onExploreClick })
                       <ArrowBackRounded fontSize="small" />
                     </IconButton>
                     <IconButton
-                      aria-label="Next slide"
+                      aria-label={`Show next slide. Current slide ${activeIndex + 1} of ${slides.length}.`}
                       onClick={() => jumpToSlide(activeIndex + 1)}
                       size="small"
                       sx={{ bgcolor: alpha(theme.palette.background.default, 0.75) }}
@@ -294,6 +308,7 @@ const HomepageHeroSlider = ({ primaryCtaLabel, primaryCtaPath, onExploreClick })
                 <Box className="homepage-media-poster">
                   <Box
                     className="homepage-media-poster__image"
+                    aria-hidden="true"
                     sx={{
                       backgroundImage: [
                         `linear-gradient(180deg, ${alpha(theme.palette.common.black, 0.06)} 0%, ${alpha(theme.palette.common.black, 0.42)} 100%)`,
@@ -303,6 +318,9 @@ const HomepageHeroSlider = ({ primaryCtaLabel, primaryCtaPath, onExploreClick })
                   />
 
                   <Stack className="homepage-media-poster__content" spacing={1.25}>
+                    <Box className="sr-only">
+                      {`Visual banner for ${activeSlide.title}`}
+                    </Box>
                     <Typography variant="overline" sx={{ letterSpacing: '0.16em', color: 'rgba(255,255,255,0.76)' }}>
                       Theme-aware visual banner
                     </Typography>
@@ -350,6 +368,8 @@ const HomepageHeroSlider = ({ primaryCtaLabel, primaryCtaPath, onExploreClick })
                   key={slide.id}
                   onClick={() => jumpToSlide(index)}
                   className={`homepage-slide-indicator${index === activeIndex ? ' is-active' : ''}`}
+                  aria-label={`Show slide ${index + 1}: ${slide.title}`}
+                  aria-pressed={index === activeIndex}
                   sx={{
                     minWidth: 0,
                     px: 1.4,

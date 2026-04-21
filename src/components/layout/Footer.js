@@ -12,36 +12,47 @@ import {
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 
+import Logo from '../../assets/images/Logo.png';
 import { PATHS } from '../../app/paths';
 import { useAuth } from '../../context/AuthContext';
-import Logo from '../../assets/images/Logo.png';
 
 const FooterColumn = ({ title, items }) => (
-  <Stack spacing={1.25} sx={{ minWidth: 0 }}>
+  <Box component="nav" aria-label={`${title} links`} sx={{ minWidth: 0 }}>
     <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 1.2 }}>
       {title}
     </Typography>
-    <Stack spacing={1}>
+    <Box
+      component="ul"
+      sx={{
+        listStyle: 'none',
+        mt: 1.25,
+        p: 0,
+        m: 0,
+        display: 'grid',
+        gap: 1,
+      }}
+    >
       {items.map((item) => (
-        item.to ? (
-          <Link
-            key={item.label}
-            component={RouterLink}
-            to={item.to}
-            underline="hover"
-            color="text.primary"
-            sx={{ width: 'fit-content', fontWeight: 600 }}
-          >
-            {item.label}
-          </Link>
-        ) : (
-          <Typography key={item.label} variant="body2" color="text.secondary">
-            {item.label}
-          </Typography>
-        )
+        <Box component="li" key={item.label}>
+          {item.to ? (
+            <Link
+              component={RouterLink}
+              to={item.to}
+              underline="hover"
+              color="text.primary"
+              sx={{ width: 'fit-content', fontWeight: 600 }}
+            >
+              {item.label}
+            </Link>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              {item.label}
+            </Typography>
+          )}
+        </Box>
       ))}
-    </Stack>
-  </Stack>
+    </Box>
+  </Box>
 );
 
 const Footer = () => {
@@ -67,34 +78,38 @@ const Footer = () => {
         { label: 'Contact', to: PATHS.contact },
       ];
 
-  const workspaceLinks = isAdmin
-    ? [
-        { label: 'Admin workspace', to: PATHS.admin },
-        { label: 'Access control', to: PATHS.adminAccess },
-        { label: 'Blog moderation', to: PATHS.adminBlog },
-        { label: 'Reports', to: PATHS.adminReports },
-      ]
-    : isStaff
-      ? [
-          { label: 'Staff home', to: PATHS.staff },
-          { label: 'Access desk', to: PATHS.staffAccess },
-          { label: 'Blog editor', to: PATHS.staffBlog },
-          { label: 'Staff POS', to: PATHS.staffPos },
-        ]
-      : user
-        ? [
-            { label: 'Schedule', to: PATHS.schedule },
-            { label: 'Bookings', to: PATHS.bookings },
-            { label: 'Membership', to: PATHS.membership },
-            { label: 'Account', to: PATHS.account },
-          ]
-        : [
-            { label: 'Events page', to: PATHS.events },
-            { label: 'Testimonials', to: PATHS.testimonials },
-            { label: 'Tools', to: PATHS.tools },
-            { label: 'Feedback', to: PATHS.feedback },
-            { label: 'Gym map', to: PATHS.gymMap },
-          ];
+  let workspaceLinks;
+
+  if (isAdmin) {
+    workspaceLinks = [
+      { label: 'Admin workspace', to: PATHS.admin },
+      { label: 'Access control', to: PATHS.adminAccess },
+      { label: 'Blog moderation', to: PATHS.adminBlog },
+      { label: 'Reports', to: PATHS.adminReports },
+    ];
+  } else if (isStaff) {
+    workspaceLinks = [
+      { label: 'Staff home', to: PATHS.staff },
+      { label: 'Access desk', to: PATHS.staffAccess },
+      { label: 'Blog editor', to: PATHS.staffBlog },
+      { label: 'Staff POS', to: PATHS.staffPos },
+    ];
+  } else if (user) {
+    workspaceLinks = [
+      { label: 'Schedule', to: PATHS.schedule },
+      { label: 'Bookings', to: PATHS.bookings },
+      { label: 'Membership', to: PATHS.membership },
+      { label: 'Account', to: PATHS.account },
+    ];
+  } else {
+    workspaceLinks = [
+      { label: 'Events page', to: PATHS.events },
+      { label: 'Testimonials', to: PATHS.testimonials },
+      { label: 'Tools', to: PATHS.tools },
+      { label: 'Feedback', to: PATHS.feedback },
+      { label: 'Gym map', to: PATHS.gymMap },
+    ];
+  }
 
   const publicSiteLinks = [
     { label: 'Gallery', to: PATHS.gallery },
@@ -132,6 +147,8 @@ const Footer = () => {
                 component="img"
                 src={Logo}
                 alt="Checkers Gym logo"
+                loading="lazy"
+                decoding="async"
                 sx={{
                   width: { xs: 48, md: 56 },
                   height: { xs: 48, md: 56 },
@@ -157,17 +174,18 @@ const Footer = () => {
               private product workflows.
             </Typography>
 
-            <Stack direction="row" flexWrap="wrap" gap={1}>
+            <Stack component="ul" direction="row" flexWrap="wrap" gap={1} sx={{ listStyle: 'none', p: 0, m: 0 }}>
               {['Gallery', 'Testimonials', 'Tools', 'Events', 'Feedback'].map((label) => (
-                <Chip
-                  key={label}
-                  size="small"
-                  label={label}
-                  sx={{
-                    bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.18 : 0.08),
-                    color: 'text.primary',
-                  }}
-                />
+                <Box component="li" key={label}>
+                  <Chip
+                    size="small"
+                    label={label}
+                    sx={{
+                      bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.18 : 0.08),
+                      color: 'text.primary',
+                    }}
+                  />
+                </Box>
               ))}
             </Stack>
           </Stack>

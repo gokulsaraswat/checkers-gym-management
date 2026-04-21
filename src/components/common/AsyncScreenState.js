@@ -32,6 +32,9 @@ export default function AsyncScreenState({
   if (loading) {
     return (
       <Stack
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
         alignItems="center"
         justifyContent="center"
         spacing={2.5}

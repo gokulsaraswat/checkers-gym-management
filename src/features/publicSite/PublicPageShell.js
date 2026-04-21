@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { alpha } from '@mui/material/styles';
 import {
   Box,
@@ -45,10 +45,12 @@ const PublicPageShell = ({
   children,
 }) => {
   const theme = useTheme();
+  const headingId = useId();
 
   return (
-    <Box sx={{ py: { xs: 3, md: 5 } }}>
+    <Box component="section" aria-labelledby={headingId} sx={{ py: { xs: 3, md: 5 } }}>
       <Paper
+        component="header"
         variant="outlined"
         sx={{
           position: 'relative',
@@ -71,7 +73,7 @@ const PublicPageShell = ({
             <Typography color="primary.main" fontWeight={700}>
               {eyebrow}
             </Typography>
-            <Typography variant="h3" fontWeight={800} sx={{ fontSize: { xs: '32px', md: '48px' } }}>
+            <Typography id={headingId} variant="h3" fontWeight={800} sx={{ fontSize: { xs: '32px', md: '48px' } }}>
               {title}
             </Typography>
             <Typography color="text.secondary" maxWidth="900px" sx={{ lineHeight: 1.8 }}>
@@ -80,9 +82,11 @@ const PublicPageShell = ({
           </Stack>
 
           {chips.length ? (
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Stack component="ul" direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ listStyle: 'none', p: 0, m: 0 }}>
               {chips.map((chip) => (
-                <Chip key={chip} label={chip} variant="outlined" size="small" />
+                <Box component="li" key={chip}>
+                  <Chip label={chip} variant="outlined" size="small" />
+                </Box>
               ))}
             </Stack>
           ) : null}
@@ -96,10 +100,19 @@ const PublicPageShell = ({
           ) : null}
 
           {stats.length ? (
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} flexWrap="wrap" useFlexGap>
+            <Box
+              component="dl"
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 1.5,
+                m: 0,
+              }}
+            >
               {stats.map((stat) => (
                 <Paper
                   key={stat.label}
+                  component="div"
                   variant="outlined"
                   sx={{
                     minWidth: { xs: '100%', sm: 170 },
@@ -109,10 +122,10 @@ const PublicPageShell = ({
                     bgcolor: alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.72 : 0.9),
                   }}
                 >
-                  <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 1 }}>
+                  <Typography component="dt" variant="overline" color="text.secondary" sx={{ letterSpacing: 1 }}>
                     {stat.label}
                   </Typography>
-                  <Typography variant="h5" fontWeight={800}>
+                  <Typography component="dd" variant="h5" fontWeight={800} sx={{ m: 0 }}>
                     {stat.value}
                   </Typography>
                   {stat.caption ? (
@@ -122,7 +135,7 @@ const PublicPageShell = ({
                   ) : null}
                 </Paper>
               ))}
-            </Stack>
+            </Box>
           ) : null}
         </Stack>
       </Paper>
