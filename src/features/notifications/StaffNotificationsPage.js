@@ -32,14 +32,22 @@ import MetricCard from '../../components/common/MetricCard';
 import SetupNotice from '../../components/common/SetupNotice';
 import { useAuth } from '../../context/AuthContext';
 import {
+  fetchNotificationReminderRules,
   fetchNotificationTargets,
   fetchStaffNotifications,
+  previewNotificationReminderRule,
+  runNotificationReminderRule,
+  saveNotificationReminderRule,
   sendStaffNotification,
 } from '../../services/gymService';
+import ReminderPreviewTable from './components/ReminderPreviewTable';
+import ReminderRuleEditorCard from './components/ReminderRuleEditorCard';
 import {
   applyNotificationTemplate,
   buildNotificationAudienceLabel,
   buildNotificationSummary,
+  buildReminderSummary,
+  createDefaultReminderRule,
   createEmptyNotificationComposer,
   DELIVERY_CHANNEL_OPTIONS,
   formatNotificationDate,
@@ -52,7 +60,24 @@ import {
   NOTIFICATION_TEMPLATE_OPTIONS,
   NOTIFICATION_TYPE_OPTIONS,
   sortNotificationsNewestFirst,
+  sortReminderRules,
 } from './notificationsHelpers';
+
+const numericReminderFields = new Set(['lead_value', 'cooldown_hours']);
+
+const createRuleKeyFromTitle = (title = '') => {
+  const trimmedTitle = title.trim().toLowerCase();
+
+  if (!trimmedTitle) {
+    return `reminder-rule-${Date.now()}`;
+  }
+
+  const slug = trimmedTitle
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+
+  return slug || `reminder-rule-${Date.now()}`;
+};
 
 const StaffNotificationsPage = () => {
   const { loading, isConfigured } = useAuth();
@@ -67,7 +92,16 @@ const StaffNotificationsPage = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [sending, setSending] = useState(false);
   const [feedback, setFeedback] = useState({ type: '', message: '' });
-  const [form, setForm] = useState(createEmptyNotificationComposer);
+  const [form, setForm] = useState(createEmptyNotificationComposer());
+  const [reminderRules, setReminderRules] = useState([]);
+  const [selectedRuleId, setSelectedRuleId] = useState('');
+  const [selectedRule, setSelectedRule] = useState(createDefaultReminderRule());
+  const [previewRows, setPreviewRows] = useState([]);
+  const [reminderLoading, setReminderLoading] = useState(false);
+  const [previewingReminder, setPreviewingReminder] = useState(false);
+  const [savingReminder, setSavingReminder] = useState(false);
+  const [runningReminder, setRunningReminder] = useState(false);
+  const [reminderFeedback, setReminderFeedback] = useState({ type: '', message: '' });
 
   const loadNotifications = useCallback(async ({
     nextQuery = query,
@@ -122,14 +156,61 @@ const StaffNotificationsPage = () => {
     }
   }, [isConfigured]);
 
+  const loadReminderRules = useCallback(async (preferredRuleId = '') => {
+    if (!isConfigured) {
+      setReminderLoading(false);
+      return [];
+    }
+
+    try {
+      setReminderLoading(true);
+      const rows = sortReminderRules(await fetchNotificationReminderRules());
+      setReminderRules(rows);
+
+      const nextRuleId = preferredRuleId || selectedRuleId || rows[0]?.id || '';
+      const nextRule = rows.find((row) => row.id === nextRuleId) || rows[0] || null;
+
+      if (nextRule) {
+        setSelectedRuleId(nextRule.id);
+        setSelectedRule(createDefaultReminderRule(nextRule));
+      } else {
+        setSelectedRuleId('');
+        setSelectedRule(createDefaultReminderRule());
+      }
+
+      return rows;
+    } catch (error) {
+      setReminderFeedback({
+        type: 'error',
+        message: error.message || 'Unable to load reminder rules.',
+      });
+      return [];
+    } finally {
+      setReminderLoading(false);
+    }
+  }, [isConfigured]);
+
   useEffect(() => {
-    Promise.all([
-      loadNotifications({ showPageLoader: true }),
-      loadTargets(''),
-    ]);
-  }, [loadNotifications, loadTargets]);
+    loadNotifications({ showPageLoader: true });
+  }, [loadNotifications]);
+
+  useEffect(() => {
+    const initialiseWorkspace = async () => {
+      await Promise.all([
+        loadTargets(''),
+        loadReminderRules(),
+      ]);
+    };
+
+    initialiseWorkspace();
+  }, [loadReminderRules, loadTargets]);
 
   const summary = useMemo(() => buildNotificationSummary(notifications), [notifications]);
+
+  const reminderSummary = useMemo(
+    () => buildReminderSummary(reminderRules, previewRows),
+    [previewRows, reminderRules],
+  );
 
   const selectedTarget = useMemo(
     () => targets.find((row) => row.id === form.target_user_id) || null,
@@ -185,6 +266,110 @@ const StaffNotificationsPage = () => {
     }
   };
 
+  const handleSelectRule = (ruleId) => {
+    setSelectedRuleId(ruleId);
+    const matchingRule = reminderRules.find((row) => row.id === ruleId);
+    setSelectedRule(createDefaultReminderRule(matchingRule || {}));
+    setPreviewRows([]);
+    setReminderFeedback({ type: '', message: '' });
+  };
+
+  const handleReminderFieldChange = (field, value) => {
+    setSelectedRule((current) => ({
+      ...current,
+      [field]: numericReminderFields.has(field) ? Number(value || 0) : value,
+    }));
+  };
+
+  const handleSaveReminderRule = async () => {
+    try {
+      setSavingReminder(true);
+      setReminderFeedback({ type: '', message: '' });
+
+      const payload = {
+        ...selectedRule,
+        rule_key: selectedRule.rule_key || createRuleKeyFromTitle(selectedRule.title),
+      };
+
+      const savedRule = await saveNotificationReminderRule(payload);
+      await loadReminderRules(savedRule.id);
+      setReminderFeedback({
+        type: 'success',
+        message: 'Reminder rule saved.',
+      });
+    } catch (error) {
+      setReminderFeedback({
+        type: 'error',
+        message: error.message || 'Unable to save the reminder rule.',
+      });
+    } finally {
+      setSavingReminder(false);
+    }
+  };
+
+  const handlePreviewReminderRule = async () => {
+    if (!selectedRuleId) {
+      setReminderFeedback({
+        type: 'warning',
+        message: 'Save or select a reminder rule before previewing recipients.',
+      });
+      return;
+    }
+
+    try {
+      setPreviewingReminder(true);
+      setReminderFeedback({ type: '', message: '' });
+      const rows = await previewNotificationReminderRule(selectedRuleId, 80);
+      setPreviewRows(rows);
+      setReminderFeedback({
+        type: rows.length ? 'success' : 'info',
+        message: rows.length
+          ? `Preview ready for ${rows.length} recipient(s).`
+          : 'No recipients currently match this reminder rule.',
+      });
+    } catch (error) {
+      setReminderFeedback({
+        type: 'error',
+        message: error.message || 'Unable to preview reminder recipients.',
+      });
+    } finally {
+      setPreviewingReminder(false);
+    }
+  };
+
+  const handleRunReminderRule = async () => {
+    if (!selectedRuleId) {
+      setReminderFeedback({
+        type: 'warning',
+        message: 'Save or select a reminder rule before running it.',
+      });
+      return;
+    }
+
+    try {
+      setRunningReminder(true);
+      setReminderFeedback({ type: '', message: '' });
+      const insertedCount = await runNotificationReminderRule(selectedRuleId, 120);
+      await Promise.all([
+        loadNotifications({ showPageLoader: false }),
+        loadReminderRules(selectedRuleId),
+      ]);
+      setReminderFeedback({
+        type: insertedCount ? 'success' : 'info',
+        message: insertedCount
+          ? `Triggered ${insertedCount} reminder(s) from the selected rule.`
+          : 'No new reminders were generated because the current matches are already covered by cooldown.',
+      });
+    } catch (error) {
+      setReminderFeedback({
+        type: 'error',
+        message: error.message || 'Unable to run the reminder rule.',
+      });
+    } finally {
+      setRunningReminder(false);
+    }
+  };
+
   if (loading || pageLoading) {
     return <LoadingScreen message="Loading notifications workspace..." />;
   }
@@ -195,14 +380,14 @@ const StaffNotificationsPage = () => {
 
       <Stack spacing={1.5} mb={4}>
         <Typography color="#ff2625" fontWeight={700}>
-          Staff notifications
+          Staff notifications and reminders
         </Typography>
         <Typography variant="h3" fontWeight={800} sx={{ fontSize: { xs: '32px', md: '46px' } }}>
-          Send reminders, updates, and member nudges
+          Send updates now and automate the right nudges later
         </Typography>
         <Typography color="text.secondary" maxWidth="920px">
-          Use this workspace to broadcast updates, send one-to-one reminders, and monitor which notifications
-          members have already opened.
+          Use this workspace to broadcast updates, send one-to-one reminders, preview recurring reminder rules,
+          and monitor which notifications members have already opened.
         </Typography>
       </Stack>
 
@@ -468,7 +653,7 @@ const StaffNotificationsPage = () => {
                   </TextField>
                   <Button
                     variant="outlined"
-                    onClick={() => { loadNotifications({ showPageLoader: false }); }}
+                    onClick={() => loadNotifications({ showPageLoader: false })}
                     disabled={refreshing}
                     sx={{ textTransform: 'none', borderRadius: 999 }}
                   >
@@ -547,6 +732,54 @@ const StaffNotificationsPage = () => {
               </TableContainer>
             </Stack>
           </Paper>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Paper className="surface-card" sx={{ p: 3, borderRadius: 4 }}>
+            <Stack direction={{ xs: 'column', lg: 'row' }} justifyContent="space-between" spacing={2}>
+              <Stack spacing={0.75}>
+                <Typography color="#ff2625" fontWeight={700}>
+                  Reminder automation snapshot
+                </Typography>
+                <Typography color="text.secondary">
+                  Keep staff-triggered reminder rules visible without mixing them into unrelated public-site or hardware work.
+                </Typography>
+              </Stack>
+
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.25} flexWrap="wrap" useFlexGap>
+                <Chip label={`${reminderSummary.enabledRules} active rule(s)`} sx={{ fontWeight: 700 }} />
+                <Chip label={`${reminderSummary.totalRules} total rule(s)`} sx={{ fontWeight: 700 }} />
+                <Chip label={`${reminderSummary.previewCount} preview recipient(s)`} sx={{ fontWeight: 700 }} />
+                <Chip
+                  label={reminderSummary.latestRun ? `Last run ${formatNotificationDate(reminderSummary.latestRun)}` : 'No reminder run yet'}
+                  sx={{ fontWeight: 700 }}
+                />
+              </Stack>
+            </Stack>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} lg={5}>
+          <ReminderRuleEditorCard
+            rules={reminderRules}
+            selectedRuleId={selectedRuleId}
+            rule={selectedRule}
+            feedback={reminderFeedback}
+            loading={reminderLoading}
+            saving={savingReminder}
+            previewing={previewingReminder}
+            running={runningReminder}
+            onSelectRule={handleSelectRule}
+            onFieldChange={handleReminderFieldChange}
+            onReload={() => loadReminderRules(selectedRuleId)}
+            onSave={handleSaveReminderRule}
+            onPreview={handlePreviewReminderRule}
+            onRun={handleRunReminderRule}
+          />
+        </Grid>
+
+        <Grid item xs={12} lg={7}>
+          <ReminderPreviewTable rows={previewRows} loading={previewingReminder} />
         </Grid>
       </Grid>
     </Box>

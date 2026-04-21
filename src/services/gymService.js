@@ -477,6 +477,33 @@ const memberNotificationSelect = `
   updated_at
 `;
 
+const notificationReminderRuleSelect = `
+  id,
+  rule_key,
+  title,
+  description,
+  reminder_type,
+  target_role,
+  delivery_channel,
+  action_label,
+  action_path,
+  title_template,
+  message_template,
+  lead_value,
+  lead_unit,
+  cooldown_hours,
+  include_inactive,
+  respect_preferences,
+  enabled,
+  metadata,
+  last_previewed_at,
+  last_run_at,
+  created_by,
+  updated_by,
+  created_at,
+  updated_at
+`;
+
 const staffDirectorySelect = `
   id,
   email,
@@ -2831,6 +2858,75 @@ export const sendStaffNotification = async (payload = {}) => {
   });
 
   unwrap(error, 'Unable to send the notification.');
+  emitNotificationsChanged();
+  return Number(data || 0);
+};
+
+
+export const fetchNotificationReminderRules = async () => {
+  const client = ensureSupabase();
+  const { data, error } = await client
+    .from('notification_reminder_rules')
+    .select(notificationReminderRuleSelect)
+    .order('enabled', { ascending: false })
+    .order('title', { ascending: true });
+
+  unwrap(error, 'Unable to load reminder rules.');
+  return data ?? [];
+};
+
+export const saveNotificationReminderRule = async (rule = {}) => {
+  const client = ensureSupabase();
+  const payload = {
+    id: rule.id || undefined,
+    rule_key: normaliseOptionalText(rule.rule_key),
+    title: normaliseOptionalText(rule.title) || 'Reminder rule',
+    description: normaliseOptionalText(rule.description),
+    reminder_type: rule.reminder_type || 'billing_due',
+    target_role: rule.target_role || 'member',
+    delivery_channel: rule.delivery_channel || 'in_app',
+    action_label: normaliseOptionalText(rule.action_label),
+    action_path: normaliseOptionalText(rule.action_path),
+    title_template: normaliseOptionalText(rule.title_template) || normaliseOptionalText(rule.title) || 'Reminder',
+    message_template: normaliseOptionalText(rule.message_template) || 'Please review your gym update.',
+    lead_value: normaliseOptionalInteger(rule.lead_value) ?? 1,
+    lead_unit: rule.lead_unit || 'days',
+    cooldown_hours: normaliseOptionalInteger(rule.cooldown_hours) ?? 24,
+    include_inactive: normaliseBoolean(rule.include_inactive) ?? false,
+    respect_preferences: normaliseBoolean(rule.respect_preferences) ?? true,
+    enabled: normaliseBoolean(rule.enabled) ?? true,
+    metadata: rule.metadata && typeof rule.metadata === 'object' ? rule.metadata : {},
+  };
+
+  const { data, error } = await client
+    .from('notification_reminder_rules')
+    .upsert([payload], { onConflict: 'rule_key' })
+    .select(notificationReminderRuleSelect)
+    .single();
+
+  unwrap(error, 'Unable to save the reminder rule.');
+  return data;
+};
+
+export const previewNotificationReminderRule = async (ruleId, limit = 80) => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('preview_notification_reminder_rule', {
+    p_rule_id: ruleId,
+    p_limit: normaliseOptionalInteger(limit) ?? 80,
+  });
+
+  unwrap(error, 'Unable to preview reminder recipients.');
+  return data ?? [];
+};
+
+export const runNotificationReminderRule = async (ruleId, limit = 120) => {
+  const client = ensureSupabase();
+  const { data, error } = await client.rpc('run_notification_reminder_rule', {
+    p_rule_id: ruleId,
+    p_limit: normaliseOptionalInteger(limit) ?? 120,
+  });
+
+  unwrap(error, 'Unable to run the reminder rule.');
   emitNotificationsChanged();
   return Number(data || 0);
 };
