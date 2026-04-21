@@ -1,6 +1,7 @@
-import PropTypes from 'prop-types'
-import { Card, CardContent, Stack, Typography } from '@mui/material'
-import { sectionCardSx } from '../../../theme/responsiveTokens'
+import PropTypes from 'prop-types';
+import { Card, CardContent, Stack, Typography } from '@mui/material';
+
+import { sectionCardSx } from '../../../theme/responsiveTokens';
 
 export default function SectionCard({ title, subtitle, actions, children }) {
   return (
@@ -27,7 +28,7 @@ export default function SectionCard({ title, subtitle, actions, children }) {
         </Stack>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 SectionCard.propTypes = {
@@ -35,9 +36,9 @@ SectionCard.propTypes = {
   children: PropTypes.node.isRequired,
   subtitle: PropTypes.string,
   title: PropTypes.string.isRequired,
-}
+};
 
 SectionCard.defaultProps = {
   actions: null,
   subtitle: '',
-}
+};

@@ -59,6 +59,7 @@ const AdminReportsPage = lazy(() => import('../features/reports/AdminReportsPage
 const AdminCrmPage = lazy(() => import('../features/crm/AdminCrmPage'));
 const AdminPosPage = lazy(() => import('../features/pos/AdminPosPage'));
 const AdminBlogManagementPage = lazy(() => import('../features/blog/AdminBlogManagementPage'));
+const AdminOperationsPage = lazy(() => import('../features/ops/AdminOperationsPage'));
 
 const AppRouter = () => (
   <Routes>
@@ -130,6 +131,7 @@ const AppRouter = () => (
         <Route path={PATHS.adminCrm} element={<AdminCrmPage />} />
         <Route path={PATHS.adminPos} element={<AdminPosPage />} />
         <Route path={PATHS.adminBlog} element={<AdminBlogManagementPage />} />
+        <Route path={PATHS.adminOps} element={<AdminOperationsPage />} />
         <Route path={PATHS.memberDetail} element={<MemberDetailPage />} />
       </Route>
 

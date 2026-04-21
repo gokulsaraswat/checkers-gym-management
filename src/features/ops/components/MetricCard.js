@@ -1,6 +1,7 @@
-import PropTypes from 'prop-types'
-import { Card, CardContent, Stack, Typography } from '@mui/material'
-import { sectionCardSx } from '../../../theme/responsiveTokens'
+import PropTypes from 'prop-types';
+import { Card, CardContent, Stack, Typography } from '@mui/material';
+
+import { sectionCardSx } from '../../../theme/responsiveTokens';
 
 export default function MetricCard({ label, value, helper }) {
   return (
@@ -21,15 +22,15 @@ export default function MetricCard({ label, value, helper }) {
         </Stack>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 MetricCard.propTypes = {
   helper: PropTypes.string,
   label: PropTypes.string.isRequired,
   value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-}
+};
 
 MetricCard.defaultProps = {
   helper: '',
-}
+};
