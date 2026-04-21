@@ -23,8 +23,7 @@ function getActionVariant(action, index) {
 }
 
 function renderAction(action, index) {
-  const sharedProps = {
-    key: action.label,
+  const buttonProps = {
     variant: getActionVariant(action, index),
     color: action.color || 'primary',
     startIcon: action.startIcon || undefined,
@@ -33,7 +32,15 @@ function renderAction(action, index) {
 
   if (action.to) {
     return (
-      <Button {...sharedProps} component={RouterLink} to={action.to}>
+      <Button
+        key={action.label}
+        variant={buttonProps.variant}
+        color={buttonProps.color}
+        startIcon={buttonProps.startIcon}
+        onClick={buttonProps.onClick}
+        component={RouterLink}
+        to={action.to}
+      >
         {action.label}
       </Button>
     );
@@ -42,7 +49,11 @@ function renderAction(action, index) {
   if (action.href) {
     return (
       <Button
-        {...sharedProps}
+        key={action.label}
+        variant={buttonProps.variant}
+        color={buttonProps.color}
+        startIcon={buttonProps.startIcon}
+        onClick={buttonProps.onClick}
         component="a"
         href={action.href}
         target={action.external ? '_blank' : undefined}
@@ -53,7 +64,17 @@ function renderAction(action, index) {
     );
   }
 
-  return <Button {...sharedProps}>{action.label}</Button>;
+  return (
+    <Button
+      key={action.label}
+      variant={buttonProps.variant}
+      color={buttonProps.color}
+      startIcon={buttonProps.startIcon}
+      onClick={buttonProps.onClick}
+    >
+      {action.label}
+    </Button>
+  );
 }
 
 function getIconColor(severity) {

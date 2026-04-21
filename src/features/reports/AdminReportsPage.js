@@ -20,11 +20,12 @@ import {
 } from '@mui/material';
 import {
   AutoGraph,
+  Download,
   EventRepeat,
+  Insights,
   MonetizationOn,
   PeopleAlt,
   Refresh,
-  Timeline,
 } from '@mui/icons-material';
 import {
   ArcElement,
@@ -61,6 +62,19 @@ import {
   saveReportPreset,
 } from '../../services/gymService';
 import { formatCurrency } from '../billing/billingHelpers';
+import ReportComparisonCard from './components/ReportComparisonCard';
+import ReportInsightPanel from './components/ReportInsightPanel';
+import {
+  buildClassUtilizationChartData,
+  buildDecoratedClassRows,
+  buildMonthlyScorecardRows,
+  buildPaymentMixChartData,
+  buildPaymentMixRows,
+  buildQuickRangeOptions,
+  buildRangeComparison,
+  buildReportInsights,
+  buildReportSnapshotCsv,
+} from './reportPolishHelpers';
 import {
   applyPreset,
   buildClassPerformanceRows,
@@ -114,23 +128,76 @@ const chartOptions = {
   },
 };
 
-const TargetProgressRow = ({ label, actual, target, progress, isCurrency = false }) => (
-  <Stack spacing={0.75}>
-    <Stack direction="row" justifyContent="space-between" spacing={1}>
-      <Typography fontWeight={700}>{label}</Typography>
-      <Typography variant="body2" color="text.secondary">
-        {isCurrency ? formatCurrency(actual, 'INR') : actual}
-        {' / '}
-        {target ? (isCurrency ? formatCurrency(target, 'INR') : target) : 'No target'}
-      </Typography>
+const doughnutOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'bottom',
+    },
+  },
+};
+
+const TargetProgressRow = ({ label, actual, target, progress, isCurrency = false }) => {
+  const actualDisplay = isCurrency ? formatCurrency(actual, 'INR') : actual;
+  let targetDisplay = 'No target';
+
+  if (target) {
+    targetDisplay = isCurrency ? formatCurrency(target, 'INR') : target;
+  }
+
+  return (
+    <Stack spacing={0.75}>
+      <Stack direction="row" justifyContent="space-between" spacing={1}>
+        <Typography fontWeight={700}>{label}</Typography>
+        <Typography variant="body2" color="text.secondary">
+          {actualDisplay}
+          {' / '}
+          {targetDisplay}
+        </Typography>
+      </Stack>
+      <LinearProgress
+        variant={target ? 'determinate' : 'indeterminate'}
+        value={target ? Number(progress || 0) : 15}
+        sx={{ height: 10, borderRadius: 999, backgroundColor: '#f3f4f6' }}
+      />
     </Stack>
-    <LinearProgress
-      variant={target ? 'determinate' : 'indeterminate'}
-      value={target ? Number(progress || 0) : 15}
-      sx={{ height: 10, borderRadius: 999, backgroundColor: '#f3f4f6' }}
-    />
-  </Stack>
-);
+  );
+};
+
+const formatComparisonCardValue = (value, cardId) => {
+  if (cardId === 'collections' || cardId === 'expenses') {
+    return formatCurrency(value, 'INR');
+  }
+
+  if (cardId === 'fill_rate') {
+    return formatPercent(value);
+  }
+
+  return value;
+};
+
+const formatComparisonDelta = (card) => {
+  if (card.deltaPercent === null || card.deltaPercent === undefined) {
+    return 'No baseline';
+  }
+
+  const prefix = card.deltaPercent > 0 ? '+' : '';
+
+  if (card.id === 'fill_rate') {
+    return `${prefix}${card.deltaPercent.toFixed(1)} pts`;
+  }
+
+  return `${prefix}${card.deltaPercent.toFixed(1)}%`;
+};
+
+const formatAttainment = (value) => {
+  if (value === null || value === undefined) {
+    return '—';
+  }
+
+  return formatPercent(value);
+};
 
 const AdminReportsPage = () => {
   const { loading, isConfigured, user } = useAuth();
@@ -153,6 +220,8 @@ const AdminReportsPage = () => {
   const [bookings, setBookings] = useState([]);
   const [financeTargets, setFinanceTargets] = useState([]);
   const [reportPresets, setReportPresets] = useState([]);
+
+  const quickRangeOptions = useMemo(() => buildQuickRangeOptions(new Date()), []);
 
   const syncTargetForm = useCallback((monthValue, targetRows = financeTargets) => {
     const targetMonth = monthInputToDate(monthValue || currentMonthInput());
@@ -221,7 +290,7 @@ const AdminReportsPage = () => {
   }, [filters.endDate, filters.reportYear, filters.startDate, isConfigured]);
 
   useEffect(() => {
-    void loadPage(true);
+    loadPage(true);
   }, [loadPage]);
 
   const summary = useMemo(() => buildReportsSummary({
@@ -250,16 +319,51 @@ const AdminReportsPage = () => {
   const expiringRows = useMemo(() => buildExpiringRows(members, filters.startDate, filters.endDate), [filters.endDate, filters.startDate, members]);
   const classRows = useMemo(() => buildClassPerformanceRows(sessions, bookings), [bookings, sessions]);
   const targetProgress = useMemo(() => buildTargetProgress(trendRows, targetForm.month), [targetForm.month, trendRows]);
+  const decoratedClassRows = useMemo(() => buildDecoratedClassRows(classRows), [classRows]);
+  const paymentMixRows = useMemo(() => buildPaymentMixRows(payments, filters.startDate, filters.endDate), [filters.endDate, filters.startDate, payments]);
+  const paymentMixChartData = useMemo(() => buildPaymentMixChartData(paymentMixRows), [paymentMixRows]);
+  const classUtilizationChartData = useMemo(() => buildClassUtilizationChartData(decoratedClassRows), [decoratedClassRows]);
+  const comparison = useMemo(() => buildRangeComparison({
+    members,
+    invoices,
+    payments,
+    expenses,
+    sessions,
+    bookings,
+    startDate: filters.startDate,
+    endDate: filters.endDate,
+  }), [bookings, expenses, filters.endDate, filters.startDate, invoices, members, payments, sessions]);
+  const scorecardRows = useMemo(() => buildMonthlyScorecardRows(trendRows), [trendRows]);
+  const insights = useMemo(() => buildReportInsights({
+    summary,
+    comparison,
+    outstandingRows,
+    expiringRows,
+    classRows: decoratedClassRows,
+    trendRows,
+  }), [comparison, decoratedClassRows, expiringRows, outstandingRows, summary, trendRows]);
 
   const handleFilterChange = (field) => (event) => {
+    const { value } = event.target;
+    const nextValue = field === 'reportYear' ? Number(value) : value;
+
     setFilters((current) => ({
       ...current,
-      [field]: event.target.value,
+      [field]: nextValue,
+    }));
+  };
+
+  const handleQuickRangeApply = (option) => {
+    setFilters((current) => ({
+      ...current,
+      startDate: option.startDate,
+      endDate: option.endDate,
+      reportYear: option.reportYear,
     }));
   };
 
   const handleTargetFieldChange = (field) => (event) => {
-    const value = event.target.value;
+    const { value } = event.target;
 
     if (field === 'month') {
       syncTargetForm(value);
@@ -273,9 +377,11 @@ const AdminReportsPage = () => {
   };
 
   const handlePresetFieldChange = (event) => {
+    const { value } = event.target;
+
     setPresetForm((current) => ({
       ...current,
-      name: event.target.value,
+      name: value,
     }));
   };
 
@@ -366,6 +472,33 @@ const AdminReportsPage = () => {
     }
   };
 
+  const handleRefresh = async () => {
+    await loadPage();
+  };
+
+  const handleDownloadSnapshot = useCallback(() => {
+    const csvContent = buildReportSnapshotCsv({
+      filters,
+      summary,
+      scorecardRows,
+      insights,
+      outstandingRows,
+      expiringRows,
+      classRows: decoratedClassRows,
+    });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const objectUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = objectUrl;
+    link.download = `reports-snapshot-${filters.startDate}-to-${filters.endDate}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(objectUrl);
+    setFeedback({ type: 'success', message: 'CSV snapshot downloaded.' });
+  }, [decoratedClassRows, expiringRows, filters, insights, outstandingRows, scorecardRows, summary]);
+
   if (loading || pageLoading) {
     return <LoadingScreen message="Loading admin reports..." />;
   }
@@ -381,13 +514,13 @@ const AdminReportsPage = () => {
       ) : null}
 
       <Stack spacing={1.5} mb={4}>
-        <Typography color="#ff2625" fontWeight={700}>Reports and analytics</Typography>
+        <Typography color="#ff2625" fontWeight={700}>Reporting and analytics polish</Typography>
         <Typography variant="h3" fontWeight={800} sx={{ fontSize: { xs: '32px', md: '46px' } }}>
-          Watch renewals, collections, expenses, and class demand in one place
+          See performance, period-over-period shifts, and action items in one reporting view
         </Typography>
         <Typography color="text.secondary" maxWidth="980px">
-          Patch 14 adds an owner-ready reports workspace on top of finance and billing. Use it to track monthly targets,
-          review plan mix, save recurring report presets, and then jump to the finance export center for Excel/PDF downloads.
+          Patch 35 refines the reporting workspace with period comparison cards, quick range presets, CSV snapshot export,
+          payment-mix visibility, utilization summaries, and an action-oriented insight panel.
         </Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
           <Button
@@ -400,8 +533,16 @@ const AdminReportsPage = () => {
           </Button>
           <Button
             variant="outlined"
+            startIcon={<Download />}
+            onClick={handleDownloadSnapshot}
+            sx={{ textTransform: 'none', borderRadius: 999, alignSelf: 'flex-start' }}
+          >
+            Download CSV snapshot
+          </Button>
+          <Button
+            variant="outlined"
             startIcon={<Refresh />}
-            onClick={() => void loadPage()}
+            onClick={handleRefresh}
             disabled={refreshing}
             sx={{ textTransform: 'none', borderRadius: 999, alignSelf: 'flex-start' }}
           >
@@ -411,21 +552,39 @@ const AdminReportsPage = () => {
       </Stack>
 
       <Paper sx={{ ...sectionCardSx, mb: 3 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={4}>
-            <TextField label="Start date" type="date" value={filters.startDate} onChange={handleFilterChange('startDate')} fullWidth InputLabelProps={{ shrink: true }} />
+        <Stack spacing={2}>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={4}>
+              <TextField label="Start date" type="date" value={filters.startDate} onChange={handleFilterChange('startDate')} fullWidth InputLabelProps={{ shrink: true }} />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField label="End date" type="date" value={filters.endDate} onChange={handleFilterChange('endDate')} fullWidth InputLabelProps={{ shrink: true }} />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField select label="Trend year" value={filters.reportYear} onChange={handleFilterChange('reportYear')} fullWidth>
+                {[filters.reportYear - 1, filters.reportYear, filters.reportYear + 1].map((year) => (
+                  <MenuItem key={year} value={year}>{year}</MenuItem>
+                ))}
+              </TextField>
+            </Grid>
           </Grid>
-          <Grid item xs={12} md={4}>
-            <TextField label="End date" type="date" value={filters.endDate} onChange={handleFilterChange('endDate')} fullWidth InputLabelProps={{ shrink: true }} />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <TextField select label="Trend year" value={filters.reportYear} onChange={handleFilterChange('reportYear')} fullWidth>
-              {[filters.reportYear - 1, filters.reportYear, filters.reportYear + 1].map((year) => (
-                <MenuItem key={year} value={year}>{year}</MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-        </Grid>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} flexWrap="wrap" useFlexGap>
+            {quickRangeOptions.map((option) => (
+              <Button
+                key={option.id}
+                variant="outlined"
+                size="small"
+                onClick={() => { handleQuickRangeApply(option); }}
+                sx={{ textTransform: 'none', borderRadius: 999 }}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </Stack>
+          <Typography variant="body2" color="text.secondary">
+            Active range: {formatShortDate(filters.startDate)} – {formatShortDate(filters.endDate)}
+          </Typography>
+        </Stack>
       </Paper>
 
       <Grid container spacing={3} mb={1}>
@@ -439,9 +598,35 @@ const AdminReportsPage = () => {
           <MetricCard title="Collection rate" value={formatPercent(summary.collectionRate)} caption={formatCurrency(summary.collectedRevenue, 'INR')} icon={MonetizationOn} />
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
-          <MetricCard title="Net cash flow" value={formatCurrency(summary.netCashFlow, 'INR')} caption={`Fill ${formatPercent(summary.fillRate)}`} icon={AutoGraph} />
+          <MetricCard title="Net cash flow" value={formatCurrency(summary.netCashFlow, 'INR')} caption={`No-shows ${formatPercent(summary.noShowRate)}`} icon={AutoGraph} />
         </Grid>
       </Grid>
+
+      <Paper sx={{ ...sectionCardSx, mb: 3 }}>
+        <Stack spacing={2}>
+          <Box>
+            <Typography variant="h6" fontWeight={800}>Period comparison</Typography>
+            <Typography color="text.secondary">
+              Compare the selected date range against the immediately previous period ({comparison.previousRangeLabel}).
+            </Typography>
+          </Box>
+          <Grid container spacing={2}>
+            {comparison.cards.map((card) => (
+              <Grid key={card.id} item xs={12} md={6} lg={3}>
+                <ReportComparisonCard
+                  title={card.label}
+                  value={formatComparisonCardValue(card.currentValue, card.id)}
+                  comparisonText={`Previous range: ${formatComparisonCardValue(card.previousValue, card.id)}`}
+                  deltaText={formatComparisonDelta(card)}
+                  deltaValue={card.deltaValue}
+                  goal={card.goal}
+                  helperText={card.helperText}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        </Stack>
+      </Paper>
 
       <Grid container spacing={3}>
         <Grid item xs={12} xl={8}>
@@ -466,10 +651,45 @@ const AdminReportsPage = () => {
               </Box>
               {planMixChartData.labels.length ? (
                 <Box sx={{ height: 320 }}>
-                  <Doughnut data={planMixChartData} options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }} />
+                  <Doughnut data={planMixChartData} options={doughnutOptions} />
                 </Box>
               ) : (
                 <EmptyStateCard title="No plan assignments" description="Assign plans to members to unlock this chart." />
+              )}
+            </Stack>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Paper sx={sectionCardSx}>
+            <Stack spacing={2}>
+              <Box>
+                <Typography variant="h6" fontWeight={800}>Payment mix</Typography>
+                <Typography color="text.secondary">Understand which payment methods are driving collections in the selected range.</Typography>
+              </Box>
+              {paymentMixRows.length ? (
+                <Box sx={{ height: 320 }}>
+                  <Doughnut data={paymentMixChartData} options={doughnutOptions} />
+                </Box>
+              ) : (
+                <EmptyStateCard title="No payment data" description="Completed or refunded payments will appear here when available." />
+              )}
+            </Stack>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Paper sx={sectionCardSx}>
+            <Stack spacing={2}>
+              <Box>
+                <Typography variant="h6" fontWeight={800}>Class utilisation buckets</Typography>
+                <Typography color="text.secondary">Quickly see how many sessions are under-filled, healthy, or near-full.</Typography>
+              </Box>
+              {decoratedClassRows.length ? (
+                <Box sx={{ height: 320 }}>
+                  <Bar data={classUtilizationChartData} options={chartOptions} />
+                </Box>
+              ) : (
+                <EmptyStateCard title="No class data" description="Create sessions and bookings to unlock utilisation reporting." />
               )}
             </Stack>
           </Paper>
@@ -558,7 +778,7 @@ const AdminReportsPage = () => {
                           <Button size="small" variant="outlined" onClick={() => handleLoadPreset(preset)} sx={{ textTransform: 'none', borderRadius: 999 }}>
                             Load
                           </Button>
-                          <Button size="small" variant="outlined" color="error" onClick={() => void handleDeletePreset(preset)} sx={{ textTransform: 'none', borderRadius: 999 }}>
+                          <Button size="small" variant="outlined" color="error" onClick={() => { handleDeletePreset(preset); }} sx={{ textTransform: 'none', borderRadius: 999 }}>
                             Delete
                           </Button>
                         </Stack>
@@ -569,6 +789,61 @@ const AdminReportsPage = () => {
               ) : (
                 <EmptyStateCard title="No presets yet" description="Save a preset after setting your preferred report dates." />
               )}
+            </Stack>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} lg={4}>
+          <Paper sx={sectionCardSx}>
+            <Stack spacing={2}>
+              <Stack direction="row" spacing={1.25} alignItems="center">
+                <Insights color="error" />
+                <Box>
+                  <Typography variant="h6" fontWeight={800}>Action centre</Typography>
+                  <Typography color="text.secondary">The main issues or wins surfaced by the selected range.</Typography>
+                </Box>
+              </Stack>
+              <ReportInsightPanel insights={insights} />
+            </Stack>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} lg={8}>
+          <Paper sx={sectionCardSx}>
+            <Stack spacing={2}>
+              <Box>
+                <Typography variant="h6" fontWeight={800}>Monthly scorecard</Typography>
+                <Typography color="text.secondary">Review monthly collections, target attainment, and cash flow trends at a glance.</Typography>
+              </Box>
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Month</TableCell>
+                      <TableCell align="right">Collections</TableCell>
+                      <TableCell align="right">Target</TableCell>
+                      <TableCell align="right">Attainment</TableCell>
+                      <TableCell align="right">Expenses</TableCell>
+                      <TableCell align="right">Net cash</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {[...scorecardRows].reverse().map((row) => (
+                      <TableRow key={row.month} hover>
+                        <TableCell>
+                          <Typography fontWeight={700}>{formatShortDate(row.month)}</Typography>
+                          <Typography variant="body2" color="text.secondary">Gap {row.collectionGap === null ? '—' : formatCurrency(row.collectionGap, 'INR')}</Typography>
+                        </TableCell>
+                        <TableCell align="right">{formatCurrency(row.collectedRevenue, 'INR')}</TableCell>
+                        <TableCell align="right">{row.collectionsTarget ? formatCurrency(row.collectionsTarget, 'INR') : '—'}</TableCell>
+                        <TableCell align="right">{formatAttainment(row.collectionAttainment)}</TableCell>
+                        <TableCell align="right">{formatCurrency(row.expenseTotal, 'INR')}</TableCell>
+                        <TableCell align="right">{formatCurrency(row.netCashFlow, 'INR')}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             </Stack>
           </Paper>
         </Grid>
@@ -658,9 +933,9 @@ const AdminReportsPage = () => {
             <Stack spacing={2}>
               <Box>
                 <Typography variant="h6" fontWeight={800}>Class performance</Typography>
-                <Typography color="text.secondary">Track the strongest classes before you adjust the timetable.</Typography>
+                <Typography color="text.secondary">Track class demand, missed sessions, and trainer-level hotspots before you adjust the timetable.</Typography>
               </Box>
-              {classRows.length ? (
+              {decoratedClassRows.length ? (
                 <TableContainer>
                   <Table size="small">
                     <TableHead>
@@ -669,11 +944,13 @@ const AdminReportsPage = () => {
                         <TableCell>Trainer</TableCell>
                         <TableCell>Booked</TableCell>
                         <TableCell>Attended</TableCell>
+                        <TableCell>Missed</TableCell>
                         <TableCell>Fill</TableCell>
+                        <TableCell>No-show</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {classRows.slice(0, 12).map((row) => (
+                      {decoratedClassRows.slice(0, 12).map((row) => (
                         <TableRow key={row.id} hover>
                           <TableCell>
                             <Typography fontWeight={700}>{row.title}</Typography>
@@ -682,7 +959,9 @@ const AdminReportsPage = () => {
                           <TableCell>{row.trainerName}</TableCell>
                           <TableCell>{row.bookedCount}/{row.capacity}</TableCell>
                           <TableCell>{row.attendedCount}</TableCell>
+                          <TableCell>{row.missedCount}</TableCell>
                           <TableCell>{formatPercent(row.fillRate)}</TableCell>
+                          <TableCell>{formatPercent(row.noShowRate)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
