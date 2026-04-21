@@ -39,6 +39,7 @@ export const PATHS = {
   staffBlog: '/staff/blog',
   admin: '/admin',
   adminOps: '/admin/ops',
+  adminProductionReadiness: '/admin/production-readiness',
   adminSecurity: '/admin/security',
   adminAccess: '/admin/access',
   adminAccessHardware: '/admin/access/hardware',

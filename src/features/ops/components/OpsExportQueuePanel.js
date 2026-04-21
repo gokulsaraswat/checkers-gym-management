@@ -1,3 +1,5 @@
+/* eslint-disable react/react-in-jsx-scope, import/no-extraneous-dependencies, react/forbid-prop-types */
+
 import PropTypes from 'prop-types';
 import {
   Box,

@@ -209,6 +209,7 @@ const Navbar = () => {
     return [
       { label: 'Admin', to: PATHS.admin },
       { label: 'Ops', to: PATHS.adminOps },
+      { label: 'Readiness', to: PATHS.adminProductionReadiness },
       { label: 'Access', to: PATHS.adminAccess },
       { label: 'CRM', to: PATHS.adminCrm },
       { label: 'POS', to: PATHS.adminPos },

@@ -60,6 +60,11 @@ export const DEFAULT_BACKUP_POLICY = {
 
 export const QUICK_LINKS = [
   {
+    label: 'Production readiness',
+    to: '/admin/production-readiness',
+    helper: 'Final launch score, go-live gates, and rollout checklist.',
+  },
+  {
     label: 'Security center',
     to: '/admin/security',
     helper: 'Audit trails, overrides, and account restrictions.',

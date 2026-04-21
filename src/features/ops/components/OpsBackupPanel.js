@@ -1,3 +1,5 @@
+/* eslint-disable react/react-in-jsx-scope, import/no-extraneous-dependencies */
+
 import PropTypes from 'prop-types';
 import { useMemo, useState } from 'react';
 import {

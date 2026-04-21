@@ -160,6 +160,4 @@ export const listSystemHealthChecks = async () => {
   return result ?? [];
 };
 
-export const seedOpsToolingDefaults = async () => {
-  return rpc('seed_ops_tooling_defaults', {}, 'Unable to seed the operations defaults.');
-};
+export const seedOpsToolingDefaults = async () => rpc('seed_ops_tooling_defaults', {}, 'Unable to seed the operations defaults.');
