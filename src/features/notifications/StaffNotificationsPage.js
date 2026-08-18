@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -28,6 +28,7 @@ import {
 } from '@mui/icons-material';
 
 import LoadingScreen from '../../components/common/LoadingScreen';
+import useDebouncedValue from '../../utils/useDebouncedValue';
 import MetricCard from '../../components/common/MetricCard';
 import SetupNotice from '../../components/common/SetupNotice';
 import { useAuth } from '../../context/AuthContext';
@@ -85,6 +86,7 @@ const StaffNotificationsPage = () => {
   const [targets, setTargets] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [query, setQuery] = useState('');
+  const debouncedQuery = useDebouncedValue(query, 300);
   const [status, setStatus] = useState('all');
   const [notificationType, setNotificationType] = useState('all');
   const [targetSearch, setTargetSearch] = useState('');
@@ -96,6 +98,9 @@ const StaffNotificationsPage = () => {
   const [reminderRules, setReminderRules] = useState([]);
   const [selectedRuleId, setSelectedRuleId] = useState('');
   const [selectedRule, setSelectedRule] = useState(createDefaultReminderRule());
+  // Snapshot of the rule as last loaded from the database, so we can tell whether the
+  // editor draft has drifted from what Preview / Run would actually execute.
+  const [savedRuleSnapshot, setSavedRuleSnapshot] = useState(createDefaultReminderRule());
   const [previewRows, setPreviewRows] = useState([]);
   const [reminderLoading, setReminderLoading] = useState(false);
   const [previewingReminder, setPreviewingReminder] = useState(false);
@@ -104,7 +109,7 @@ const StaffNotificationsPage = () => {
   const [reminderFeedback, setReminderFeedback] = useState({ type: '', message: '' });
 
   const loadNotifications = useCallback(async ({
-    nextQuery = query,
+    nextQuery = debouncedQuery,
     nextStatus = status,
     nextType = notificationType,
     showPageLoader = false,
@@ -138,7 +143,7 @@ const StaffNotificationsPage = () => {
       setPageLoading(false);
       setRefreshing(false);
     }
-  }, [isConfigured, notificationType, query, status]);
+  }, [debouncedQuery, isConfigured, notificationType, status]);
 
   const loadTargets = useCallback(async (searchValue = '') => {
     if (!isConfigured) {
@@ -173,9 +178,11 @@ const StaffNotificationsPage = () => {
       if (nextRule) {
         setSelectedRuleId(nextRule.id);
         setSelectedRule(createDefaultReminderRule(nextRule));
+        setSavedRuleSnapshot(createDefaultReminderRule(nextRule));
       } else {
         setSelectedRuleId('');
         setSelectedRule(createDefaultReminderRule());
+        setSavedRuleSnapshot(createDefaultReminderRule());
       }
 
       return rows;
@@ -190,8 +197,13 @@ const StaffNotificationsPage = () => {
     }
   }, [isConfigured]);
 
+  const hasLoadedNotificationsRef = useRef(false);
+
+  // Search keystrokes and filter changes refresh in the background; only the first
+  // load shows the blocking <LoadingScreen/>.
   useEffect(() => {
-    loadNotifications({ showPageLoader: true });
+    loadNotifications({ showPageLoader: !hasLoadedNotificationsRef.current });
+    hasLoadedNotificationsRef.current = true;
   }, [loadNotifications]);
 
   useEffect(() => {
@@ -204,6 +216,11 @@ const StaffNotificationsPage = () => {
 
     initialiseWorkspace();
   }, [loadReminderRules, loadTargets]);
+
+  const hasUnsavedReminderChanges = useMemo(
+    () => Boolean(selectedRuleId) && JSON.stringify(selectedRule) !== JSON.stringify(savedRuleSnapshot),
+    [savedRuleSnapshot, selectedRule, selectedRuleId],
+  );
 
   const summary = useMemo(() => buildNotificationSummary(notifications), [notifications]);
 
@@ -270,6 +287,7 @@ const StaffNotificationsPage = () => {
     setSelectedRuleId(ruleId);
     const matchingRule = reminderRules.find((row) => row.id === ruleId);
     setSelectedRule(createDefaultReminderRule(matchingRule || {}));
+    setSavedRuleSnapshot(createDefaultReminderRule(matchingRule || {}));
     setPreviewRows([]);
     setReminderFeedback({ type: '', message: '' });
   };
@@ -769,6 +787,7 @@ const StaffNotificationsPage = () => {
             saving={savingReminder}
             previewing={previewingReminder}
             running={runningReminder}
+            hasUnsavedChanges={hasUnsavedReminderChanges}
             onSelectRule={handleSelectRule}
             onFieldChange={handleReminderFieldChange}
             onReload={() => loadReminderRules(selectedRuleId)}

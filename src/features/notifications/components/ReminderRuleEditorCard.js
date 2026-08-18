@@ -41,6 +41,7 @@ const ReminderRuleEditorCard = ({
   saving,
   previewing,
   running,
+  hasUnsavedChanges = false,
   onSelectRule,
   onFieldChange,
   onReload,
@@ -295,6 +296,13 @@ const ReminderRuleEditorCard = ({
           </Stack>
         </Stack>
 
+        {hasUnsavedChanges ? (
+          <Alert severity="warning">
+            This rule has unsaved edits. Preview and Run read the last saved version from the
+            database, so save the rule first to test what you see here.
+          </Alert>
+        ) : null}
+
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
           <Button
             variant="contained"
@@ -308,7 +316,7 @@ const ReminderRuleEditorCard = ({
           <Button
             variant="outlined"
             onClick={onPreview}
-            disabled={previewing}
+            disabled={previewing || hasUnsavedChanges}
             startIcon={<Preview />}
             sx={{ textTransform: 'none', borderRadius: 999 }}
           >
@@ -318,7 +326,7 @@ const ReminderRuleEditorCard = ({
             variant="outlined"
             color="warning"
             onClick={onRun}
-            disabled={running}
+            disabled={running || hasUnsavedChanges}
             startIcon={<PlayArrow />}
             sx={{ textTransform: 'none', borderRadius: 999 }}
           >

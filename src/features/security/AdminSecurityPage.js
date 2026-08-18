@@ -24,6 +24,8 @@ import SaveRoundedIcon from '@mui/icons-material/SaveRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 
+import { useTheme } from '@mui/material/styles';
+
 import LoadingScreen from '../../components/common/LoadingScreen';
 import SetupNotice from '../../components/common/SetupNotice';
 import EmptyStateCard from '../../components/common/EmptyStateCard';
@@ -43,6 +45,16 @@ import {
   saveSecurityIncident,
   saveUserSecurityFlag,
 } from './securityClient';
+import { getStatusChipSx } from '../../utils/statusColors';
+import useDebouncedValue from '../../utils/useDebouncedValue';
+
+const AUDIT_PAGE_SIZE = 40;
+
+const emptyAuditFilter = {
+  actionKey: '',
+  entityType: '',
+  branchId: '',
+};
 
 const emptyOverrideForm = {
   roleName: 'staff',
@@ -90,13 +102,9 @@ const formatDate = (value) => {
   }).format(date);
 };
 
-const statusChipSx = (value) => ({
-  fontWeight: 700,
-  backgroundColor: value === 'resolved' || value === 'allow' ? '#edf7ed' : value === 'deny' ? '#ffebee' : '#fff4e5',
-  color: value === 'resolved' || value === 'allow' ? '#2e7d32' : value === 'deny' ? '#c62828' : '#ed6c02',
-});
-
 const AdminSecurityPage = () => {
+  const theme = useTheme();
+  const statusChipSx = (value) => getStatusChipSx(theme, value);
   const { isConfigured, profile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [busyAction, setBusyAction] = useState('');
@@ -113,6 +121,11 @@ const AdminSecurityPage = () => {
   const [flagForm, setFlagForm] = useState(emptyFlagForm);
   const [incidentFilter, setIncidentFilter] = useState({ status: '', severity: '' });
   const [flagSearch, setFlagSearch] = useState('');
+  const debouncedFlagSearch = useDebouncedValue(flagSearch, 300);
+  const [auditFilter, setAuditFilter] = useState(emptyAuditFilter);
+  const debouncedAuditFilter = useDebouncedValue(auditFilter, 300);
+  const [auditLimit, setAuditLimit] = useState(AUDIT_PAGE_SIZE);
+  const [auditHasMore, setAuditHasMore] = useState(false);
 
   const userOptions = useMemo(
     () => users.map((user) => ({
@@ -122,36 +135,68 @@ const AdminSecurityPage = () => {
     [users],
   );
 
-  const loadPage = useCallback(async () => {
-    setLoading(true);
+  const reportLoadError = useCallback((error, fallbackMessage) => {
+    setFeedback({ severity: 'error', message: error.message || fallbackMessage });
+  }, []);
+
+  // Mount-only data. Filter changes must never re-run this, or the page-level
+  // <LoadingScreen/> would unmount the very inputs the admin is typing into.
+  const loadCoreData = useCallback(async () => {
     try {
-      const [nextSummary, nextOverrides, nextIncidents, nextFlags, nextAudit, nextUsers, nextBranches] = await Promise.all([
+      const [nextSummary, nextOverrides, nextUsers, nextBranches] = await Promise.all([
         fetchSecuritySummary(),
         fetchPermissionOverrides(),
-        fetchSecurityIncidents({
-          status: incidentFilter.status || null,
-          severity: incidentFilter.severity || null,
-          limit: 40,
-        }),
-        fetchUserSecurityFlags({ search: flagSearch, limit: 80 }),
-        fetchAuditLogEvents({ limit: 80 }),
         fetchSecurityUsers({ limit: 150 }),
         fetchSecurityBranches(),
       ]);
 
       setSummary(nextSummary);
       setPermissionOverrides(nextOverrides);
-      setIncidents(nextIncidents);
-      setUserFlags(nextFlags);
-      setAuditEvents(nextAudit);
       setUsers(nextUsers);
       setBranches(nextBranches);
     } catch (error) {
-      setFeedback({ severity: 'error', message: error.message || 'Unable to load the security center.' });
+      reportLoadError(error, 'Unable to load the security center.');
     } finally {
       setLoading(false);
     }
-  }, [flagSearch, incidentFilter.severity, incidentFilter.status]);
+  }, [reportLoadError]);
+
+  const loadIncidents = useCallback(async () => {
+    try {
+      const nextIncidents = await fetchSecurityIncidents({
+        status: incidentFilter.status || null,
+        severity: incidentFilter.severity || null,
+        limit: 40,
+      });
+      setIncidents(nextIncidents);
+    } catch (error) {
+      reportLoadError(error, 'Unable to load security incidents.');
+    }
+  }, [incidentFilter.severity, incidentFilter.status, reportLoadError]);
+
+  const loadFlags = useCallback(async () => {
+    try {
+      const nextFlags = await fetchUserSecurityFlags({ search: debouncedFlagSearch, limit: 80 });
+      setUserFlags(nextFlags);
+    } catch (error) {
+      reportLoadError(error, 'Unable to load user security flags.');
+    }
+  }, [debouncedFlagSearch, reportLoadError]);
+
+  const loadAuditEvents = useCallback(async () => {
+    try {
+      const nextAudit = await fetchAuditLogEvents({
+        limit: auditLimit,
+        actionKey: debouncedAuditFilter.actionKey.trim() || null,
+        entityType: debouncedAuditFilter.entityType.trim() || null,
+        branchId: debouncedAuditFilter.branchId || null,
+      });
+      setAuditEvents(nextAudit);
+      setAuditHasMore(nextAudit.length >= auditLimit);
+    } catch (error) {
+      reportLoadError(error, 'Unable to load audit log events.');
+    }
+  }, [auditLimit, debouncedAuditFilter, reportLoadError]);
 
   useEffect(() => {
     if (!isConfigured) {
@@ -159,13 +204,41 @@ const AdminSecurityPage = () => {
       return;
     }
 
-    loadPage();
-  }, [isConfigured, loadPage]);
+    loadCoreData();
+  }, [isConfigured, loadCoreData]);
+
+  useEffect(() => {
+    if (!isConfigured) {
+      return;
+    }
+
+    loadIncidents();
+  }, [isConfigured, loadIncidents]);
+
+  useEffect(() => {
+    if (!isConfigured) {
+      return;
+    }
+
+    loadFlags();
+  }, [isConfigured, loadFlags]);
+
+  useEffect(() => {
+    if (!isConfigured) {
+      return;
+    }
+
+    loadAuditEvents();
+  }, [isConfigured, loadAuditEvents]);
+
+  const refreshWorkspace = useCallback(async () => {
+    await Promise.all([loadCoreData(), loadIncidents(), loadFlags(), loadAuditEvents()]);
+  }, [loadAuditEvents, loadCoreData, loadFlags, loadIncidents]);
 
   const handleRefresh = async () => {
     try {
       setBusyAction('refresh');
-      await loadPage();
+      await refreshWorkspace();
       setFeedback({ severity: 'success', message: 'Security center refreshed.' });
     } catch (error) {
       setFeedback({ severity: 'error', message: error.message || 'Unable to refresh the security center.' });
@@ -203,11 +276,16 @@ const AdminSecurityPage = () => {
   };
 
   const handleSaveOverride = async () => {
+    if (!overrideForm.permissionKey.trim()) {
+      setFeedback({ severity: 'error', message: 'Enter a permission key before saving the override.' });
+      return;
+    }
+
     try {
       setBusyAction('save-override');
-      await savePermissionOverride(overrideForm);
+      await savePermissionOverride({ ...overrideForm, permissionKey: overrideForm.permissionKey.trim() });
       setOverrideForm(emptyOverrideForm);
-      await loadPage();
+      await Promise.all([loadCoreData(), loadAuditEvents()]);
       setFeedback({ severity: 'success', message: 'Permission override saved.' });
     } catch (error) {
       setFeedback({ severity: 'error', message: error.message || 'Unable to save the permission override.' });
@@ -216,11 +294,17 @@ const AdminSecurityPage = () => {
     }
   };
 
-  const handleDeleteOverride = async (overrideId) => {
+  const handleDeleteOverride = async (override) => {
+    const overrideId = override.id;
+
+    if (!window.confirm(`Remove the ${override.access_mode} override on "${override.permission_key}" for the ${override.role_name} role? This takes effect immediately.`)) {
+      return;
+    }
+
     try {
       setBusyAction(`delete-${overrideId}`);
       await deletePermissionOverride(overrideId);
-      await loadPage();
+      await Promise.all([loadCoreData(), loadAuditEvents()]);
       setFeedback({ severity: 'success', message: 'Permission override removed.' });
     } catch (error) {
       setFeedback({ severity: 'error', message: error.message || 'Unable to remove the permission override.' });
@@ -239,11 +323,16 @@ const AdminSecurityPage = () => {
   };
 
   const handleSaveIncident = async () => {
+    if (!incidentForm.title.trim()) {
+      setFeedback({ severity: 'error', message: 'Enter an incident title before saving.' });
+      return;
+    }
+
     try {
       setBusyAction('save-incident');
       await saveSecurityIncident(incidentForm);
       setIncidentForm(emptyIncidentForm);
-      await loadPage();
+      await Promise.all([loadCoreData(), loadIncidents(), loadAuditEvents()]);
       setFeedback({ severity: 'success', message: incidentForm.id ? 'Security incident updated.' : 'Security incident created.' });
     } catch (error) {
       setFeedback({ severity: 'error', message: error.message || 'Unable to save the security incident.' });
@@ -269,11 +358,31 @@ const AdminSecurityPage = () => {
   };
 
   const handleSaveFlag = async () => {
+    if (!flagForm.user_id) {
+      setFeedback({ severity: 'error', message: 'Select a user before saving security controls.' });
+      return;
+    }
+
+    const disabledPortals = [
+      !flagForm.member_portal_access ? 'member' : null,
+      !flagForm.staff_portal_access ? 'staff' : null,
+      !flagForm.admin_portal_access ? 'admin' : null,
+    ].filter(Boolean);
+
+    if (disabledPortals.length) {
+      const targetUser = userOptions.find((user) => user.id === flagForm.user_id);
+      const targetLabel = targetUser?.label || 'this user';
+
+      if (!window.confirm(`This will block ${targetLabel} from the ${disabledPortals.join(', ')} portal${disabledPortals.length === 1 ? '' : 's'} immediately. Continue?`)) {
+        return;
+      }
+    }
+
     try {
       setBusyAction('save-flag');
       await saveUserSecurityFlag(flagForm);
       setFlagForm(emptyFlagForm);
-      await loadPage();
+      await Promise.all([loadCoreData(), loadFlags(), loadAuditEvents()]);
       setFeedback({ severity: 'success', message: 'User security controls saved.' });
     } catch (error) {
       setFeedback({ severity: 'error', message: error.message || 'Unable to save the user security controls.' });
@@ -431,7 +540,7 @@ const AdminSecurityPage = () => {
                               size="small"
                               color="error"
                               startIcon={<DeleteOutlineRoundedIcon />}
-                              onClick={() => handleDeleteOverride(override.id)}
+                              onClick={() => handleDeleteOverride(override)}
                               disabled={busyAction === `delete-${override.id}`}
                             >
                               Delete
@@ -786,9 +895,9 @@ const AdminSecurityPage = () => {
                         <TableCell>{flag.role || 'user'}</TableCell>
                         <TableCell>
                           {flag.require_password_reset ? (
-                            <Chip size="small" label="Required" sx={{ fontWeight: 700, backgroundColor: '#ffebee', color: '#c62828' }} />
+                            <Chip size="small" label="Required" sx={statusChipSx('deny')} />
                           ) : (
-                            <Chip size="small" label="Normal" sx={{ fontWeight: 700, backgroundColor: '#edf7ed', color: '#2e7d32' }} />
+                            <Chip size="small" label="Normal" sx={statusChipSx('allow')} />
                           )}
                         </TableCell>
                         <TableCell>
@@ -819,7 +928,93 @@ const AdminSecurityPage = () => {
         </Grid>
 
         <Grid xs={12}>
-          <AuditEventTable events={auditEvents} />
+          <Stack spacing={2}>
+            <Paper className="surface-card" sx={{ p: 3, borderRadius: 4 }}>
+              <Stack spacing={2}>
+                <Stack spacing={0.5}>
+                  <Typography variant="h6" fontWeight={800}>
+                    Audit trail filters
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Narrow the stream by action, entity, or branch, then load older events as needed.
+                  </Typography>
+                </Stack>
+                <Grid container spacing={2}>
+                  <Grid xs={12} md={4}>
+                    <TextField
+                      size="small"
+                      label="Action key"
+                      placeholder="security.override.save"
+                      value={auditFilter.actionKey}
+                      onChange={(event) => {
+                        const { value } = event.target;
+                        setAuditLimit(AUDIT_PAGE_SIZE);
+                        setAuditFilter((current) => ({ ...current, actionKey: value }));
+                      }}
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid xs={12} md={4}>
+                    <TextField
+                      size="small"
+                      label="Entity type"
+                      placeholder="security_incident"
+                      value={auditFilter.entityType}
+                      onChange={(event) => {
+                        const { value } = event.target;
+                        setAuditLimit(AUDIT_PAGE_SIZE);
+                        setAuditFilter((current) => ({ ...current, entityType: value }));
+                      }}
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid xs={12} md={4}>
+                    <TextField
+                      select
+                      size="small"
+                      label="Branch"
+                      value={auditFilter.branchId}
+                      onChange={(event) => {
+                        const { value } = event.target;
+                        setAuditLimit(AUDIT_PAGE_SIZE);
+                        setAuditFilter((current) => ({ ...current, branchId: value }));
+                      }}
+                      fullWidth
+                    >
+                      <MenuItem value="">All branches</MenuItem>
+                      {branches.map((branch) => (
+                        <MenuItem key={branch.id} value={branch.id}>{branch.name}</MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
+                </Grid>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
+                  <Button
+                    variant="text"
+                    onClick={() => {
+                      setAuditLimit(AUDIT_PAGE_SIZE);
+                      setAuditFilter(emptyAuditFilter);
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                  <Typography variant="caption" color="text.secondary">
+                    Showing {auditEvents.length} event{auditEvents.length === 1 ? '' : 's'}.
+                  </Typography>
+                </Stack>
+              </Stack>
+            </Paper>
+
+            <AuditEventTable events={auditEvents} />
+
+            {auditHasMore ? (
+              <Box>
+                <Button variant="outlined" onClick={() => setAuditLimit((current) => current + AUDIT_PAGE_SIZE)}>
+                  Load older events
+                </Button>
+              </Box>
+            ) : null}
+          </Stack>
         </Grid>
       </Grid>
     </Stack>

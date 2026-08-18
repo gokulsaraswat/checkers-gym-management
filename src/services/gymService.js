@@ -3179,6 +3179,19 @@ export const saveStaffCompensationProfile = async (staffId, profile = {}) => {
     updated_by: profile.updated_by || null,
   };
 
+  const negativeAmountField = ['monthly_retainer', 'per_session_bonus'].find((field) => payload[field] < 0);
+
+  if (negativeAmountField) {
+    throw new Error('Retainer and per-session bonus cannot be negative.');
+  }
+
+  const invalidRateField = ['commission_rate_membership', 'commission_rate_pt']
+    .find((field) => payload[field] < 0 || payload[field] > 100);
+
+  if (invalidRateField) {
+    throw new Error('Commission rates are percentages and must be between 0 and 100.');
+  }
+
   const { data, error } = await client
     .from('staff_compensation_profiles')
     .upsert([payload], { onConflict: 'staff_id' })
@@ -3252,6 +3265,10 @@ export const saveStaffCommissionEntry = async (entry = {}) => {
     notes: normaliseOptionalText(entry.notes),
     created_by: entry.created_by || null,
   };
+
+  if (!payload.amount || payload.amount <= 0) {
+    throw new Error('Commission amount must be greater than zero.');
+  }
 
   let request;
 
@@ -3458,7 +3475,7 @@ export const saveMembershipPlanCatalog = async (plan = {}) => {
     name: String(plan.name ?? '').trim(),
     plan_code: normaliseOptionalText(plan.plan_code) || null,
     description: normaliseOptionalText(plan.description) || null,
-    price: Math.max(0, Number(plan.price || 0)),
+    price: Number(plan.price || 0),
     billing_cycle: plan.billing_cycle || 'month',
     duration_weeks: Math.max(1, normaliseOptionalInteger(plan.duration_weeks) || Math.max(Number(plan.duration_months || 1) * 4, 4)),
     duration_months: Math.max(1, normaliseOptionalInteger(plan.duration_months) || 1),
@@ -3469,6 +3486,10 @@ export const saveMembershipPlanCatalog = async (plan = {}) => {
 
   if (!payload.name) {
     throw new Error('Plan name is required.');
+  }
+
+  if (!Number.isFinite(payload.price) || payload.price <= 0) {
+    throw new Error('Plan price must be greater than 0.');
   }
 
   let data = null;
@@ -3512,7 +3533,7 @@ export const saveMembershipAddOn = async (addOn = {}) => {
     name: String(addOn.name ?? '').trim(),
     description: normaliseOptionalText(addOn.description) || null,
     category: addOn.category || 'general',
-    price: Math.max(0, Number(addOn.price || 0)),
+    price: Number(addOn.price || 0),
     billing_frequency: addOn.billing_frequency || 'recurring',
     currency_code: normaliseOptionalText(addOn.currency_code) || 'INR',
     sort_order: Math.max(0, normaliseOptionalInteger(addOn.sort_order) || 0),
@@ -3521,6 +3542,10 @@ export const saveMembershipAddOn = async (addOn = {}) => {
 
   if (!payload.name) {
     throw new Error('Add-on name is required.');
+  }
+
+  if (!Number.isFinite(payload.price) || payload.price <= 0) {
+    throw new Error('Add-on price must be greater than 0.');
   }
 
   let data = null;

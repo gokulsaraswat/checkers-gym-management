@@ -38,6 +38,8 @@ import { createPosSale, fetchInventoryItems, fetchMembers, fetchPosSales } from 
 import {
   buildPosSummary,
   buildSaleDraftTotals,
+  getMaxSaleQuantity,
+  getSaleStockIssues,
   createSaleForm,
   createSaleLine,
   formatCurrency,
@@ -109,6 +111,10 @@ const StaffPosPage = () => {
     () => buildSaleDraftTotals(saleForm.items, inventoryItems, saleForm.discountAmount, saleForm.taxAmount),
     [inventoryItems, saleForm.discountAmount, saleForm.items, saleForm.taxAmount],
   );
+  const stockIssues = useMemo(
+    () => getSaleStockIssues(saleForm.items, inventoryItems),
+    [inventoryItems, saleForm.items],
+  );
 
   const updateSaleField = (field) => (event) => {
     const value = event.target.value;
@@ -152,6 +158,16 @@ const StaffPosPage = () => {
   const handleCreateSale = async (event) => {
     event.preventDefault();
     setFeedback({ type: '', message: '' });
+
+    if (stockIssues.length) {
+      setFeedback({ type: 'error', message: `Reduce the quantity before completing this sale. ${stockIssues.join(' ')}` });
+      return;
+    }
+
+    if (draftTotals.isDiscountExcessive) {
+      setFeedback({ type: 'error', message: 'The discount is larger than the sale value. Lower the discount before completing the sale.' });
+      return;
+    }
 
     try {
       setSavingSale(true);
@@ -244,6 +260,8 @@ const StaffPosPage = () => {
                   const selectedItem = inventoryMap.get(line.inventory_item_id);
                   const quantity = Math.max(1, Number(line.quantity || 1));
                   const lineTotal = Number(selectedItem?.unit_price || 0) * quantity;
+                  const maxQuantity = getMaxSaleQuantity(line, inventoryItems);
+                  const overStock = maxQuantity !== null && quantity > maxQuantity;
 
                   return (
                     <Paper key={`${line.inventory_item_id || 'line'}-${index}`} variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
@@ -257,7 +275,18 @@ const StaffPosPage = () => {
                             ))}
                           </TextField>
                         </Grid>
-                        <Grid item xs={12} sm={6} md={2}><TextField fullWidth label="Qty" type="number" inputProps={{ min: '1', step: '1' }} value={quantity} onChange={(event) => updateSaleLine(index, 'quantity', event.target.value)} /></Grid>
+                        <Grid item xs={12} sm={6} md={2}>
+                          <TextField
+                            fullWidth
+                            label="Qty"
+                            type="number"
+                            inputProps={{ min: '1', step: '1', ...(maxQuantity !== null ? { max: String(maxQuantity) } : {}) }}
+                            value={quantity}
+                            onChange={(event) => updateSaleLine(index, 'quantity', event.target.value)}
+                            error={overStock}
+                            helperText={overStock ? `Only ${maxQuantity} in stock` : ' '}
+                          />
+                        </Grid>
                         <Grid item xs={12} sm={6} md={3}><TextField fullWidth label="Line total" value={formatCurrency(lineTotal)} InputProps={{ readOnly: true }} /></Grid>
                         <Grid item xs={12} md={1}><IconButton color="error" disabled={saleForm.items.length === 1} onClick={() => removeSaleLine(index)}><DeleteOutline /></IconButton></Grid>
                       </Grid>
@@ -273,6 +302,16 @@ const StaffPosPage = () => {
                   <Typography color="text.secondary">Discount: {formatCurrency(draftTotals.discount)}</Typography>
                   <Typography color="text.secondary">Tax: {formatCurrency(draftTotals.tax)}</Typography>
                   <Typography variant="h5" fontWeight={800}>Grand total: {formatCurrency(draftTotals.total)}</Typography>
+                  {draftTotals.isDiscountExcessive ? (
+                    <Alert severity="warning" sx={{ borderRadius: 3 }}>
+                      The discount exceeds the sale value. Lower it before completing the sale.
+                    </Alert>
+                  ) : null}
+                  {stockIssues.length ? (
+                    <Alert severity="warning" sx={{ borderRadius: 3 }}>
+                      {stockIssues.join(' ')}
+                    </Alert>
+                  ) : null}
                 </Stack>
                 <Button type="submit" disabled={savingSale} variant="contained" sx={{ textTransform: 'none', borderRadius: 999, bgcolor: '#ff2625', '&:hover': { bgcolor: '#df1d1d' } }}>
                   {savingSale ? 'Completing sale…' : 'Complete sale'}

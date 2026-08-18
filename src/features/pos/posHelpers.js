@@ -136,7 +136,51 @@ export const buildSaleDraftTotals = (draftItems = [], inventoryItems = [], disco
   }, 0);
   const discount = Math.max(0, Number(discountAmount || 0));
   const tax = Math.max(0, Number(taxAmount || 0));
-  return { subtotal, discount, tax, total: Math.max(0, subtotal + tax - discount) };
+  const rawTotal = subtotal + tax - discount;
+
+  return {
+    subtotal,
+    discount,
+    tax,
+    total: Math.max(0, rawTotal),
+    // A discount larger than the sale would otherwise clamp to a free sale without warning.
+    isDiscountExcessive: discount > subtotal + tax,
+  };
+};
+
+/**
+ * Client-side stock guard for sale drafts. Returns one message per line that asks for
+ * more units than the tracked inventory holds.
+ */
+export const getSaleStockIssues = (draftItems = [], inventoryItems = []) => {
+  const inventoryMap = new Map((inventoryItems || []).map((item) => [item.id, item]));
+
+  return (draftItems || []).reduce((issues, line, index) => {
+    const inventoryItem = inventoryMap.get(line.inventory_item_id);
+
+    if (!inventoryItem?.is_stock_tracked) {
+      return issues;
+    }
+
+    const available = Number(inventoryItem.current_stock || 0);
+    const requested = Math.max(1, Number(line.quantity || 1));
+
+    if (requested > available) {
+      issues.push(`Line ${index + 1}: ${inventoryItem.name} has only ${available} in stock (${requested} requested).`);
+    }
+
+    return issues;
+  }, []);
+};
+
+export const getMaxSaleQuantity = (line, inventoryItems = []) => {
+  const inventoryItem = (inventoryItems || []).find((item) => item.id === line?.inventory_item_id);
+
+  if (!inventoryItem?.is_stock_tracked) {
+    return null;
+  }
+
+  return Math.max(0, Number(inventoryItem.current_stock || 0));
 };
 
 export const buildPosSummary = ({ inventoryItems = [], sales = [] } = {}) => {

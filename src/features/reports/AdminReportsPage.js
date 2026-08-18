@@ -106,6 +106,27 @@ ChartJS.register(
   Legend,
 );
 
+const INVOICE_FETCH_LIMIT = 600;
+const PAYMENT_FETCH_LIMIT = 800;
+
+const minDateString = (...values) => values.filter(Boolean).sort()[0] || null;
+const maxDateString = (...values) => values.filter(Boolean).sort().slice(-1)[0] || null;
+
+// The billing endpoints return the most recent rows first, so hitting the limit means
+// older invoices or payments were dropped and the totals below understate reality.
+const buildTruncationNotice = (invoiceCount, paymentCount) => {
+  const truncated = [
+    invoiceCount >= INVOICE_FETCH_LIMIT ? `invoices (first ${INVOICE_FETCH_LIMIT})` : null,
+    paymentCount >= PAYMENT_FETCH_LIMIT ? `payments (first ${PAYMENT_FETCH_LIMIT})` : null,
+  ].filter(Boolean);
+
+  if (!truncated.length) {
+    return '';
+  }
+
+  return `Only the most recent ${truncated.join(' and ')} were loaded, so revenue and collection totals for wide or historical ranges may be understated. Narrow the date range for exact figures.`;
+};
+
 const sectionCardSx = {
   p: { xs: 2.25, md: 3 },
   borderRadius: 4,
@@ -207,6 +228,7 @@ const AdminReportsPage = () => {
   const [savingPreset, setSavingPreset] = useState(false);
   const [savingTarget, setSavingTarget] = useState(false);
   const [feedback, setFeedback] = useState({ type: '', message: '' });
+  const [truncationNotice, setTruncationNotice] = useState('');
 
   const [filters, setFilters] = useState(createReportFilters);
   const [targetForm, setTargetForm] = useState(createTargetForm);
@@ -241,6 +263,12 @@ const AdminReportsPage = () => {
       return;
     }
 
+    if (filters.startDate && filters.endDate && filters.startDate > filters.endDate) {
+      setPageLoading(false);
+      setFeedback({ type: 'error', message: 'The start date is after the end date, so no data can be reported. Adjust the range.' });
+      return;
+    }
+
     try {
       if (showLoader) {
         setPageLoading(true);
@@ -261,9 +289,15 @@ const AdminReportsPage = () => {
 
       const [memberRows, invoiceRows, paymentRows, expenseRows, targetRows, presetRows] = await Promise.all([
         fetchMembers(),
-        fetchBillingInvoices({ limit: 600 }),
-        fetchBillingPayments({ limit: 800 }),
-        fetchOperatingExpenses({ startDate: `${filters.reportYear}-01-01`, endDate: `${filters.reportYear}-12-31`, limit: 800 }),
+        fetchBillingInvoices({ limit: INVOICE_FETCH_LIMIT }),
+        fetchBillingPayments({ limit: PAYMENT_FETCH_LIMIT }),
+        // Expenses feed both the range-scoped summary and the trend-year rows, so fetch
+        // the union of both windows rather than the trend year alone.
+        fetchOperatingExpenses({
+          startDate: minDateString(`${filters.reportYear}-01-01`, filters.startDate),
+          endDate: maxDateString(`${filters.reportYear}-12-31`, filters.endDate),
+          limit: 1200,
+        }),
         fetchFinanceTargets({ year: filters.reportYear, limit: 24 }),
         fetchReportPresets({ scope: 'admin_reports', limit: 30 }),
       ]);
@@ -276,6 +310,7 @@ const AdminReportsPage = () => {
       setBookings(bookingRows);
       setFinanceTargets(targetRows);
       setReportPresets(presetRows);
+      setTruncationNotice(buildTruncationNotice(invoiceRows.length, paymentRows.length));
       setTargetForm((current) => {
         const nextMonth = current?.month || currentMonthInput();
         const matched = (targetRows || []).find((target) => String(target?.target_month || '').slice(0, 10) === monthInputToDate(nextMonth));
@@ -584,6 +619,12 @@ const AdminReportsPage = () => {
           <Typography variant="body2" color="text.secondary">
             Active range: {formatShortDate(filters.startDate)} – {formatShortDate(filters.endDate)}
           </Typography>
+          {filters.startDate > filters.endDate ? (
+            <Alert severity="error">
+              The start date is after the end date. Reports will stay empty until the range is corrected.
+            </Alert>
+          ) : null}
+          {truncationNotice ? <Alert severity="warning">{truncationNotice}</Alert> : null}
         </Stack>
       </Paper>
 

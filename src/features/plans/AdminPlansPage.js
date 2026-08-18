@@ -234,6 +234,11 @@ const AdminPlansPage = () => {
     event.preventDefault();
     setFeedback({ type: '', message: '' });
 
+    if (!(Number(planForm.price) > 0)) {
+      setFeedback({ type: 'error', message: 'Plan price must be greater than 0.' });
+      return;
+    }
+
     try {
       setSavingPlan(true);
       const savedPlan = await saveMembershipPlanCatalog(planForm);
@@ -256,6 +261,11 @@ const AdminPlansPage = () => {
   const handleSaveAddOn = async (event) => {
     event.preventDefault();
     setFeedback({ type: '', message: '' });
+
+    if (!(Number(addOnForm.price) > 0)) {
+      setFeedback({ type: 'error', message: 'Add-on price must be greater than 0.' });
+      return;
+    }
 
     try {
       setSavingAddOn(true);
@@ -443,7 +453,7 @@ const AdminPlansPage = () => {
                     </TextField>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <TextField label="Price (INR)" type="number" value={planForm.price} onChange={handlePlanFieldChange('price')} fullWidth required />
+                    <TextField label="Price (INR)" type="number" inputProps={{ min: '1', step: '0.01' }} error={planForm.price !== '' && !(Number(planForm.price) > 0)} value={planForm.price} onChange={handlePlanFieldChange('price')} fullWidth required />
                   </Grid>
                   <Grid item xs={12} md={4}>
                     <TextField label="Display order" type="number" value={planForm.display_order} onChange={handlePlanFieldChange('display_order')} fullWidth />
@@ -566,7 +576,7 @@ const AdminPlansPage = () => {
                     </TextField>
                   </Grid>
                   <Grid item xs={12} md={4}>
-                    <TextField label="Price (INR)" type="number" value={addOnForm.price} onChange={handleAddOnFieldChange('price')} fullWidth required />
+                    <TextField label="Price (INR)" type="number" inputProps={{ min: '1', step: '0.01' }} error={addOnForm.price !== '' && !(Number(addOnForm.price) > 0)} value={addOnForm.price} onChange={handleAddOnFieldChange('price')} fullWidth required />
                   </Grid>
                   <Grid item xs={12}>
                     <TextField label="Description" value={addOnForm.description} onChange={handleAddOnFieldChange('description')} fullWidth multiline minRows={2} />
@@ -662,7 +672,7 @@ const AdminPlansPage = () => {
                   <Grid item xs={12} md={4}>
                     <TextField select label="Member" value={bundleForm.memberId} onChange={handleBundleFieldChange('memberId')} fullWidth required>
                       <MenuItem value="">Select member</MenuItem>
-                      {members.filter((member) => member.role === 'member').map((member) => (
+                      {members.filter((member) => member.role === 'member' && member.is_active).map((member) => (
                         <MenuItem key={member.id} value={member.id}>
                           {member.full_name || member.email}
                         </MenuItem>

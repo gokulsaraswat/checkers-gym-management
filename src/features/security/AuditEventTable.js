@@ -11,7 +11,10 @@ import {
   Typography,
 } from '@mui/material';
 
+import { useTheme } from '@mui/material/styles';
+
 import EmptyStateCard from '../../components/common/EmptyStateCard';
+import { getStatusChipSx } from '../../utils/statusColors';
 
 const formatDateTime = (value) => {
   if (!value) {
@@ -29,13 +32,10 @@ const formatDateTime = (value) => {
   }).format(date);
 };
 
-const eventChipSx = {
-  fontWeight: 700,
-  backgroundColor: '#fff4e5',
-  color: '#ed6c02',
-};
-
 const AuditEventTable = ({ events }) => {
+  const theme = useTheme();
+  const eventChipSx = getStatusChipSx(theme, 'pending');
+
   if (!events?.length) {
     return (
       <EmptyStateCard

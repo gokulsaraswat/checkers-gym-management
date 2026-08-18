@@ -149,6 +149,20 @@ const AdminBlogManagementPage = () => {
       return;
     }
 
+    if (!form.title.trim()) {
+      setFeedback({ type: 'error', message: 'Add a title before saving this article.' });
+      return;
+    }
+
+    if (!String(form.content_markdown || '').trim()) {
+      setFeedback({ type: 'error', message: 'Add article content before saving.' });
+      return;
+    }
+
+    if (nextStatus === 'published' && !window.confirm(`Publish "${form.title.trim()}" to the public blog now?`)) {
+      return;
+    }
+
     try {
       setSaving(true);
       const saved = await saveBlogPost(
