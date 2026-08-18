@@ -80,7 +80,7 @@ const NotFoundPage = () => {
 
   return (
     <PublicPageShell
-      eyebrow="Patch 34 fallback routes"
+      eyebrow="Page not found"
       title="We could not find that page."
       description={`The route ${missingPath} does not match an active page right now. This fallback keeps visitors and staff out of blank screens and gives them a clean way back into the app.`}
       chips={['404 page', 'Safer UI failures', 'Reusable error states']}
@@ -100,7 +100,7 @@ const NotFoundPage = () => {
           <ErrorStatePanel
             eyebrow="Missing route"
             title="The link may be outdated, moved, or typed incorrectly."
-            description="As the public site, blog, and future pages expand, some old links can stop matching the latest structure. Patch 34 replaces hard redirects with a dedicated 404 page so the next step stays obvious."
+            description="As the site and blog grow, older links can stop matching the current structure. Rather than a hard redirect, this page keeps your next step obvious."
             hint="Go back home first, then use the gallery, blog, or tools pages to recover the content you were looking for."
             severity="warning"
             icon={SearchOffRoundedIcon}
@@ -152,7 +152,7 @@ const NotFoundPage = () => {
               <Typography fontWeight={800}>Safer failure behavior</Typography>
             </Stack>
             <Typography color="text.secondary" sx={{ lineHeight: 1.8, maxWidth: '72ch' }}>
-              Patch 34 also adds a reusable route fallback for runtime failures, so unexpected render issues can land in a recoverable screen instead of breaking the entire route tree.
+              A matching route fallback catches runtime failures too, so an unexpected render issue lands in a recoverable screen instead of breaking the whole site.
             </Typography>
           </Stack>
           <Box>

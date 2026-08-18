@@ -58,12 +58,12 @@ const RouteFallbackPage = ({ error = null, onRetry = null }) => {
     <Box sx={{ py: { xs: 4, md: 6 } }}>
       <Stack spacing={1.5} maxWidth="760px" sx={{ mx: 'auto' }}>
         <Typography color="primary.main" fontWeight={800}>
-          Patch 34 route fallback
+          Something went wrong
         </Typography>
         <ErrorStatePanel
           eyebrow="Safe failure state"
           title="This screen ran into a problem, but the app is still responding."
-          description="Instead of dropping you into a blank page or a hard crash, Patch 34 routes runtime issues into a recoverable fallback screen with clear next steps."
+          description="Instead of a blank page or a hard crash, runtime issues land here on a recoverable screen with clear next steps."
           hint="Try again first. If the same issue comes back, reload the page or return to the homepage."
           details={details}
           severity="warning"

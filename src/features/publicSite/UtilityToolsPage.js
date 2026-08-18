@@ -75,7 +75,7 @@ const UtilityToolsPage = () => {
     <PublicPageShell
       eyebrow="Public website"
       title="Utility tools for quick planning"
-      description="Patch 33 adds lightweight BMI, calorie, hydration, and starter-program tools for visitors who want practical guidance before a trial visit or deeper coach conversation."
+      description="Quick BMI, calorie, hydration, and starter-program estimates for practical guidance before a trial visit or a conversation with a coach."
       chips={['BMI check', 'Calorie planning', 'Suggestion tools']}
       actions={[
         { label: 'Plan a visit', to: PATHS.contact },

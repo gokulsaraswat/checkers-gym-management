@@ -106,7 +106,7 @@ const ContactPage = () => (
             </Stack>
             <Typography color="text.secondary" sx={{ lineHeight: 1.8 }}>
               Public visitors need a simple explanation of where to start, who to ask, and what the
-              gym experience looks like. Patch 31 keeps those public-facing questions inside the website,
+              gym experience looks like. We keep those public-facing questions on the website,
               while member-only workflows stay in the authenticated product.
             </Typography>
             <Typography color="text.secondary" sx={{ lineHeight: 1.8 }}>

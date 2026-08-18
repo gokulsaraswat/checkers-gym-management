@@ -554,7 +554,7 @@ const AdminReportsPage = () => {
           See performance, period-over-period shifts, and action items in one reporting view
         </Typography>
         <Typography color="text.secondary" maxWidth="980px">
-          Patch 35 refines the reporting workspace with period comparison cards, quick range presets, CSV snapshot export,
+          The reporting workspace covers period comparison cards, quick range presets, CSV snapshot export,
           payment-mix visibility, utilization summaries, and an action-oriented insight panel.
         </Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>

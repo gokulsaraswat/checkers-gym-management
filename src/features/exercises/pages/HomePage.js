@@ -227,7 +227,7 @@ const HomePage = () => {
               <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2.5} justifyContent="space-between">
                 <Box sx={{ maxWidth: '72ch' }}>
                   <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 1.25 }}>
-                    <Chip icon={<CalculateRounded />} color="secondary" label="Patch 33 utility tools" sx={{ fontWeight: 700 }} />
+                    <Chip icon={<CalculateRounded />} color="secondary" label="Free training tools" sx={{ fontWeight: 700 }} />
                     <Chip icon={<MonitorWeightRounded />} label="BMI" variant="outlined" />
                     <Chip icon={<LocalDrinkRounded />} label="Hydration" variant="outlined" />
                   </Stack>
@@ -235,7 +235,7 @@ const HomePage = () => {
                     Add practical self-serve tools without mixing the public site into private member workflows.
                   </Typography>
                   <Typography color="text.secondary" sx={{ mt: 1.25, maxWidth: '64ch', lineHeight: 1.8 }}>
-                    Patch 33 adds BMI, calorie, hydration, and starter-split utilities so visitors can get quick planning value before a trial, consultation, or blog deep dive.
+                    BMI, calorie, hydration, and starter-split calculators give you quick planning value before a trial, a consultation, or a deeper read on the blog.
                   </Typography>
                 </Box>
 

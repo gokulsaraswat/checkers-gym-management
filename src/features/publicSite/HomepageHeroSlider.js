@@ -36,34 +36,34 @@ const buildSlides = () => {
   return [
     {
       id: 'first-impression',
-      eyebrow: 'Patch 32 / homepage polish',
-      title: 'Stronger first impressions with a cleaner public homepage.',
+      eyebrow: 'Train with Checkers Gym',
+      title: 'Serious training. Coaching that actually knows your name.',
       description:
-        'A polished hero, better media storytelling, and clearer visitor pathways help the public site feel intentional while still routing members into the real app experience.',
+        'Strength floors, combat sports, and guided programming under one roof — with coaches who track your progress instead of handing you a printout.',
       imageUrl: galleryCollections[0]?.imageUrl || galleryCollections[1]?.imageUrl || '',
-      accentLabel: 'Hero slider ready',
+      accentLabel: 'Now taking trial bookings',
       metrics: [
         {
           label: 'Featured zone',
           value: galleryCollections[0]?.title || 'Strength floor',
         },
         {
-          label: 'Theme mode',
-          value: 'Light and dark aware',
+          label: 'Open',
+          value: 'Seven days a week',
         },
         {
-          label: 'Primary goal',
-          value: 'Visitor confidence',
+          label: 'Start with',
+          value: 'A free trial session',
         },
       ],
-      chips: ['Homepage polish', 'Responsive media', 'Visitor flow'],
+      chips: ['Strength', 'Combat sports', 'Personal training'],
     },
     {
       id: 'community-visibility',
       eyebrow: 'Events and social proof',
-      title: 'Turn events, wins, and stories into homepage momentum.',
+      title: 'Open houses, workshops, and challenge days all year.',
       description:
-        'Use upcoming events, testimonials, and gallery media together so the homepage keeps telling a living community story instead of feeling like a static poster.',
+        'Members train together, compete together, and show up for each other. Come for a workshop, stay for the people you meet on the floor.',
       imageUrl: galleryCollections[3]?.imageUrl || galleryCollections[2]?.imageUrl || '',
       accentLabel: 'Community spotlight',
       metrics: [
@@ -76,8 +76,8 @@ const buildSlides = () => {
           value: testimonials[0]?.name ? `${testimonials[0].name} testimonial` : 'Member highlights',
         },
         {
-          label: 'Secondary event',
-          value: secondEvent?.title || 'More campaigns can slot in here',
+          label: 'Also coming up',
+          value: secondEvent?.title || 'More events announced soon',
         },
       ],
       chips: ['Events', 'Testimonials', 'Gallery'],
@@ -85,26 +85,26 @@ const buildSlides = () => {
     {
       id: 'visit-planning',
       eyebrow: 'First visit clarity',
-      title: 'Show what the gym feels like before a visitor walks in.',
+      title: 'Know exactly what to expect before you walk in.',
       description:
-        'Use theme-aware visual cards, lightweight media banners, and simple contact cues so new visitors can understand what to expect and where to go next.',
+        'See the floor, meet the coaches, and find out where to go on day one. No pressure, no hard sell — just a clear picture of the place.',
       imageUrl: galleryCollections[5]?.imageUrl || galleryCollections[4]?.imageUrl || '',
-      accentLabel: 'Video-ready banner',
+      accentLabel: 'Plan your first visit',
       metrics: [
         {
-          label: 'Public contact lane',
+          label: 'Talk to us',
           value: contactChannels[0]?.title || 'Front desk and first visits',
         },
         {
-          label: 'Support track',
+          label: 'Coaching',
           value: contactChannels[1]?.title || 'Coach consultations',
         },
         {
-          label: 'Media use',
-          value: 'Images, posters, and short clips',
+          label: 'Find us',
+          value: 'Map and facility guide',
         },
       ],
-      chips: ['Theme-aware assets', 'Contact clarity', 'Media polish'],
+      chips: ['Facility tour', 'Coach intro', 'Free trial'],
     },
   ];
 };
