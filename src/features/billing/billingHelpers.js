@@ -1,3 +1,5 @@
+import { getTonedChipSx } from '../../utils/statusColors';
+
 const createClientKey = (prefix = 'billing') => {
   if (globalThis.crypto?.randomUUID) {
     return `${prefix}-${globalThis.crypto.randomUUID()}`;
@@ -62,28 +64,24 @@ export const PAYMENT_STATUS_OPTIONS = [
 ];
 
 const INVOICE_STATUS_META = {
-  draft: { label: 'Draft', background: '#eff6ff', color: '#1d4ed8' },
-  open: { label: 'Open', background: '#fff7ed', color: '#c2410c' },
-  partial: { label: 'Partial', background: '#fef3c7', color: '#92400e' },
-  paid: { label: 'Paid', background: '#ecfdf3', color: '#047857' },
-  overdue: { label: 'Overdue', background: '#fef2f2', color: '#b91c1c' },
-  void: { label: 'Void', background: '#f8fafc', color: '#475569' },
-  refunded: { label: 'Refunded', background: '#eef2ff', color: '#4338ca' },
+  draft: { label: 'Draft', tone: 'info' },
+  open: { label: 'Open', tone: 'warning' },
+  partial: { label: 'Partial', tone: 'warning' },
+  paid: { label: 'Paid', tone: 'success' },
+  overdue: { label: 'Overdue', tone: 'error' },
+  void: { label: 'Void', tone: null },
+  refunded: { label: 'Refunded', tone: 'info' },
 };
 
 const PAYMENT_STATUS_META = {
-  pending: { label: 'Pending', background: '#eff6ff', color: '#1d4ed8' },
-  completed: { label: 'Completed', background: '#ecfdf3', color: '#047857' },
-  failed: { label: 'Failed', background: '#fef2f2', color: '#b91c1c' },
-  refunded: { label: 'Refunded', background: '#eef2ff', color: '#4338ca' },
-  cancelled: { label: 'Cancelled', background: '#f8fafc', color: '#475569' },
+  pending: { label: 'Pending', tone: 'info' },
+  completed: { label: 'Completed', tone: 'success' },
+  failed: { label: 'Failed', tone: 'error' },
+  refunded: { label: 'Refunded', tone: 'info' },
+  cancelled: { label: 'Cancelled', tone: null },
 };
 
-const getMetaSx = (meta) => ({
-  bgcolor: meta.background,
-  color: meta.color,
-  fontWeight: 700,
-});
+const getMetaSx = (meta) => (theme) => getTonedChipSx(theme, meta.tone);
 
 export const getInvoiceStatusMeta = (status) => (
   INVOICE_STATUS_META[status] || INVOICE_STATUS_META.open

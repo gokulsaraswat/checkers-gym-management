@@ -1,3 +1,5 @@
+import { getStatusChipSx } from '../../utils/statusColors';
+
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: 'medium',
 });
@@ -62,28 +64,20 @@ export const getAttendanceStatusLabel = (status) => {
   return 'Checked out';
 };
 
-export const getAttendanceStatusChipSx = (status) => {
-  if (status === 'checked_in') {
-    return {
-      bgcolor: '#e8f5e9',
-      color: '#1b5e20',
-      fontWeight: 700,
-    };
+/**
+ * Theme-aware `sx` for an attendance status chip.
+ *
+ * `theme` is optional for backwards compatibility; pass it to get correct
+ * dark-mode contrast, since the shared helper alpha-blends against the palette.
+ */
+export const getAttendanceStatusChipSx = (status, theme = null) => {
+  const normalizedStatus = status === 'missed_checkout' ? 'pending' : status;
+
+  if (!theme) {
+    return { fontWeight: 700 };
   }
 
-  if (status === 'missed_checkout') {
-    return {
-      bgcolor: '#fff7e6',
-      color: '#9a6700',
-      fontWeight: 700,
-    };
-  }
-
-  return {
-    bgcolor: '#edf2f7',
-    color: '#1f2937',
-    fontWeight: 700,
-  };
+  return getStatusChipSx(theme, normalizedStatus);
 };
 
 export const getAttendanceSourceLabel = (source) => {

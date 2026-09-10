@@ -48,14 +48,15 @@ const normalizeStatus = (status) => String(status ?? '')
 export const getStatusTone = (status) => TONE_BY_STATUS[normalizeStatus(status)] || null;
 
 /**
- * Theme-aware `sx` for a status chip. Falls back to neutral text colours for
- * unknown statuses so nothing ever renders as dark-on-dark.
+ * Theme-aware `sx` for a chip of an already-resolved palette tone.
+ *
+ * Pass `null` for a neutral chip. This is the single source of chip colour;
+ * every domain helper resolves its own tone and delegates here.
  */
-export const getStatusChipSx = (theme, status) => {
-  const tone = getStatusTone(status);
+export const getTonedChipSx = (theme, tone) => {
   const isDark = theme.palette.mode === 'dark';
 
-  if (!tone) {
+  if (!tone || !theme.palette[tone]) {
     return {
       fontWeight: 700,
       bgcolor: alpha(theme.palette.text.primary, isDark ? 0.16 : 0.08),
@@ -69,5 +70,11 @@ export const getStatusChipSx = (theme, status) => {
     color: theme.palette[tone][isDark ? 'light' : 'dark'],
   };
 };
+
+/**
+ * Theme-aware `sx` for a status chip. Falls back to neutral text colours for
+ * unknown statuses so nothing ever renders as dark-on-dark.
+ */
+export const getStatusChipSx = (theme, status) => getTonedChipSx(theme, getStatusTone(status));
 
 export default getStatusChipSx;

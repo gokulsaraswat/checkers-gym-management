@@ -1,4 +1,5 @@
 import { getMembershipStatusLabel } from '../members/memberLifecycle';
+import { getTonedChipSx } from '../../utils/statusColors';
 
 export const APP_ROLE_OPTIONS = [
   { value: 'member', label: 'Member' },
@@ -20,21 +21,15 @@ export const MEMBER_SORT_OPTIONS = [
 ];
 
 const ROLE_META = {
-  member: {
-    label: 'Member',
-    background: '#eff6ff',
-    color: '#1d4ed8',
-  },
-  staff: {
-    label: 'Staff',
-    background: '#fef3c7',
-    color: '#b45309',
-  },
-  admin: {
-    label: 'Admin',
-    background: '#fce7f3',
-    color: '#be185d',
-  },
+  member: { label: 'Member' },
+  staff: { label: 'Staff' },
+  admin: { label: 'Admin' },
+};
+
+const ROLE_TONES = {
+  member: 'info',
+  staff: 'warning',
+  admin: 'secondary',
 };
 
 const safeLower = (value) => String(value ?? '').trim().toLowerCase();
@@ -50,11 +45,10 @@ const dateToTimestamp = (value, fallback) => {
 
 export const getRoleLabel = (role) => ROLE_META[role]?.label || 'Unknown';
 
-export const getRoleChipSx = (role) => ({
-  bgcolor: ROLE_META[role]?.background || '#f8fafc',
-  color: ROLE_META[role]?.color || '#475569',
-  fontWeight: 700,
-});
+export const getRoleChipSx = (role) => (theme) => getTonedChipSx(
+  theme,
+  ROLE_TONES[role] || null,
+);
 
 export const filterMembers = (members = [], filters = {}) => {
   const query = safeLower(filters.query);

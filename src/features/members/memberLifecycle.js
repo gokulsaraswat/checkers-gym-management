@@ -1,3 +1,4 @@
+import { getTonedChipSx } from '../../utils/statusColors';
 
 export const MEMBERSHIP_STATUS_OPTIONS = [
   { value: 'trial', label: 'Trial' },
@@ -8,31 +9,11 @@ export const MEMBERSHIP_STATUS_OPTIONS = [
 ];
 
 const MEMBERSHIP_STATUS_META = {
-  trial: {
-    label: 'Trial',
-    background: '#eff6ff',
-    color: '#1d4ed8',
-  },
-  active: {
-    label: 'Active',
-    background: '#ecfdf3',
-    color: '#047857',
-  },
-  suspended: {
-    label: 'Suspended',
-    background: '#fff7ed',
-    color: '#c2410c',
-  },
-  expired: {
-    label: 'Expired',
-    background: '#fef2f2',
-    color: '#b91c1c',
-  },
-  cancelled: {
-    label: 'Cancelled',
-    background: '#f8fafc',
-    color: '#475569',
-  },
+  trial: { label: 'Trial', tone: 'info' },
+  active: { label: 'Active', tone: 'success' },
+  suspended: { label: 'Suspended', tone: 'warning' },
+  expired: { label: 'Expired', tone: 'error' },
+  cancelled: { label: 'Cancelled', tone: null },
 };
 
 export const CURRENT_LIABILITY_WAIVER_VERSION = 'liability-v1';
@@ -41,27 +22,20 @@ export const todayIsoDate = () => new Date().toISOString().slice(0, 10);
 
 export const getMembershipStatusMeta = (status) => MEMBERSHIP_STATUS_META[status] || {
   label: 'Unknown',
-  background: '#f8fafc',
-  color: '#475569',
+  tone: null,
 };
 
 export const getMembershipStatusLabel = (status) => getMembershipStatusMeta(status).label;
 
-export const getMembershipStatusChipSx = (status) => {
-  const meta = getMembershipStatusMeta(status);
+export const getMembershipStatusChipSx = (status) => (theme) => getTonedChipSx(
+  theme,
+  getMembershipStatusMeta(status).tone,
+);
 
-  return {
-    bgcolor: meta.background,
-    color: meta.color,
-    fontWeight: 700,
-  };
-};
-
-export const getWaiverChipSx = (hasSignedWaiver) => ({
-  bgcolor: hasSignedWaiver ? '#ecfdf3' : '#fff7ed',
-  color: hasSignedWaiver ? '#047857' : '#c2410c',
-  fontWeight: 700,
-});
+export const getWaiverChipSx = (hasSignedWaiver) => (theme) => getTonedChipSx(
+  theme,
+  hasSignedWaiver ? 'success' : 'warning',
+);
 
 export const formatDateValue = (value, fallback = 'Not set') => {
   if (!value) {

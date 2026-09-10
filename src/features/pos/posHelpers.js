@@ -1,3 +1,5 @@
+import { getTonedChipSx } from '../../utils/statusColors';
+
 export const POS_CATEGORY_OPTIONS = [
   { value: 'supplement', label: 'Supplement' },
   { value: 'merchandise', label: 'Merchandise' },
@@ -106,11 +108,11 @@ export const isLowStock = (item) => (
   && Number(item?.current_stock || 0) <= Number(item?.reorder_level || 0)
 );
 
-export const getInventoryStatusChipSx = (item) => {
-  if (!item?.is_active) return { bgcolor: '#f3f4f6', color: '#4b5563', fontWeight: 700 };
-  if (!item?.is_stock_tracked) return { bgcolor: '#eff6ff', color: '#1d4ed8', fontWeight: 700 };
-  if (isLowStock(item)) return { bgcolor: '#fff7ed', color: '#c2410c', fontWeight: 700 };
-  return { bgcolor: '#ecfdf3', color: '#166534', fontWeight: 700 };
+export const getInventoryStatusChipSx = (item) => (theme) => {
+  if (!item?.is_active) return getTonedChipSx(theme, null);
+  if (!item?.is_stock_tracked) return getTonedChipSx(theme, 'info');
+  if (isLowStock(item)) return getTonedChipSx(theme, 'warning');
+  return getTonedChipSx(theme, 'success');
 };
 
 export const getInventoryStatusLabel = (item) => {

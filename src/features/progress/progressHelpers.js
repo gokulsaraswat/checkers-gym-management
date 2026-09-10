@@ -1,3 +1,5 @@
+import { getTonedChipSx } from '../../utils/statusColors';
+
 const normaliseDateValue = (value) => {
   if (!value) {
     return null;
@@ -93,12 +95,12 @@ export const PERSONAL_RECORD_TYPE_OPTIONS = [
 ];
 
 const PERSONAL_RECORD_TYPE_META = {
-  weight: { label: 'Weight', background: '#eef2ff', color: '#4338ca' },
-  reps: { label: 'Reps', background: '#eff6ff', color: '#1d4ed8' },
-  distance: { label: 'Distance', background: '#ecfeff', color: '#0f766e' },
-  time: { label: 'Time', background: '#fff7ed', color: '#c2410c' },
-  volume: { label: 'Volume', background: '#ecfdf3', color: '#047857' },
-  custom: { label: 'Custom', background: '#f8fafc', color: '#475569' },
+  weight: { label: 'Weight', tone: 'info' },
+  reps: { label: 'Reps', tone: 'info' },
+  distance: { label: 'Distance', tone: 'success' },
+  time: { label: 'Time', tone: 'warning' },
+  volume: { label: 'Volume', tone: 'success' },
+  custom: { label: 'Custom', tone: null },
 };
 
 const PERSONAL_RECORD_DEFAULT_UNITS = {
@@ -114,15 +116,10 @@ export const getPersonalRecordTypeMeta = (recordType) => (
   PERSONAL_RECORD_TYPE_META[recordType] || PERSONAL_RECORD_TYPE_META.custom
 );
 
-export const getPersonalRecordTypeChipSx = (recordType) => {
-  const meta = getPersonalRecordTypeMeta(recordType);
-
-  return {
-    bgcolor: meta.background,
-    color: meta.color,
-    fontWeight: 700,
-  };
-};
+export const getPersonalRecordTypeChipSx = (recordType) => (theme) => getTonedChipSx(
+  theme,
+  getPersonalRecordTypeMeta(recordType).tone,
+);
 
 export const getSuggestedPersonalRecordUnit = (recordType) => (
   PERSONAL_RECORD_DEFAULT_UNITS[recordType] || ''
