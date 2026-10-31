@@ -1572,9 +1572,9 @@
     "semantic_hash": ""
   },
   ".project-architecture.md": {
-    "mtime": 1793117015.2383707,
-    "seen": 1793117024.040975,
-    "ast_hash": "dc02bd31afb992a7428aba6de87ea034",
+    "mtime": 1793438804.3465362,
+    "seen": 1793438812.243707,
+    "ast_hash": "6b3b3f61f37534b8219d1645aa232249",
     "semantic_hash": ""
   },
   ".prompts.md": {
@@ -1995,6 +1995,246 @@
     "mtime": 1787001606.084008,
     "seen": 1793117024.041019,
     "ast_hash": "4634ad6ade976f86080bad5824fc1997",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/supabase/schema.sql": {
+    "mtime": 1787001606.0633745,
+    "seen": 1793438812.243493,
+    "ast_hash": "69ff972b7eab35dbf6dabe8c326f483b",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407000100_initial_schema.sql": {
+    "mtime": 1787001606.1350563,
+    "seen": 1793438812.243677,
+    "ast_hash": "69ff972b7eab35dbf6dabe8c326f483b",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407000200_auth_account_flow.sql": {
+    "mtime": 1787001606.1351724,
+    "seen": 1793438812.2436779,
+    "ast_hash": "990d1d0b8d55c38458931d0869735fd1",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407000300_member_profiles_and_membership_lifecycle.sql": {
+    "mtime": 1787001606.1353338,
+    "seen": 1793438812.243679,
+    "ast_hash": "517317c6d69a414df824508910c55716",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407000400_dashboard_v2.sql": {
+    "mtime": 1787001606.1354573,
+    "seen": 1793438812.243679,
+    "ast_hash": "7a1420563b80a6d947051fa837e0619e",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407000500_admin_panel_fully_functional.sql": {
+    "mtime": 1787001606.135632,
+    "seen": 1793438812.24368,
+    "ast_hash": "361737fa875a62bfb429ee23870a1795",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407000600_attendance_and_check_in.sql": {
+    "mtime": 1787001606.1357892,
+    "seen": 1793438812.243681,
+    "ast_hash": "ffa319ebab993319f7722015016d079d",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407000700_class_and_schedule_management.sql": {
+    "mtime": 1787001606.1359172,
+    "seen": 1793438812.243681,
+    "ast_hash": "2974d2b0304bb74c4365f72d054f5d97",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407000800_bookings_and_waitlists.sql": {
+    "mtime": 1787001606.1360714,
+    "seen": 1793438812.2436821,
+    "ast_hash": "6e7a6fdf50bd0eb15882d9a70787b073",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407000900_trainer_workout_programming.sql": {
+    "mtime": 1787001606.136285,
+    "seen": 1793438812.243685,
+    "ast_hash": "b43412e91d592b20555db770885a8b5d",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407001000_progress_tracking.sql": {
+    "mtime": 1787001606.1364236,
+    "seen": 1793438812.243686,
+    "ast_hash": "51c719bf773e07f38774699aa22e408e",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407001100_nutrition_planning.sql": {
+    "mtime": 1787001606.1365774,
+    "seen": 1793438812.243687,
+    "ast_hash": "c175bc5f37e98eed7d9b9ce7b48b4478",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407001200_billing_and_renewals.sql": {
+    "mtime": 1787001606.1367068,
+    "seen": 1793438812.243687,
+    "ast_hash": "3b76f69efb2f46cc8b28c474f7114243",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407001300_notifications_and_booking_rollup_fix.sql": {
+    "mtime": 1787001606.136873,
+    "seen": 1793438812.2436879,
+    "ast_hash": "00cf9a3da7f54d37fc4bc7e33734374a",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407001400_staff_tools_and_commissions.sql": {
+    "mtime": 1787001606.1370692,
+    "seen": 1793438812.243689,
+    "ast_hash": "260739824876bc9340909a3a4486fa43",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407001450_plans_pricing_emails_and_finance_exports.sql": {
+    "mtime": 1787001606.137216,
+    "seen": 1793438812.243689,
+    "ast_hash": "4c39eabcc1ceb99d358820cc749cf0d5",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407001451_plans_pricing_on_conflict_fix.sql": {
+    "mtime": 1787001606.1373603,
+    "seen": 1793438812.24369,
+    "ast_hash": "892fd59e2dd2b5b766d39f0c64a96ee1",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407001500_reports_analytics_and_targets.sql": {
+    "mtime": 1787001606.1374974,
+    "seen": 1793438812.24369,
+    "ast_hash": "81673dd6cf690d9efdf0777811ed2569",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407001600_crm_and_lead_pipeline.sql": {
+    "mtime": 1787001606.1376355,
+    "seen": 1793438812.243691,
+    "ast_hash": "97e58d1e1fee5e1504db6545dd6cd0f7",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407001700_pos_and_inventory.sql": {
+    "mtime": 1787001606.1377985,
+    "seen": 1793438812.243692,
+    "ast_hash": "a1bafbda5ffc6486ce06ebe7d96b3719",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407001800_online_payments_and_pay_links.sql": {
+    "mtime": 1787001606.1379166,
+    "seen": 1793438812.243692,
+    "ast_hash": "7bfbe8033128a1311fad9e637bfd59d2",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407001810_razorpay_webhooks_and_auto_reconciliation.sql": {
+    "mtime": 1787001606.1380672,
+    "seen": 1793438812.243693,
+    "ast_hash": "a5fa21a909512b316e87d6b6a6eb9ebc",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407001900_qr_access_control_and_compliance.sql": {
+    "mtime": 1787001606.1382186,
+    "seen": 1793438812.243694,
+    "ast_hash": "7addec2e70d790f6a3b9ac3712608ccf",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407002000_multi_branch_and_branch_operations.sql": {
+    "mtime": 1787001606.138391,
+    "seen": 1793438812.243694,
+    "ast_hash": "13778710e6f07670c7bc38e462971f75",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407002100_security_permissions_and_audit_logs.sql": {
+    "mtime": 1787001606.1385496,
+    "seen": 1793438812.243695,
+    "ast_hash": "a1049468ac6c07daec7fc7e20c1d7a57",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407002200_final_polish_and_production_readiness.sql": {
+    "mtime": 1787001606.1387477,
+    "seen": 1793438812.2436962,
+    "ast_hash": "e6b05a4b78d37380275dd3133b64a3a6",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407002201_final_polish_operations_snapshot_fix.sql": {
+    "mtime": 1787001606.1388605,
+    "seen": 1793438812.2436962,
+    "ast_hash": "019e2a76c62bdb0de0bc212c02f63ce6",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407002300_automations_monitoring_and_backups.sql": {
+    "mtime": 1787001606.1390033,
+    "seen": 1793438812.243697,
+    "ast_hash": "4559bb17b26a7b561a661a238518734d",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407002400_advanced_analytics_and_ai_insights.sql": {
+    "mtime": 1787001606.1391473,
+    "seen": 1793438812.243698,
+    "ast_hash": "ad31d553f10b61cb0fdee8375d32224a",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407002500_marketing_growth_campaigns_and_referrals.sql": {
+    "mtime": 1787001606.1393008,
+    "seen": 1793438812.243698,
+    "ast_hash": "aff83df2bad2d1fe8435674e7f81f090",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407002600_full_payment_automation.sql": {
+    "mtime": 1787001606.1394715,
+    "seen": 1793438812.2436988,
+    "ast_hash": "0c1f7dbf4b37e9e0cd84d1ece3509b2b",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407002700_device_agnostic_access_layer.sql": {
+    "mtime": 1787001606.139685,
+    "seen": 1793438812.2437,
+    "ast_hash": "fde995ebb7152bf89011ec22b0627bda",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407002720_raspberry_pi_relay_bridge.sql": {
+    "mtime": 1787001606.1398528,
+    "seen": 1793438812.2437,
+    "ast_hash": "29c518731ea45629d069c07482ab9331",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407002730_rfid_nfc_credentials.sql": {
+    "mtime": 1787001606.1400006,
+    "seen": 1793438812.243701,
+    "ast_hash": "8900d8b51d24c71b18722ad4e7f5d54d",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407002740_vendor_controller_api_connector.sql": {
+    "mtime": 1787001606.1401334,
+    "seen": 1793438812.243701,
+    "ast_hash": "b1f2b43efe629ffcb0c102477d799cf7",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407002900_blog_system.sql": {
+    "mtime": 1787001606.1402962,
+    "seen": 1793438812.243702,
+    "ast_hash": "8aff82438dbcb5434739c104b5f2a854",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407003600_notification_reminders.sql": {
+    "mtime": 1787001606.1404307,
+    "seen": 1793438812.2437031,
+    "ast_hash": "869b9bcbb458bf2ae2c4c31fd46d55dd",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260407003700_security_hardening_and_audit_logs.sql": {
+    "mtime": 1787001606.1406,
+    "seen": 1793438812.2437031,
+    "ast_hash": "26e942d3dcd58b19950af0e9a662e425",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260421003900_backup_export_ops_tools.sql": {
+    "mtime": 1787001606.1407928,
+    "seen": 1793438812.243704,
+    "ast_hash": "26a4916902ddbcaa9c31f70ba5f9aa8c",
+    "semantic_hash": ""
+  },
+  "supabase/schema.sql": {
+    "mtime": 1787001606.1412249,
+    "seen": 1793438812.243705,
+    "ast_hash": "3e44f91707b1614a8baf9991fc5e3374",
     "semantic_hash": ""
   }
 }

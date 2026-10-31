@@ -1,0 +1,2000 @@
+{
+  ".claude-session.template.json": {
+    "mtime": 1793116933.167412,
+    "seen": 1793117024.040789,
+    "ast_hash": "9ac9a557d0d825375c27f2c4d956d8ec",
+    "semantic_hash": ""
+  },
+  ".eslintrc.js": {
+    "mtime": 1787005308.0880692,
+    "seen": 1793117024.0407932,
+    "ast_hash": "7b24570bb875035ccbf011c6cc5b3bc2",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/.eslintrc.js": {
+    "mtime": 1787001606.015479,
+    "seen": 1793117024.0407948,
+    "ast_hash": "1bdf9514a9c58425574586e4591d0eae",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/package.json": {
+    "mtime": 1787001606.0199914,
+    "seen": 1793117024.0407958,
+    "ast_hash": "960310418799385862cd5a9ea768b38b",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/public/manifest.json": {
+    "mtime": 1787001606.0239704,
+    "seen": 1793117024.040797,
+    "ast_hash": "d9d975cebe2ec20b6c652e1e4c12ccf0",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/App.js": {
+    "mtime": 1787001606.0250528,
+    "seen": 1793117024.040798,
+    "ast_hash": "30f607cc9476e0dd7da79e7e57dfc9d4",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/components/BodyPart.js": {
+    "mtime": 1787001606.0402596,
+    "seen": 1793117024.040799,
+    "ast_hash": "ef250963f6d1a59d259a2b0cd94e3206",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/components/Detail.js": {
+    "mtime": 1787001606.0405035,
+    "seen": 1793117024.0408,
+    "ast_hash": "51d3a05aa1210ae762ac39a284cafacf",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/components/ExerciseCard.js": {
+    "mtime": 1787001606.040837,
+    "seen": 1793117024.0408,
+    "ast_hash": "941518c5e364c58fe5744a1d9291aaea",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/components/ExerciseVideos.js": {
+    "mtime": 1787001606.0410664,
+    "seen": 1793117024.040801,
+    "ast_hash": "3c9abe1d321767a0a483c0ac9ef6fbaf",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/components/Exercises.js": {
+    "mtime": 1787001606.0416565,
+    "seen": 1793117024.040802,
+    "ast_hash": "8429e54979b4ab575e485c4c87c3ac28",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/components/Footer.js": {
+    "mtime": 1787001606.0427036,
+    "seen": 1793117024.040803,
+    "ast_hash": "822bb2951f286b01dc69d8285eecc492",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/components/HeroBanner.js": {
+    "mtime": 1787001606.0429153,
+    "seen": 1793117024.0408041,
+    "ast_hash": "94aeaf78160c87860ea10788c5cfad04",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/components/HorizontalScrollbar.js": {
+    "mtime": 1787001606.0431988,
+    "seen": 1793117024.0408041,
+    "ast_hash": "bc13abcbb62fdef3a605b186d8de5be4",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/components/Loader.js": {
+    "mtime": 1787001606.0437808,
+    "seen": 1793117024.040805,
+    "ast_hash": "b5de36a5964c1ccbd8ebfd31f5ea0e47",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/components/Navbar.js": {
+    "mtime": 1787001606.0439796,
+    "seen": 1793117024.0408058,
+    "ast_hash": "7bbc4f35c4c19388b9b3eaa39817e32f",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/components/SearchExercises.js": {
+    "mtime": 1787001606.0443351,
+    "seen": 1793117024.040807,
+    "ast_hash": "7607e48720eb0e5812a2c230c4454179",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/components/SimilarExercises.js": {
+    "mtime": 1787001606.0445135,
+    "seen": 1793117024.040807,
+    "ast_hash": "2cfb70751b2e9d69b2cf4a815ff05ba0",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/components/common/EmptyStateCard.js": {
+    "mtime": 1787001606.044954,
+    "seen": 1793117024.040808,
+    "ast_hash": "e3933623aedbe421660adde6124f3543",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/components/common/LoadingScreen.js": {
+    "mtime": 1787001606.0451415,
+    "seen": 1793117024.040809,
+    "ast_hash": "a8968458af36e5edc95e39f5a7b3d0ff",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/components/common/MetricCard.js": {
+    "mtime": 1787001606.04534,
+    "seen": 1793117024.0408099,
+    "ast_hash": "cb64caee3718088822e847b922bbcc2b",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/components/common/SetupNotice.js": {
+    "mtime": 1787001606.0456903,
+    "seen": 1793117024.0408099,
+    "ast_hash": "dc46d28dea3edb0200a1fce2d41c4f71",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/components/layout/Footer.js": {
+    "mtime": 1787001606.0481791,
+    "seen": 1793117024.040812,
+    "ast_hash": "15039af089f5c630f5ce1a1feb490206",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/components/layout/Navbar.js": {
+    "mtime": 1787001606.048874,
+    "seen": 1793117024.040812,
+    "ast_hash": "7f46ad9bb5be4f2f4e11c4fd7d392eea",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/context/AuthContext.js": {
+    "mtime": 1787001606.0496929,
+    "seen": 1793117024.040813,
+    "ast_hash": "5c8ebdfd00f491f0249746697ed3028d",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/data/sampleExercises.js": {
+    "mtime": 1787001606.050456,
+    "seen": 1793117024.0408142,
+    "ast_hash": "4333e85f7bc94537932e7b37c4cb4952",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/features/admin/AdminPage.js": {
+    "mtime": 1787001606.0513656,
+    "seen": 1793117024.0408142,
+    "ast_hash": "074785444c2abae7ebc60afbe163493d",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/features/auth/AuthPage.js": {
+    "mtime": 1787001606.0517917,
+    "seen": 1793117024.040815,
+    "ast_hash": "c0585aba674cefbac6f3280711338eae",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/features/dashboard/DashboardPage.js": {
+    "mtime": 1787001606.0522606,
+    "seen": 1793117024.040816,
+    "ast_hash": "5335af6dffed7fceba848314552d6a98",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/features/exercises/pages/ExerciseDetailPage.js": {
+    "mtime": 1787001606.0529726,
+    "seen": 1793117024.040816,
+    "ast_hash": "c4726f256ac4ae8eb26f1cb6d284586c",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/features/exercises/pages/HomePage.js": {
+    "mtime": 1787001606.0532682,
+    "seen": 1793117024.0408168,
+    "ast_hash": "8222e4c71252515ade33de67fe095b78",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/index.js": {
+    "mtime": 1787001606.053485,
+    "seen": 1793117024.0408168,
+    "ast_hash": "28554fa4a7b030117f1903070b38f578",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/lib/supabaseClient.js": {
+    "mtime": 1787001606.0589082,
+    "seen": 1793117024.040818,
+    "ast_hash": "f280c91e9a116f3c0fd9efe284279267",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/pages/ExerciseDetail.js": {
+    "mtime": 1787001606.0592508,
+    "seen": 1793117024.040819,
+    "ast_hash": "651a665d278ce96a13243633528fb584",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/pages/Home.js": {
+    "mtime": 1787001606.0595253,
+    "seen": 1793117024.040819,
+    "ast_hash": "e1dcde9d531d38fe9f60a680209d5234",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/routes/AdminRoute.js": {
+    "mtime": 1787001606.0598629,
+    "seen": 1793117024.04082,
+    "ast_hash": "6ab35b60d7e42d4bdc1a35a3c5030995",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/routes/ProtectedRoute.js": {
+    "mtime": 1787001606.0600374,
+    "seen": 1793117024.040821,
+    "ast_hash": "b07fed6acf3b8f98dc5e78454ffddc72",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/services/gymService.js": {
+    "mtime": 1787001606.0604305,
+    "seen": 1793117024.040821,
+    "ast_hash": "3b6109068740a404471066e85d510acc",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/utils/fetchData.js": {
+    "mtime": 1787001606.060928,
+    "seen": 1793117024.040822,
+    "ast_hash": "5f4c8f0e61550c2a0bb0a8f2734a4b19",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/supabase/functions/admin-members/index.ts": {
+    "mtime": 1787001606.0629048,
+    "seen": 1793117024.040823,
+    "ast_hash": "2cc9d95879878cc95fcb1a5e5be00d2f",
+    "semantic_hash": ""
+  },
+  "gsclaude/.claude-session.template.json": {
+    "mtime": 1789058276.9075248,
+    "seen": 1793117024.040823,
+    "ast_hash": "9ac9a557d0d825375c27f2c4d956d8ec",
+    "semantic_hash": ""
+  },
+  "gsclaude/sync-architecture.sh": {
+    "mtime": 1789058276.8859463,
+    "seen": 1793117024.0408242,
+    "ast_hash": "ff5f06384bdc881f2fb88617b889feee",
+    "semantic_hash": ""
+  },
+  "package.json": {
+    "mtime": 1787001606.0682793,
+    "seen": 1793117024.0408251,
+    "ast_hash": "33c72a5d3ed6244b882df10f1c75327f",
+    "semantic_hash": ""
+  },
+  "public/manifest.json": {
+    "mtime": 1787001606.0697591,
+    "seen": 1793117024.040826,
+    "ast_hash": "e09e0fce99e1ce8490ff2b7fc1540f45",
+    "semantic_hash": ""
+  },
+  "public/service-worker.js": {
+    "mtime": 1787001606.0708547,
+    "seen": 1793117024.0408268,
+    "ast_hash": "eb861bc31d8d313de7b9772867f3b3f9",
+    "semantic_hash": ""
+  },
+  "src/App.js": {
+    "mtime": 1787001606.0744536,
+    "seen": 1793117024.0408268,
+    "ast_hash": "fe8d391622caa09d0ba38c96cfd3785a",
+    "semantic_hash": ""
+  },
+  "src/app/AppProviders.js": {
+    "mtime": 1787001606.0748587,
+    "seen": 1793117024.040828,
+    "ast_hash": "2e33429be149813ef5bcd75e42a70559",
+    "semantic_hash": ""
+  },
+  "src/app/AppRouter.js": {
+    "mtime": 1787001606.0753849,
+    "seen": 1793117024.040829,
+    "ast_hash": "ac4c362b976c9ab3dccc3ecbb49c1f80",
+    "semantic_hash": ""
+  },
+  "src/app/AppShell.js": {
+    "mtime": 1787001606.0755935,
+    "seen": 1793117024.040829,
+    "ast_hash": "4a1477440a6b2e52bc8c064b11efb221",
+    "semantic_hash": ""
+  },
+  "src/app/auth/access.js": {
+    "mtime": 1787001606.0759234,
+    "seen": 1793117024.04083,
+    "ast_hash": "823fff2e79edf17b09f2f073dc8ee90b",
+    "semantic_hash": ""
+  },
+  "src/app/config/env.js": {
+    "mtime": 1787001606.076247,
+    "seen": 1793117024.040831,
+    "ast_hash": "48427802718b87a9aacb637c9d5af18f",
+    "semantic_hash": ""
+  },
+  "src/app/paths.js": {
+    "mtime": 1787001606.0764115,
+    "seen": 1793117024.040831,
+    "ast_hash": "e6c5723c2ccfe133ef0ed573ac5a6430",
+    "semantic_hash": ""
+  },
+  "src/components/BodyPart.js": {
+    "mtime": 1787001606.084532,
+    "seen": 1793117024.040832,
+    "ast_hash": "ef250963f6d1a59d259a2b0cd94e3206",
+    "semantic_hash": ""
+  },
+  "src/components/Detail.js": {
+    "mtime": 1787001606.0847845,
+    "seen": 1793117024.040833,
+    "ast_hash": "51d3a05aa1210ae762ac39a284cafacf",
+    "semantic_hash": ""
+  },
+  "src/components/ExerciseCard.js": {
+    "mtime": 1787001606.0850742,
+    "seen": 1793117024.040833,
+    "ast_hash": "941518c5e364c58fe5744a1d9291aaea",
+    "semantic_hash": ""
+  },
+  "src/components/ExerciseVideos.js": {
+    "mtime": 1787001606.0872095,
+    "seen": 1793117024.040834,
+    "ast_hash": "3c9abe1d321767a0a483c0ac9ef6fbaf",
+    "semantic_hash": ""
+  },
+  "src/components/Exercises.js": {
+    "mtime": 1787001606.0915565,
+    "seen": 1793117024.0408351,
+    "ast_hash": "8429e54979b4ab575e485c4c87c3ac28",
+    "semantic_hash": ""
+  },
+  "src/components/HeroBanner.js": {
+    "mtime": 1787001606.0919518,
+    "seen": 1793117024.0408351,
+    "ast_hash": "9ba9e24f944f24afaf28aba707f35985",
+    "semantic_hash": ""
+  },
+  "src/components/HorizontalScrollbar.js": {
+    "mtime": 1787001606.0921438,
+    "seen": 1793117024.040836,
+    "ast_hash": "bc13abcbb62fdef3a605b186d8de5be4",
+    "semantic_hash": ""
+  },
+  "src/components/Loader.js": {
+    "mtime": 1787001606.0923283,
+    "seen": 1793117024.040837,
+    "ast_hash": "ffd796ded0830cb6b734c4e873f8194e",
+    "semantic_hash": ""
+  },
+  "src/components/SearchExercises.js": {
+    "mtime": 1787001606.092508,
+    "seen": 1793117024.040837,
+    "ast_hash": "7607e48720eb0e5812a2c230c4454179",
+    "semantic_hash": ""
+  },
+  "src/components/SimilarExercises.js": {
+    "mtime": 1787001606.092678,
+    "seen": 1793117024.040838,
+    "ast_hash": "2cfb70751b2e9d69b2cf4a815ff05ba0",
+    "semantic_hash": ""
+  },
+  "src/components/common/AsyncScreenState.js": {
+    "mtime": 1787001606.0929625,
+    "seen": 1793117024.040839,
+    "ast_hash": "6d464420df71f72febef8515e19c76cf",
+    "semantic_hash": ""
+  },
+  "src/components/common/EmptyStateCard.js": {
+    "mtime": 1787001606.0931292,
+    "seen": 1793117024.040839,
+    "ast_hash": "e3933623aedbe421660adde6124f3543",
+    "semantic_hash": ""
+  },
+  "src/components/common/LoadingScreen.js": {
+    "mtime": 1787001606.0932827,
+    "seen": 1793117024.04084,
+    "ast_hash": "7d004f2cce3a632575f930e6abbdb355",
+    "semantic_hash": ""
+  },
+  "src/components/common/MetricCard.js": {
+    "mtime": 1787001606.0934405,
+    "seen": 1793117024.0408409,
+    "ast_hash": "cb64caee3718088822e847b922bbcc2b",
+    "semantic_hash": ""
+  },
+  "src/components/common/SetupNotice.js": {
+    "mtime": 1787001606.093594,
+    "seen": 1793117024.0408409,
+    "ast_hash": "dc46d28dea3edb0200a1fce2d41c4f71",
+    "semantic_hash": ""
+  },
+  "src/components/common/StateFeedbackCard.js": {
+    "mtime": 1787001606.0937593,
+    "seen": 1793117024.040842,
+    "ast_hash": "4d8b74d8ae813809e8870fc5a9b42cd8",
+    "semantic_hash": ""
+  },
+  "src/components/layout/Footer.js": {
+    "mtime": 1787001606.0940747,
+    "seen": 1793117024.040843,
+    "ast_hash": "a20f693f3f44b5c6fa32bcd8ed9a976a",
+    "semantic_hash": ""
+  },
+  "src/components/layout/InstallAppPrompt.js": {
+    "mtime": 1787001606.0942583,
+    "seen": 1793117024.040843,
+    "ast_hash": "4bf87c4133d3abd895afd01009185750",
+    "semantic_hash": ""
+  },
+  "src/components/layout/Navbar.js": {
+    "mtime": 1787001606.0944774,
+    "seen": 1793117024.040844,
+    "ast_hash": "15706b03a5b1e5b938c745d07a996b99",
+    "semantic_hash": ""
+  },
+  "src/components/layout/ThemeModeToggle.js": {
+    "mtime": 1787001606.0947232,
+    "seen": 1793117024.0408452,
+    "ast_hash": "49ae56ad39eef6bd6e9c993db77d5dc8",
+    "semantic_hash": ""
+  },
+  "src/context/AuthContext.js": {
+    "mtime": 1787001606.0949936,
+    "seen": 1793117024.0408452,
+    "ast_hash": "30bbd7a996a9bdbecacd47642c1b49f3",
+    "semantic_hash": ""
+  },
+  "src/data/sampleExercises.js": {
+    "mtime": 1787001606.0952516,
+    "seen": 1793117024.040846,
+    "ast_hash": "4333e85f7bc94537932e7b37c4cb4952",
+    "semantic_hash": ""
+  },
+  "src/features/access/AccessLogsCard.js": {
+    "mtime": 1787001606.0956516,
+    "seen": 1793117024.040847,
+    "ast_hash": "78f056c885df6d0d060bcc21b5f20f16",
+    "semantic_hash": ""
+  },
+  "src/features/access/AdminAccessControlPage.js": {
+    "mtime": 1787001606.09586,
+    "seen": 1793117024.040847,
+    "ast_hash": "f50398b6cd88d0aae5731ed8e5e9ac5e",
+    "semantic_hash": ""
+  },
+  "src/features/access/AdminAccessHardwarePage.js": {
+    "mtime": 1787001606.0960934,
+    "seen": 1793117024.0408478,
+    "ast_hash": "e13039ab99abc08d7aff096b104066dd",
+    "semantic_hash": ""
+  },
+  "src/features/access/MemberAccessPassPage.js": {
+    "mtime": 1787001606.0964618,
+    "seen": 1793117024.040849,
+    "ast_hash": "8aae2f49a626a37a4dc6ff8c00b7cde0",
+    "semantic_hash": ""
+  },
+  "src/features/access/RfidCredentialRegistryCard.js": {
+    "mtime": 1787001606.0978024,
+    "seen": 1793117024.04085,
+    "ast_hash": "c67f26cac92d359b43cc7343c8d12568",
+    "semantic_hash": ""
+  },
+  "src/features/access/RfidNfcConsoleCard.js": {
+    "mtime": 1787001606.098196,
+    "seen": 1793117024.04085,
+    "ast_hash": "797733775eea12ed6d54f78a05fe3c4e",
+    "semantic_hash": ""
+  },
+  "src/features/access/StaffAccessControlPage.js": {
+    "mtime": 1787001606.0985253,
+    "seen": 1793117024.0408509,
+    "ast_hash": "1b99ad0504e8a97326dee625bc66270f",
+    "semantic_hash": ""
+  },
+  "src/features/access/VendorControllerCommandCard.js": {
+    "mtime": 1787001606.0988512,
+    "seen": 1793117024.040852,
+    "ast_hash": "6b0c75a20dbf3d6915b4ea7882901ec8",
+    "semantic_hash": ""
+  },
+  "src/features/access/accessClient.js": {
+    "mtime": 1787001606.09908,
+    "seen": 1793117024.040852,
+    "ast_hash": "08d21de9380c65bfaab142b4c3f0b9c6",
+    "semantic_hash": ""
+  },
+  "src/features/access/accessHardwareClient.js": {
+    "mtime": 1787001606.0992846,
+    "seen": 1793117024.040853,
+    "ast_hash": "f100045bf9e5e7889f32446b817ead42",
+    "semantic_hash": ""
+  },
+  "src/features/access/accessStabilizationHelpers.js": {
+    "mtime": 1787001606.099457,
+    "seen": 1793117024.040854,
+    "ast_hash": "cdee70d15a9f011116e3dd701a69ae54",
+    "semantic_hash": ""
+  },
+  "src/features/access/piRelayBridgeHelpers.js": {
+    "mtime": 1787001606.0996182,
+    "seen": 1793117024.040855,
+    "ast_hash": "9ffdd856dc63143ae2cfbe0b392fc6f0",
+    "semantic_hash": ""
+  },
+  "src/features/access/rfidNfcHelpers.js": {
+    "mtime": 1787001606.099775,
+    "seen": 1793117024.0408561,
+    "ast_hash": "cda935b51a25cb7f275b19582f55bbd0",
+    "semantic_hash": ""
+  },
+  "src/features/access/scannerWorkflowHelpers.js": {
+    "mtime": 1787001606.100022,
+    "seen": 1793117024.040857,
+    "ast_hash": "5d37b333ed4ad9119ee627c1fdad785f",
+    "semantic_hash": ""
+  },
+  "src/features/access/vendorControllerHelpers.js": {
+    "mtime": 1787001606.1001935,
+    "seen": 1793117024.040858,
+    "ast_hash": "a4fa0fefb1ebdf394333fe05b1755b99",
+    "semantic_hash": ""
+  },
+  "src/features/accessibility/RouteAnnouncer.js": {
+    "mtime": 1787001606.100659,
+    "seen": 1793117024.040858,
+    "ast_hash": "cbc55e9a89169cf94d50f90733663c59",
+    "semantic_hash": ""
+  },
+  "src/features/accessibility/SkipToContentLink.js": {
+    "mtime": 1787001606.1008062,
+    "seen": 1793117024.040859,
+    "ast_hash": "7e238032d65cf57c00f5ed9d4010efbf",
+    "semantic_hash": ""
+  },
+  "src/features/accessibility/useReducedMotionPreference.js": {
+    "mtime": 1787001606.1009445,
+    "seen": 1793117024.04086,
+    "ast_hash": "d59797faa05cb6db6e7caeba065d7d85",
+    "semantic_hash": ""
+  },
+  "src/features/account/AccountPage.js": {
+    "mtime": 1787001606.1013122,
+    "seen": 1793117024.040861,
+    "ast_hash": "1c99c39e39c6cb6043d9559f8084968f",
+    "semantic_hash": ""
+  },
+  "src/features/admin/AdminPage.js": {
+    "mtime": 1787001606.1016061,
+    "seen": 1793117024.040861,
+    "ast_hash": "e53d1d4ca12720a93b9ab3791b330234",
+    "semantic_hash": ""
+  },
+  "src/features/admin/adminHelpers.js": {
+    "mtime": 1787001606.1018133,
+    "seen": 1793117024.0408618,
+    "ast_hash": "f0de9a8a36c9b3c3f926f143ed342663",
+    "semantic_hash": ""
+  },
+  "src/features/admin/components/AdminRecentActivityCard.js": {
+    "mtime": 1787001606.1020849,
+    "seen": 1793117024.0408618,
+    "ast_hash": "a0d3b58051d3640c905515708d15aeb8",
+    "semantic_hash": ""
+  },
+  "src/features/admin/components/StaffRosterCard.js": {
+    "mtime": 1787001606.1022468,
+    "seen": 1793117024.040863,
+    "ast_hash": "b24f04b282d6f32d0f4c90fc723192f8",
+    "semantic_hash": ""
+  },
+  "src/features/attendance/AttendancePage.js": {
+    "mtime": 1787001606.1026185,
+    "seen": 1793117024.040864,
+    "ast_hash": "9eaa53e813c59bb923b65b903dace0dd",
+    "semantic_hash": ""
+  },
+  "src/features/attendance/attendanceHelpers.js": {
+    "mtime": 1787001606.1027803,
+    "seen": 1793117024.040864,
+    "ast_hash": "92f3517308909060ab12e254d59e74a5",
+    "semantic_hash": ""
+  },
+  "src/features/auth/AuthPage.js": {
+    "mtime": 1787001606.103092,
+    "seen": 1793117024.040865,
+    "ast_hash": "3ca62dbc4e2d100a0c2c58741b09616d",
+    "semantic_hash": ""
+  },
+  "src/features/auth/ForgotPasswordPage.js": {
+    "mtime": 1787001606.103276,
+    "seen": 1793117024.0408661,
+    "ast_hash": "89214ff4e9d7fc8830b61dc202a25c03",
+    "semantic_hash": ""
+  },
+  "src/features/auth/ResetPasswordPage.js": {
+    "mtime": 1787001606.103469,
+    "seen": 1793117024.0408661,
+    "ast_hash": "7efb11f32d7d3eaaf91e7a838ff4811e",
+    "semantic_hash": ""
+  },
+  "src/features/automations/AdminAutomationsPage.js": {
+    "mtime": 1787001606.1037278,
+    "seen": 1793117024.040867,
+    "ast_hash": "04f8f07325a990aae120013cf80b17e5",
+    "semantic_hash": ""
+  },
+  "src/features/automations/AutomationKpiGrid.js": {
+    "mtime": 1787001606.1038778,
+    "seen": 1793117024.040868,
+    "ast_hash": "00403e8d0e4014207105dc11cd6d4a4a",
+    "semantic_hash": ""
+  },
+  "src/features/automations/BackupPoliciesPanel.js": {
+    "mtime": 1787001606.1040504,
+    "seen": 1793117024.040868,
+    "ast_hash": "9b1dc790b4efa170bb82f11d925e777d",
+    "semantic_hash": ""
+  },
+  "src/features/automations/HealthChecksPanel.js": {
+    "mtime": 1787001606.1041899,
+    "seen": 1793117024.0408692,
+    "ast_hash": "07b567ebdb55ec0eaa5c0b41599ae2d3",
+    "semantic_hash": ""
+  },
+  "src/features/automations/JobRunTable.js": {
+    "mtime": 1787001606.1043148,
+    "seen": 1793117024.04087,
+    "ast_hash": "adb6b20e310e7cf8eae87be247f9f5f7",
+    "semantic_hash": ""
+  },
+  "src/features/automations/automationsClient.js": {
+    "mtime": 1787001606.1045728,
+    "seen": 1793117024.04087,
+    "ast_hash": "9d0661816c6aefc578d6bdb2e885ff28",
+    "semantic_hash": ""
+  },
+  "src/features/billing/BillingPage.js": {
+    "mtime": 1787001606.1049078,
+    "seen": 1793117024.040871,
+    "ast_hash": "76efb355c334c2bb71441d31b696c376",
+    "semantic_hash": ""
+  },
+  "src/features/billing/StaffBillingPage.js": {
+    "mtime": 1787001606.105055,
+    "seen": 1793117024.0408719,
+    "ast_hash": "f90c7b8efc8d854831d022d8d4d60aa6",
+    "semantic_hash": ""
+  },
+  "src/features/billing/billingHelpers.js": {
+    "mtime": 1787001606.1052878,
+    "seen": 1793117024.0408719,
+    "ast_hash": "6692d01031ea6aaf0f86d4a62291616c",
+    "semantic_hash": ""
+  },
+  "src/features/blog/AdminBlogManagementPage.js": {
+    "mtime": 1787001606.1055636,
+    "seen": 1793117024.040873,
+    "ast_hash": "c76ba9a5061a34b28f054acd74420423",
+    "semantic_hash": ""
+  },
+  "src/features/blog/BlogEditorForm.js": {
+    "mtime": 1787001606.1057086,
+    "seen": 1793117024.040874,
+    "ast_hash": "62d8e50395a3b2f39a63bd952ee5f3e6",
+    "semantic_hash": ""
+  },
+  "src/features/blog/BlogPage.js": {
+    "mtime": 1787001606.1058598,
+    "seen": 1793117024.040874,
+    "ast_hash": "eb93a17715c8779ea370ccf7c5e55a89",
+    "semantic_hash": ""
+  },
+  "src/features/blog/BlogPostPage.js": {
+    "mtime": 1787001606.1060083,
+    "seen": 1793117024.040875,
+    "ast_hash": "4c915afbc56862ac822f18260b72441e",
+    "semantic_hash": ""
+  },
+  "src/features/blog/BlogStatusChip.js": {
+    "mtime": 1787001606.1061373,
+    "seen": 1793117024.0408762,
+    "ast_hash": "e65b6d520578d0b98c0348d230900b70",
+    "semantic_hash": ""
+  },
+  "src/features/blog/MarkdownRenderer.js": {
+    "mtime": 1787001606.1063108,
+    "seen": 1793117024.0408762,
+    "ast_hash": "361343d8a9cbc90e4f4f98ce0d918801",
+    "semantic_hash": ""
+  },
+  "src/features/blog/StaffBlogEditorPage.js": {
+    "mtime": 1787001606.1066592,
+    "seen": 1793117024.040877,
+    "ast_hash": "f85bc995ba11fd0fc45c46a642ba431d",
+    "semantic_hash": ""
+  },
+  "src/features/blog/blogClient.js": {
+    "mtime": 1787001606.1068342,
+    "seen": 1793117024.040878,
+    "ast_hash": "fad24d21acb3f8dacf209a73c70d9fa5",
+    "semantic_hash": ""
+  },
+  "src/features/blog/blogHelpers.js": {
+    "mtime": 1787001606.1070035,
+    "seen": 1793117024.040879,
+    "ast_hash": "9657c2eb457bf3d30a881aa690cb8368",
+    "semantic_hash": ""
+  },
+  "src/features/bookings/BookingsPage.js": {
+    "mtime": 1787001606.1073177,
+    "seen": 1793117024.040879,
+    "ast_hash": "6f591f1d5e2e5d6c9f40a6a0a2d250d3",
+    "semantic_hash": ""
+  },
+  "src/features/bookings/StaffBookingsPage.js": {
+    "mtime": 1787001606.1074646,
+    "seen": 1793117024.0408802,
+    "ast_hash": "d5a8f32b424bbf86606e7eea6ced36e6",
+    "semantic_hash": ""
+  },
+  "src/features/bookings/bookingHelpers.js": {
+    "mtime": 1787001606.1076226,
+    "seen": 1793117024.040881,
+    "ast_hash": "0ffb93c3e5de51db5a15af910e0acd6a",
+    "semantic_hash": ""
+  },
+  "src/features/branches/AdminBranchesPage.js": {
+    "mtime": 1787001606.1078978,
+    "seen": 1793117024.040881,
+    "ast_hash": "d163a803c7835e0a216430a4aeb0568b",
+    "semantic_hash": ""
+  },
+  "src/features/branches/BranchSummaryCards.js": {
+    "mtime": 1787001606.108162,
+    "seen": 1793117024.0408819,
+    "ast_hash": "e12d8a5dabf8e8f3f16261f3e45206f9",
+    "semantic_hash": ""
+  },
+  "src/features/branches/MemberBranchesPage.js": {
+    "mtime": 1787001606.1083555,
+    "seen": 1793117024.0408819,
+    "ast_hash": "d879d5713ae1376be5b31ffbf2d435f8",
+    "semantic_hash": ""
+  },
+  "src/features/branches/StaffBranchesPage.js": {
+    "mtime": 1787001606.1086578,
+    "seen": 1793117024.0408828,
+    "ast_hash": "e422f82fb9904facc33138fa5ea0ced0",
+    "semantic_hash": ""
+  },
+  "src/features/branches/branchClient.js": {
+    "mtime": 1787001606.108804,
+    "seen": 1793117024.040884,
+    "ast_hash": "f0b86645f95a2a448e547620b22471cc",
+    "semantic_hash": ""
+  },
+  "src/features/classes/ClassSchedulePage.js": {
+    "mtime": 1787001606.1091225,
+    "seen": 1793117024.040884,
+    "ast_hash": "9212e1b4a2549e359305b0c4ad3104c1",
+    "semantic_hash": ""
+  },
+  "src/features/classes/StaffSchedulePage.js": {
+    "mtime": 1787001606.10929,
+    "seen": 1793117024.040885,
+    "ast_hash": "20da1e1923d12a732d8a1f4cb1cf21cd",
+    "semantic_hash": ""
+  },
+  "src/features/classes/classScheduleHelpers.js": {
+    "mtime": 1787001606.1094718,
+    "seen": 1793117024.040885,
+    "ast_hash": "2c9cab66af9f4303200f13416690376a",
+    "semantic_hash": ""
+  },
+  "src/features/crm/AdminCrmPage.js": {
+    "mtime": 1787001606.109772,
+    "seen": 1793117024.040886,
+    "ast_hash": "112e8ca72873feea6484dc3383f5e592",
+    "semantic_hash": ""
+  },
+  "src/features/crm/crmHelpers.js": {
+    "mtime": 1787001606.1099904,
+    "seen": 1793117024.040887,
+    "ast_hash": "6cf176dea0e68025f60ca9f9733cf9e4",
+    "semantic_hash": ""
+  },
+  "src/features/dashboard/DashboardPage.js": {
+    "mtime": 1787001606.110245,
+    "seen": 1793117024.040887,
+    "ast_hash": "d876247de74e4fd3d64b3a5be5c139c4",
+    "semantic_hash": ""
+  },
+  "src/features/dashboard/components/BillingSummaryCard.js": {
+    "mtime": 1787001606.110501,
+    "seen": 1793117024.040888,
+    "ast_hash": "df5bb343a91d50c9d98ff3a656180246",
+    "semantic_hash": ""
+  },
+  "src/features/dashboard/components/DashboardAlertsCard.js": {
+    "mtime": 1787001606.1106396,
+    "seen": 1793117024.040889,
+    "ast_hash": "3b1120a1cc0a2c5fe9e740411c502eed",
+    "semantic_hash": ""
+  },
+  "src/features/dashboard/components/NotificationsSummaryCard.js": {
+    "mtime": 1787001606.1107779,
+    "seen": 1793117024.040889,
+    "ast_hash": "7326029070f537fdfca2e3ebcc1d41b0",
+    "semantic_hash": ""
+  },
+  "src/features/dashboard/components/NutritionSummaryCard.js": {
+    "mtime": 1787001606.1109142,
+    "seen": 1793117024.0408902,
+    "ast_hash": "8bcfbcbc7a12ee94afa2ca0a5dd40265",
+    "semantic_hash": ""
+  },
+  "src/features/dashboard/components/ProgressSnapshotCard.js": {
+    "mtime": 1787001606.111087,
+    "seen": 1793117024.040891,
+    "ast_hash": "0b90a493b1a5031972fd9df3443d9a43",
+    "semantic_hash": ""
+  },
+  "src/features/dashboard/components/UpcomingClassesCard.js": {
+    "mtime": 1787001606.1112669,
+    "seen": 1793117024.040891,
+    "ast_hash": "a60994eeb83fe8cddef10f12a26bc3ff",
+    "semantic_hash": ""
+  },
+  "src/features/dashboard/components/WorkoutPlanSummaryCard.js": {
+    "mtime": 1787001606.1114428,
+    "seen": 1793117024.040892,
+    "ast_hash": "0856803d42a1fd5e288e97d3c0e71482",
+    "semantic_hash": ""
+  },
+  "src/features/dashboard/dashboardHelpers.js": {
+    "mtime": 1787001606.1116245,
+    "seen": 1793117024.040892,
+    "ast_hash": "6ef0b8b798430b836a7926a780c414a6",
+    "semantic_hash": ""
+  },
+  "src/features/errors/AppErrorBoundary.js": {
+    "mtime": 1787001606.1118703,
+    "seen": 1793117024.0408928,
+    "ast_hash": "58a169fd856bf664251bd422731bd92d",
+    "semantic_hash": ""
+  },
+  "src/features/errors/ErrorPageShell.js": {
+    "mtime": 1787001606.1120336,
+    "seen": 1793117024.040894,
+    "ast_hash": "b778ecfb4e87edf23a9c341942eb94ca",
+    "semantic_hash": ""
+  },
+  "src/features/errors/ErrorStatePanel.js": {
+    "mtime": 1787001606.1121712,
+    "seen": 1793117024.040895,
+    "ast_hash": "0b438ef5065b10660df58f53cbae5e23",
+    "semantic_hash": ""
+  },
+  "src/features/errors/NotFoundPage.js": {
+    "mtime": 1787001606.1123126,
+    "seen": 1793117024.040895,
+    "ast_hash": "b4c4f0806875548c8c86c5f8cbc52c67",
+    "semantic_hash": ""
+  },
+  "src/features/errors/RouteFallbackPage.js": {
+    "mtime": 1787001606.1125746,
+    "seen": 1793117024.040896,
+    "ast_hash": "8da96dc1631967c881ffc001f4b9eb98",
+    "semantic_hash": ""
+  },
+  "src/features/errors/errorStateHelpers.js": {
+    "mtime": 1787001606.1127453,
+    "seen": 1793117024.0408971,
+    "ast_hash": "3514bd6a353f0f25b6dbc9ddadaa931b",
+    "semantic_hash": ""
+  },
+  "src/features/exercises/pages/ExerciseDetailPage.js": {
+    "mtime": 1787001606.1130748,
+    "seen": 1793117024.0408971,
+    "ast_hash": "c4726f256ac4ae8eb26f1cb6d284586c",
+    "semantic_hash": ""
+  },
+  "src/features/exercises/pages/HomePage.js": {
+    "mtime": 1787001606.1132467,
+    "seen": 1793117024.040898,
+    "ast_hash": "a80833c995e6dbe5c25769a22392b391",
+    "semantic_hash": ""
+  },
+  "src/features/finance/AdminFinancePage.js": {
+    "mtime": 1787001606.113503,
+    "seen": 1793117024.040898,
+    "ast_hash": "81e38c67b28a0df686eb7a3e6bd73189",
+    "semantic_hash": ""
+  },
+  "src/features/finance/financeHelpers.js": {
+    "mtime": 1787001606.1136894,
+    "seen": 1793117024.040899,
+    "ast_hash": "a995640a0de96755ba31c62eb52b2201",
+    "semantic_hash": ""
+  },
+  "src/features/insights/AdminInsightsPage.js": {
+    "mtime": 1787001606.1139572,
+    "seen": 1793117024.0409,
+    "ast_hash": "3cd33717a976716f3bc418d5f7c00b93",
+    "semantic_hash": ""
+  },
+  "src/features/insights/analyticsClient.js": {
+    "mtime": 1787001606.11425,
+    "seen": 1793117024.0409,
+    "ast_hash": "eb92dfd35df9c18ac79e8768fcb876c7",
+    "semantic_hash": ""
+  },
+  "src/features/insights/formatters.js": {
+    "mtime": 1787001606.1143682,
+    "seen": 1793117024.0409012,
+    "ast_hash": "cc94f0f4e3b188f8f80be61275be2bf0",
+    "semantic_hash": ""
+  },
+  "src/features/marketing/AdminMarketingPage.js": {
+    "mtime": 1787001606.1146767,
+    "seen": 1793117024.040902,
+    "ast_hash": "b1f77c49057679a132a30b66343b214c",
+    "semantic_hash": ""
+  },
+  "src/features/marketing/formatters.js": {
+    "mtime": 1787001606.1149516,
+    "seen": 1793117024.040902,
+    "ast_hash": "9eef8dfb7dc560664b5a90a063759e91",
+    "semantic_hash": ""
+  },
+  "src/features/marketing/marketingClient.js": {
+    "mtime": 1787001606.1150706,
+    "seen": 1793117024.0409029,
+    "ast_hash": "763f93380ece4809ff8db9f0fca16d36",
+    "semantic_hash": ""
+  },
+  "src/features/members/MemberDetailPage.js": {
+    "mtime": 1787001606.1153398,
+    "seen": 1793117024.040904,
+    "ast_hash": "41cca7c7b763f2fb97767ba1f13c374f",
+    "semantic_hash": ""
+  },
+  "src/features/members/MemberProfilePage.js": {
+    "mtime": 1787001606.115533,
+    "seen": 1793117024.040904,
+    "ast_hash": "805a0bf34e0bf90e64585ca3dc123111",
+    "semantic_hash": ""
+  },
+  "src/features/members/memberLifecycle.js": {
+    "mtime": 1787001606.1156821,
+    "seen": 1793117024.040905,
+    "ast_hash": "970701d15c5ad74a6e72eab01340da75",
+    "semantic_hash": ""
+  },
+  "src/features/notifications/NotificationsPage.js": {
+    "mtime": 1787001606.1159756,
+    "seen": 1793117024.040906,
+    "ast_hash": "49844cb50f6ff118c136deac91db7b54",
+    "semantic_hash": ""
+  },
+  "src/features/notifications/StaffNotificationsPage.js": {
+    "mtime": 1787001606.116308,
+    "seen": 1793117024.040906,
+    "ast_hash": "d433f302ba85e2ccfe9f4255f367d5a1",
+    "semantic_hash": ""
+  },
+  "src/features/notifications/components/ReminderPreviewTable.js": {
+    "mtime": 1787001606.116516,
+    "seen": 1793117024.040907,
+    "ast_hash": "82cd08657a361a90bdd378717dfa03f3",
+    "semantic_hash": ""
+  },
+  "src/features/notifications/components/ReminderRuleEditorCard.js": {
+    "mtime": 1787001606.1166737,
+    "seen": 1793117024.040907,
+    "ast_hash": "3c3388af19cfa589c7b8c50af48c669c",
+    "semantic_hash": ""
+  },
+  "src/features/notifications/notificationsHelpers.js": {
+    "mtime": 1787001606.116814,
+    "seen": 1793117024.040908,
+    "ast_hash": "9abf1a69e6de26f5cb87ebce10917c13",
+    "semantic_hash": ""
+  },
+  "src/features/nutrition/NutritionPage.js": {
+    "mtime": 1787001606.1171193,
+    "seen": 1793117024.040909,
+    "ast_hash": "f68e8ddc3df352bd9c69489f04bdcf19",
+    "semantic_hash": ""
+  },
+  "src/features/nutrition/StaffNutritionPage.js": {
+    "mtime": 1787001606.117273,
+    "seen": 1793117024.040909,
+    "ast_hash": "7bf9a2e3e27493f0deb437b06429c8c3",
+    "semantic_hash": ""
+  },
+  "src/features/nutrition/components/MealLogsCard.js": {
+    "mtime": 1787001606.1175656,
+    "seen": 1793117024.04091,
+    "ast_hash": "09eea13aa78e678adcb70d5813730862",
+    "semantic_hash": ""
+  },
+  "src/features/nutrition/components/NutritionCheckinsCard.js": {
+    "mtime": 1787001606.1177185,
+    "seen": 1793117024.0409112,
+    "ast_hash": "e1b4cd7ff6135ba79b47e4d0df2de78f",
+    "semantic_hash": ""
+  },
+  "src/features/nutrition/nutritionHelpers.js": {
+    "mtime": 1787001606.117859,
+    "seen": 1793117024.0409112,
+    "ast_hash": "46cca84b4204e67e87ec3b42b13ea240",
+    "semantic_hash": ""
+  },
+  "src/features/ops/AdminOperationsPage.js": {
+    "mtime": 1787001606.1180837,
+    "seen": 1793117024.040916,
+    "ast_hash": "84ff9fe064ed47bd18d143c3b5d35131",
+    "semantic_hash": ""
+  },
+  "src/features/ops/AdminProductionReadinessPage.js": {
+    "mtime": 1787001606.118229,
+    "seen": 1793117024.040917,
+    "ast_hash": "5b2d97bd78540e58dfec4986e2116bac",
+    "semantic_hash": ""
+  },
+  "src/features/ops/components/MetricCard.js": {
+    "mtime": 1787001606.1187632,
+    "seen": 1793117024.040917,
+    "ast_hash": "a64cc5f3cebbcad59794a6b70672b076",
+    "semantic_hash": ""
+  },
+  "src/features/ops/components/OpsBackupPanel.js": {
+    "mtime": 1787001606.1189017,
+    "seen": 1793117024.040918,
+    "ast_hash": "d4d090a1116cdfd499db17f27214baa6",
+    "semantic_hash": ""
+  },
+  "src/features/ops/components/OpsExportQueuePanel.js": {
+    "mtime": 1787001606.1190376,
+    "seen": 1793117024.040919,
+    "ast_hash": "0bdcbc6a9e21327ab9f8138d3f6b3363",
+    "semantic_hash": ""
+  },
+  "src/features/ops/components/OpsHealthPanel.js": {
+    "mtime": 1787001606.119145,
+    "seen": 1793117024.040919,
+    "ast_hash": "fd2bf3eb10db3ebbc3467a82b0efb2d7",
+    "semantic_hash": ""
+  },
+  "src/features/ops/components/ReadinessChecklistCard.js": {
+    "mtime": 1787001606.1192596,
+    "seen": 1793117024.04092,
+    "ast_hash": "e0d3041bba8f6fc9f9c1cd8125e66fc8",
+    "semantic_hash": ""
+  },
+  "src/features/ops/components/ReadinessGateCard.js": {
+    "mtime": 1787001606.1193712,
+    "seen": 1793117024.040921,
+    "ast_hash": "18efb067155832ceb0abdb86341f2a12",
+    "semantic_hash": ""
+  },
+  "src/features/ops/components/SectionCard.js": {
+    "mtime": 1787001606.119485,
+    "seen": 1793117024.040921,
+    "ast_hash": "518a3fd4c30b46e4589c29b8478cf212",
+    "semantic_hash": ""
+  },
+  "src/features/ops/components/StatusChip.js": {
+    "mtime": 1787001606.1195931,
+    "seen": 1793117024.0409222,
+    "ast_hash": "3ceb7624c5c2fe0203a399cee2b22a9e",
+    "semantic_hash": ""
+  },
+  "src/features/ops/opsClient.js": {
+    "mtime": 1787001606.119707,
+    "seen": 1793117024.0409229,
+    "ast_hash": "0c1cc27ebeac4cad2c94116f70987468",
+    "semantic_hash": ""
+  },
+  "src/features/ops/opsHelpers.js": {
+    "mtime": 1787001606.1198177,
+    "seen": 1793117024.0409229,
+    "ast_hash": "5a1cc3c220e9e5b3f6e497c661c9b149",
+    "semantic_hash": ""
+  },
+  "src/features/ops/productionReadinessHelpers.js": {
+    "mtime": 1787001606.1199453,
+    "seen": 1793117024.0409238,
+    "ast_hash": "d2a245a8736fd2288676dc86470b805f",
+    "semantic_hash": ""
+  },
+  "src/features/payments/AdminPaymentAutomationPage.js": {
+    "mtime": 1787001606.1202128,
+    "seen": 1793117024.040925,
+    "ast_hash": "94c568486d4ed5bc89f1bc227e0e0ea7",
+    "semantic_hash": ""
+  },
+  "src/features/payments/AdminPaymentWebhookEventsCard.js": {
+    "mtime": 1787001606.1203454,
+    "seen": 1793117024.040925,
+    "ast_hash": "17317363bb5329365673ddaa8bc4fece",
+    "semantic_hash": ""
+  },
+  "src/features/payments/AdminPaymentsPage.js": {
+    "mtime": 1787001606.1205468,
+    "seen": 1793117024.040926,
+    "ast_hash": "212b44b5a3bbfcfc2faa370e9148974d",
+    "semantic_hash": ""
+  },
+  "src/features/payments/MemberPaymentSettingsPage.js": {
+    "mtime": 1787001606.1206548,
+    "seen": 1793117024.040927,
+    "ast_hash": "503660553bc035c07e1ad10a98028756",
+    "semantic_hash": ""
+  },
+  "src/features/payments/paymentAutomationClient.js": {
+    "mtime": 1787001606.1211348,
+    "seen": 1793117024.040927,
+    "ast_hash": "9d4e5ef376566ca692c0decb10a2c9cd",
+    "semantic_hash": ""
+  },
+  "src/features/payments/paymentGatewayClient.js": {
+    "mtime": 1787001606.1212401,
+    "seen": 1793117024.040928,
+    "ast_hash": "9f3f1b52c5d56e6846079689faa5a48b",
+    "semantic_hash": ""
+  },
+  "src/features/payments/paymentWebhookClient.js": {
+    "mtime": 1787001606.121352,
+    "seen": 1793117024.040928,
+    "ast_hash": "5240d9faa066033511912dc18f0b41af",
+    "semantic_hash": ""
+  },
+  "src/features/plans/AdminPlansPage.js": {
+    "mtime": 1787001606.121593,
+    "seen": 1793117024.040929,
+    "ast_hash": "a30af11dccd3361ea296e8e81da46ad7",
+    "semantic_hash": ""
+  },
+  "src/features/plans/planCatalogHelpers.js": {
+    "mtime": 1787001606.1217437,
+    "seen": 1793117024.04093,
+    "ast_hash": "db3828c541c055d039bde1a5cb0dcaea",
+    "semantic_hash": ""
+  },
+  "src/features/pos/AdminPosPage.js": {
+    "mtime": 1787001606.1219635,
+    "seen": 1793117024.04093,
+    "ast_hash": "f668993305e5b2c5bfafbd95157cfd39",
+    "semantic_hash": ""
+  },
+  "src/features/pos/StaffPosPage.js": {
+    "mtime": 1787001606.122166,
+    "seen": 1793117024.040931,
+    "ast_hash": "e7b003394e90b06da82b8b01b1174baa",
+    "semantic_hash": ""
+  },
+  "src/features/pos/posHelpers.js": {
+    "mtime": 1787001606.1222875,
+    "seen": 1793117024.0409322,
+    "ast_hash": "81c0b280de8d24c6757a435452136c98",
+    "semantic_hash": ""
+  },
+  "src/features/progress/ProgressTrackingPage.js": {
+    "mtime": 1787001606.122504,
+    "seen": 1793117024.0409322,
+    "ast_hash": "e8f540394c85681b23359d29723ba96d",
+    "semantic_hash": ""
+  },
+  "src/features/progress/StaffProgressPage.js": {
+    "mtime": 1787001606.122852,
+    "seen": 1793117024.0409331,
+    "ast_hash": "35c792f79d2d8f32bfcaa92c4ec52970",
+    "semantic_hash": ""
+  },
+  "src/features/progress/components/BodyMeasurementsCard.js": {
+    "mtime": 1787001606.1232162,
+    "seen": 1793117024.0409331,
+    "ast_hash": "2512e048b1810a4badf0e5f2de716fd5",
+    "semantic_hash": ""
+  },
+  "src/features/progress/components/PersonalRecordsCard.js": {
+    "mtime": 1787001606.1233978,
+    "seen": 1793117024.0409338,
+    "ast_hash": "fb6c95aec4cec2c8e17606c624b55b7c",
+    "semantic_hash": ""
+  },
+  "src/features/progress/components/ProgressTimelineCard.js": {
+    "mtime": 1787001606.1235425,
+    "seen": 1793117024.0409348,
+    "ast_hash": "300f6869d4b70d38db01d8b46bd6a65a",
+    "semantic_hash": ""
+  },
+  "src/features/progress/progressHelpers.js": {
+    "mtime": 1787001606.1237078,
+    "seen": 1793117024.0409348,
+    "ast_hash": "0085e8a89c5c2906c31d09e3d8875622",
+    "semantic_hash": ""
+  },
+  "src/features/publicSite/ContactPage.js": {
+    "mtime": 1787001606.1239188,
+    "seen": 1793117024.040936,
+    "ast_hash": "356efdff25d258d6d759ce03b386d9f5",
+    "semantic_hash": ""
+  },
+  "src/features/publicSite/EventsPage.js": {
+    "mtime": 1787001606.1240396,
+    "seen": 1793117024.040937,
+    "ast_hash": "78d0ae740905256c9d1136be3ad868f7",
+    "semantic_hash": ""
+  },
+  "src/features/publicSite/FeedbackPage.js": {
+    "mtime": 1787001606.124191,
+    "seen": 1793117024.040937,
+    "ast_hash": "c3c838d043d0782847ac3365e315e583",
+    "semantic_hash": ""
+  },
+  "src/features/publicSite/GalleryPage.js": {
+    "mtime": 1787001606.1243107,
+    "seen": 1793117024.040938,
+    "ast_hash": "83067ac063cd548f3c670db41400517a",
+    "semantic_hash": ""
+  },
+  "src/features/publicSite/GymMapPage.js": {
+    "mtime": 1787001606.12444,
+    "seen": 1793117024.040939,
+    "ast_hash": "2211c5e8a492da1838fddd42554a7de2",
+    "semantic_hash": ""
+  },
+  "src/features/publicSite/HomepageHeroSlider.js": {
+    "mtime": 1787001606.1246085,
+    "seen": 1793117024.040939,
+    "ast_hash": "d3c46df2dc531bf59fc5d52e232a6067",
+    "semantic_hash": ""
+  },
+  "src/features/publicSite/HomepageMediaShowcase.js": {
+    "mtime": 1787001606.1247897,
+    "seen": 1793117024.04094,
+    "ast_hash": "66e5fba130220b203197ace0b46384a6",
+    "semantic_hash": ""
+  },
+  "src/features/publicSite/NotFoundPage.js": {
+    "mtime": 1787001606.1249213,
+    "seen": 1793117024.040941,
+    "ast_hash": "7d1ce440acac8421badd787ddf7469e2",
+    "semantic_hash": ""
+  },
+  "src/features/publicSite/PublicPageShell.js": {
+    "mtime": 1787001606.125438,
+    "seen": 1793117024.040941,
+    "ast_hash": "b20182d2903887d28df26dba50c02688",
+    "semantic_hash": ""
+  },
+  "src/features/publicSite/TestimonialsPage.js": {
+    "mtime": 1787001606.1255863,
+    "seen": 1793117024.0409422,
+    "ast_hash": "4c4b3ff0f7e331209fa30d7f96b7b693",
+    "semantic_hash": ""
+  },
+  "src/features/publicSite/UtilityToolsPage.js": {
+    "mtime": 1787001606.125749,
+    "seen": 1793117024.0409431,
+    "ast_hash": "58488e53e4fb0e1f1ed043766db7440c",
+    "semantic_hash": ""
+  },
+  "src/features/publicSite/publicSiteContent.js": {
+    "mtime": 1787001606.125939,
+    "seen": 1793117024.0409431,
+    "ast_hash": "36d953de23d6c51cd4797263686116b9",
+    "semantic_hash": ""
+  },
+  "src/features/publicSite/publicSiteHelpers.js": {
+    "mtime": 1787001606.126057,
+    "seen": 1793117024.040944,
+    "ast_hash": "f6d072e4563fc2cc23d40f0cdbfdddde",
+    "semantic_hash": ""
+  },
+  "src/features/publicSite/utilityToolHelpers.js": {
+    "mtime": 1787001606.1262796,
+    "seen": 1793117024.0409448,
+    "ast_hash": "a7b2227c1b12463536ef739d0b6054f5",
+    "semantic_hash": ""
+  },
+  "src/features/reports/AdminReportsPage.js": {
+    "mtime": 1787001606.1265404,
+    "seen": 1793117024.0409448,
+    "ast_hash": "42f7fead34620907e39f74dbad285c6f",
+    "semantic_hash": ""
+  },
+  "src/features/reports/components/ReportComparisonCard.js": {
+    "mtime": 1787001606.1269348,
+    "seen": 1793117024.040946,
+    "ast_hash": "84e3d0f162440f72eed793018399696f",
+    "semantic_hash": ""
+  },
+  "src/features/reports/components/ReportInsightPanel.js": {
+    "mtime": 1787001606.1270537,
+    "seen": 1793117024.040947,
+    "ast_hash": "edd9622ab2ef965b9cc28f34185a7b7d",
+    "semantic_hash": ""
+  },
+  "src/features/reports/reportHelpers.js": {
+    "mtime": 1787001606.1271946,
+    "seen": 1793117024.040947,
+    "ast_hash": "f7248d965b392647d34da1fdfbea5807",
+    "semantic_hash": ""
+  },
+  "src/features/reports/reportPolishHelpers.js": {
+    "mtime": 1787001606.1273637,
+    "seen": 1793117024.040948,
+    "ast_hash": "122f08ad5b435d58061848e381f03da7",
+    "semantic_hash": ""
+  },
+  "src/features/security/AdminSecurityPage.js": {
+    "mtime": 1787001606.1275816,
+    "seen": 1793117024.040949,
+    "ast_hash": "eadb6c970d46a27f9286d3e78e906341",
+    "semantic_hash": ""
+  },
+  "src/features/security/AuditEventTable.js": {
+    "mtime": 1787001606.1277194,
+    "seen": 1793117024.040949,
+    "ast_hash": "de0e38c66513f21f5c89d45cc0ab1381",
+    "semantic_hash": ""
+  },
+  "src/features/security/SecurityRestrictionPage.js": {
+    "mtime": 1787001606.1282601,
+    "seen": 1793117024.04095,
+    "ast_hash": "d703b091d0743c68bf5854c930bcfcf1",
+    "semantic_hash": ""
+  },
+  "src/features/security/SecuritySummaryCards.js": {
+    "mtime": 1787001606.1283677,
+    "seen": 1793117024.04095,
+    "ast_hash": "f8ef33aafa558b2af91a5d9e1e9d7734",
+    "semantic_hash": ""
+  },
+  "src/features/security/securityAccess.js": {
+    "mtime": 1787001606.1284873,
+    "seen": 1793117024.040951,
+    "ast_hash": "6dd0f25e9787b8577992f77d0c26c9bb",
+    "semantic_hash": ""
+  },
+  "src/features/security/securityClient.js": {
+    "mtime": 1787001606.1286201,
+    "seen": 1793117024.040951,
+    "ast_hash": "6b98cc51991428ed3c83e26865f5a2c4",
+    "semantic_hash": ""
+  },
+  "src/features/security/useUserSecurityPolicy.js": {
+    "mtime": 1787001606.1287425,
+    "seen": 1793117024.040952,
+    "ast_hash": "4bf7cf900cd7876d77cf2e56485fe382",
+    "semantic_hash": ""
+  },
+  "src/features/staff/StaffHomePage.js": {
+    "mtime": 1787001606.1289446,
+    "seen": 1793117024.0409532,
+    "ast_hash": "a17d2981b632297a97c8a6e38e427a5b",
+    "semantic_hash": ""
+  },
+  "src/features/staff/StaffToolsPage.js": {
+    "mtime": 1787001606.1290812,
+    "seen": 1793117024.0409532,
+    "ast_hash": "52a6c6fc99d4ba143eb75a935f811099",
+    "semantic_hash": ""
+  },
+  "src/features/staff/staffToolsHelpers.js": {
+    "mtime": 1787001606.1292655,
+    "seen": 1793117024.040954,
+    "ast_hash": "64f5f3306bf1e4579404347defaad863",
+    "semantic_hash": ""
+  },
+  "src/features/workouts/MemberWorkoutPlanPage.js": {
+    "mtime": 1787001606.1295168,
+    "seen": 1793117024.0409548,
+    "ast_hash": "c4de86c41ea1f621c906c9d3857d5778",
+    "semantic_hash": ""
+  },
+  "src/features/workouts/StaffWorkoutProgramsPage.js": {
+    "mtime": 1787001606.1296763,
+    "seen": 1793117024.0409548,
+    "ast_hash": "71a977e412e33dc175f541e6daff9821",
+    "semantic_hash": ""
+  },
+  "src/features/workouts/workoutProgrammingHelpers.js": {
+    "mtime": 1787001606.1298823,
+    "seen": 1793117024.040956,
+    "ast_hash": "027dd1f32f8c532bdf7680582160acd9",
+    "semantic_hash": ""
+  },
+  "src/index.js": {
+    "mtime": 1787001606.129997,
+    "seen": 1793117024.040957,
+    "ast_hash": "2ef4a6a2208e901152b64dbc614acf96",
+    "semantic_hash": ""
+  },
+  "src/lib/supabaseClient.js": {
+    "mtime": 1787001606.1301844,
+    "seen": 1793117024.040957,
+    "ast_hash": "66da15a029fd285c5d6d0a5111421ec5",
+    "semantic_hash": ""
+  },
+  "src/routes/AdminRoute.js": {
+    "mtime": 1787001606.1303866,
+    "seen": 1793117024.040958,
+    "ast_hash": "cb2a06963d4b7b5e4ca4b7f430ce5b2f",
+    "semantic_hash": ""
+  },
+  "src/routes/GuestRoute.js": {
+    "mtime": 1787001606.1304975,
+    "seen": 1793117024.040959,
+    "ast_hash": "69899b9f76edc8ec78fdd26e4b4f6668",
+    "semantic_hash": ""
+  },
+  "src/routes/ProtectedRoute.js": {
+    "mtime": 1787001606.130622,
+    "seen": 1793117024.040959,
+    "ast_hash": "6a15a1c78a91016b363b359af5bf3d72",
+    "semantic_hash": ""
+  },
+  "src/routes/StaffRoute.js": {
+    "mtime": 1787001606.1307244,
+    "seen": 1793117024.04096,
+    "ast_hash": "96a75671379e6607deddf381f34fc092",
+    "semantic_hash": ""
+  },
+  "src/serviceWorkerRegistration.js": {
+    "mtime": 1787001606.13085,
+    "seen": 1793117024.040961,
+    "ast_hash": "ffdf54bb0ef680f048e5b37bc83e59bd",
+    "semantic_hash": ""
+  },
+  "src/services/gymService.js": {
+    "mtime": 1787001606.1312356,
+    "seen": 1793117024.040961,
+    "ast_hash": "90f1a746fcef921320734015c651266d",
+    "semantic_hash": ""
+  },
+  "src/theme/ThemeModeProvider.js": {
+    "mtime": 1787001606.1314595,
+    "seen": 1793117024.040962,
+    "ast_hash": "c895e3a2f245fb69ffd06173bb7972ef",
+    "semantic_hash": ""
+  },
+  "src/theme/responsiveTokens.js": {
+    "mtime": 1787001606.1315658,
+    "seen": 1793117024.0409632,
+    "ast_hash": "8fea1e3feaabdfca14d24907fd858813",
+    "semantic_hash": ""
+  },
+  "src/theme/themeFactory.js": {
+    "mtime": 1787001606.1316915,
+    "seen": 1793117024.0409632,
+    "ast_hash": "7729364b78d8b094771531862c242e9b",
+    "semantic_hash": ""
+  },
+  "src/utils/fetchData.js": {
+    "mtime": 1787001606.131884,
+    "seen": 1793117024.0409641,
+    "ast_hash": "748e7781e88275024d81754975667ada",
+    "semantic_hash": ""
+  },
+  "supabase/functions/admin-members/index.ts": {
+    "mtime": 1787001606.1323373,
+    "seen": 1793117024.040965,
+    "ast_hash": "ef193a20a722dcef411d68b3ca01ee6e",
+    "semantic_hash": ""
+  },
+  "supabase/functions/cancel-payment-link/index.ts": {
+    "mtime": 1787001606.1325343,
+    "seen": 1793117024.040965,
+    "ast_hash": "b6d1f808e77eb4ddb506c8be245b5337",
+    "semantic_hash": ""
+  },
+  "supabase/functions/create-payment-link/index.ts": {
+    "mtime": 1787001606.1327088,
+    "seen": 1793117024.0409658,
+    "ast_hash": "6028b03b870fb80a2b966c6fdaf5c119",
+    "semantic_hash": ""
+  },
+  "supabase/functions/issue-access-pass/index.ts": {
+    "mtime": 1787001606.1328864,
+    "seen": 1793117024.040967,
+    "ast_hash": "3b719376096702cfed36a07c81a392d8",
+    "semantic_hash": ""
+  },
+  "supabase/functions/process-payment-retries/index.ts": {
+    "mtime": 1787001606.1330643,
+    "seen": 1793117024.040967,
+    "ast_hash": "d99a749d8d969eb59a09af756718a52f",
+    "semantic_hash": ""
+  },
+  "supabase/functions/process-refunds/index.ts": {
+    "mtime": 1787001606.133249,
+    "seen": 1793117024.040968,
+    "ast_hash": "f27cc4547b89f27b65ce6fd869228a9e",
+    "semantic_hash": ""
+  },
+  "supabase/functions/process-renewal-queue/index.ts": {
+    "mtime": 1787001606.133482,
+    "seen": 1793117024.040969,
+    "ast_hash": "914c12e91224846da8f6efc176049303",
+    "semantic_hash": ""
+  },
+  "supabase/functions/public-health-check/index.ts": {
+    "mtime": 1787001606.1336923,
+    "seen": 1793117024.04097,
+    "ast_hash": "113e539140c3cc373a07cbc8a26d986d",
+    "semantic_hash": ""
+  },
+  "supabase/functions/razorpay-webhook/index.ts": {
+    "mtime": 1787001606.1338975,
+    "seen": 1793117024.04097,
+    "ast_hash": "119b6e369d9c7e38958a08ab98eaafff",
+    "semantic_hash": ""
+  },
+  "supabase/functions/run-daily-ops-summary/index.ts": {
+    "mtime": 1787001606.1340907,
+    "seen": 1793117024.040971,
+    "ast_hash": "39a755bb660687f516129d0115007f75",
+    "semantic_hash": ""
+  },
+  "supabase/functions/run-renewal-reminders/index.ts": {
+    "mtime": 1787001606.1342854,
+    "seen": 1793117024.040971,
+    "ast_hash": "fd71306d7f16cdd09fba888de1564853",
+    "semantic_hash": ""
+  },
+  "supabase/functions/send-billing-email/index.ts": {
+    "mtime": 1787001606.1344993,
+    "seen": 1793117024.040972,
+    "ast_hash": "dc3e06de56e1812692f0f4e80c579157",
+    "semantic_hash": ""
+  },
+  "supabase/functions/sync-payment-link/index.ts": {
+    "mtime": 1787001606.1346793,
+    "seen": 1793117024.040973,
+    "ast_hash": "8e3b9985d1fb86069c3a5d7bd52fca62",
+    "semantic_hash": ""
+  },
+  "supabase/functions/verify-access-pass/index.ts": {
+    "mtime": 1787001606.134853,
+    "seen": 1793117024.040973,
+    "ast_hash": "ffe2c916abd4701d6408dfe1841537c5",
+    "semantic_hash": ""
+  },
+  "sync-architecture.sh": {
+    "mtime": 1793116933.1539042,
+    "seen": 1793117024.0409741,
+    "ast_hash": "ff5f06384bdc881f2fb88617b889feee",
+    "semantic_hash": ""
+  },
+  ".github/FUNDING.yml": {
+    "mtime": 1787001606.0102031,
+    "seen": 1793117024.0409741,
+    "ast_hash": "7089b550d7783aeff0ee32ec21d55877",
+    "semantic_hash": ""
+  },
+  ".project-architecture.md": {
+    "mtime": 1793117015.2383707,
+    "seen": 1793117024.040975,
+    "ast_hash": "dc02bd31afb992a7428aba6de87ea034",
+    "semantic_hash": ""
+  },
+  ".prompts.md": {
+    "mtime": 1793116933.1591907,
+    "seen": 1793117024.0409758,
+    "ast_hash": "3d356e5edfc4f642c778a69db1a3be8e",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1793116986.6056178,
+    "seen": 1793117024.0409758,
+    "ast_hash": "ae401bd6c609ccbe208b2bdc52e9fe0f",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1787001606.011143,
+    "seen": 1793117024.040977,
+    "ast_hash": "b14f84cd906ab13ff084e3d9fe8494bb",
+    "semantic_hash": ""
+  },
+  "Roadmap/AGENT_HANDOFF.md": {
+    "mtime": 1787001606.0116105,
+    "seen": 1793117024.040978,
+    "ast_hash": "b75caf23b7d36323652b926db108f8ca",
+    "semantic_hash": ""
+  },
+  "Roadmap/IMPLEMENTATION_README.md": {
+    "mtime": 1787001606.0118668,
+    "seen": 1793117024.040978,
+    "ast_hash": "db430220a9f329c333b76618304e91c7",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/.github/FUNDING.yml": {
+    "mtime": 1787001606.015919,
+    "seen": 1793117024.040979,
+    "ast_hash": "7089b550d7783aeff0ee32ec21d55877",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/IMPLEMENTATION_README.md": {
+    "mtime": 1787001606.0163956,
+    "seen": 1793117024.0409799,
+    "ast_hash": "db430220a9f329c333b76618304e91c7",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/README.md": {
+    "mtime": 1787001606.0166469,
+    "seen": 1793117024.0409799,
+    "ast_hash": "92eac2dac9f4d7339a47a6a0a82742f1",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/docs/AGENT_HANDOFF.md": {
+    "mtime": 1787001606.0197866,
+    "seen": 1793117024.040981,
+    "ast_hash": "b75caf23b7d36323652b926db108f8ca",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/public/index.html": {
+    "mtime": 1787001606.0237513,
+    "seen": 1793117024.040981,
+    "ast_hash": "5949be576f38b98d1638928504a7d73f",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/public/robots.txt": {
+    "mtime": 1787001606.0243566,
+    "seen": 1793117024.040982,
+    "ast_hash": "fa1ded1ed7c11438a9b0385b1e112850",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/supabase/README.md": {
+    "mtime": 1787001606.0617085,
+    "seen": 1793117024.040983,
+    "ast_hash": "00d1199ef4657d7ac357f1e7820e3589",
+    "semantic_hash": ""
+  },
+  "docs/PATCH_22_SUPABASE_SETUP.md": {
+    "mtime": 1787001606.066449,
+    "seen": 1793117024.040983,
+    "ast_hash": "7963e6b4982927e5f8785452e6356436",
+    "semantic_hash": ""
+  },
+  "gsclaude/.prompts.md": {
+    "mtime": 1789058276.9036605,
+    "seen": 1793117024.0409842,
+    "ast_hash": "3d356e5edfc4f642c778a69db1a3be8e",
+    "semantic_hash": ""
+  },
+  "gsclaude/CLAUDE.md": {
+    "mtime": 1789058276.8919523,
+    "seen": 1793117024.0409842,
+    "ast_hash": "c3ba832fbbbfe3c2ef4aa0924f030bbd",
+    "semantic_hash": ""
+  },
+  "public/index.html": {
+    "mtime": 1787001606.0690682,
+    "seen": 1793117024.040985,
+    "ast_hash": "583d44b3a542fdb428686a2ae4a79a50",
+    "semantic_hash": ""
+  },
+  "public/robots.txt": {
+    "mtime": 1787001606.070631,
+    "seen": 1793117024.040986,
+    "ast_hash": "fa1ded1ed7c11438a9b0385b1e112850",
+    "semantic_hash": ""
+  },
+  "src/features/access/PATCH_18_INTEGRATION.md": {
+    "mtime": 1787001606.0966086,
+    "seen": 1793117024.0409868,
+    "ast_hash": "03e2597faa45bd3dd3d33d0ca5ac6877",
+    "semantic_hash": ""
+  },
+  "src/features/access/PATCH_27_1_INTEGRATION.md": {
+    "mtime": 1787001606.0967548,
+    "seen": 1793117024.0409868,
+    "ast_hash": "512286be870b94972a6b8075c7de359b",
+    "semantic_hash": ""
+  },
+  "src/features/access/PATCH_27_2_INTEGRATION.md": {
+    "mtime": 1787001606.0969088,
+    "seen": 1793117024.040988,
+    "ast_hash": "e9ad1dc071a46a7faccc4cec63c495d1",
+    "semantic_hash": ""
+  },
+  "src/features/access/PATCH_27_3_INTEGRATION.md": {
+    "mtime": 1787001606.0970566,
+    "seen": 1793117024.040988,
+    "ast_hash": "9f52449c867737d1bab4996934fbf80b",
+    "semantic_hash": ""
+  },
+  "src/features/access/PATCH_27_4_INTEGRATION.md": {
+    "mtime": 1787001606.0972319,
+    "seen": 1793117024.040989,
+    "ast_hash": "3db38432cec7d75e442046569f7f82b1",
+    "semantic_hash": ""
+  },
+  "src/features/access/PATCH_27_INTEGRATION.md": {
+    "mtime": 1787001606.0974562,
+    "seen": 1793117024.0409899,
+    "ast_hash": "a1b7d469f68e4424ae74d7d2ed038c5d",
+    "semantic_hash": ""
+  },
+  "src/features/access/PATCH_30_INTEGRATION.md": {
+    "mtime": 1787001606.0976095,
+    "seen": 1793117024.0409899,
+    "ast_hash": "0374c42284e3f91f98fa05a41b263d56",
+    "semantic_hash": ""
+  },
+  "src/features/accessibility/PATCH_38_INTEGRATION.md": {
+    "mtime": 1787001606.1004944,
+    "seen": 1793117024.040991,
+    "ast_hash": "4e901df685908f71324511ef4ea48e1f",
+    "semantic_hash": ""
+  },
+  "src/features/automations/PATCH_22_INTEGRATION.md": {
+    "mtime": 1787001606.1044412,
+    "seen": 1793117024.040991,
+    "ast_hash": "96436c7ba622d5f197570454bfba493e",
+    "semantic_hash": ""
+  },
+  "src/features/blog/PATCH_29_INTEGRATION.md": {
+    "mtime": 1787001606.1064513,
+    "seen": 1793117024.040992,
+    "ast_hash": "5955f09e7bcf3eb918ac0921b24590fb",
+    "semantic_hash": ""
+  },
+  "src/features/branches/PATCH_19_INTEGRATION.md": {
+    "mtime": 1787001606.1085038,
+    "seen": 1793117024.040993,
+    "ast_hash": "ed58b5d3b343a0af3ea0d399e96edd17",
+    "semantic_hash": ""
+  },
+  "src/features/errors/PATCH_34_INTEGRATION.md": {
+    "mtime": 1787001606.1124477,
+    "seen": 1793117024.040993,
+    "ast_hash": "eabb53fc2e02da218d630f4bf5a085a0",
+    "semantic_hash": ""
+  },
+  "src/features/insights/PATCH_24_INTEGRATION.md": {
+    "mtime": 1787001606.1141217,
+    "seen": 1793117024.040994,
+    "ast_hash": "cd3ebf7709a0fbc3a1ffc20011e1eb72",
+    "semantic_hash": ""
+  },
+  "src/features/marketing/PATCH_25_INTEGRATION.md": {
+    "mtime": 1787001606.1148274,
+    "seen": 1793117024.040994,
+    "ast_hash": "65e00c35112d82c2615a017a9f192a4d",
+    "semantic_hash": ""
+  },
+  "src/features/notifications/PATCH_36_INTEGRATION.md": {
+    "mtime": 1787001606.1161458,
+    "seen": 1793117024.0409951,
+    "ast_hash": "b4379a67e34e896c2578109be1ff54e8",
+    "semantic_hash": ""
+  },
+  "src/features/ops/PATCH_21_INTEGRATION.md": {
+    "mtime": 1787001606.1183467,
+    "seen": 1793117024.040996,
+    "ast_hash": "c26775ac6b8720bba5982f98ff49bc09",
+    "semantic_hash": ""
+  },
+  "src/features/ops/PATCH_39_INTEGRATION.md": {
+    "mtime": 1787001606.118454,
+    "seen": 1793117024.040996,
+    "ast_hash": "d1c1aaee48e5b598753479ae8791f850",
+    "semantic_hash": ""
+  },
+  "src/features/ops/PATCH_40_INTEGRATION.md": {
+    "mtime": 1787001606.1185613,
+    "seen": 1793117024.040997,
+    "ast_hash": "434edb7235589079b3cf7f35078b0ad1",
+    "semantic_hash": ""
+  },
+  "src/features/payments/PATCH_17_1_INTEGRATION.md": {
+    "mtime": 1787001606.1207662,
+    "seen": 1793117024.040997,
+    "ast_hash": "c0662a7acdd69f4b3990f91926f802ff",
+    "semantic_hash": ""
+  },
+  "src/features/payments/PATCH_17_INTEGRATION.md": {
+    "mtime": 1787001606.120896,
+    "seen": 1793117024.040998,
+    "ast_hash": "0eac1e7cfbfc0bd521b2558f37b5a522",
+    "semantic_hash": ""
+  },
+  "src/features/payments/PATCH_26_INTEGRATION.md": {
+    "mtime": 1787001606.1210148,
+    "seen": 1793117024.040999,
+    "ast_hash": "7f14a6bef294c4a13f1ce62b26645f39",
+    "semantic_hash": ""
+  },
+  "src/features/publicSite/PATCH_31_INTEGRATION.md": {
+    "mtime": 1787001606.1250424,
+    "seen": 1793117024.040999,
+    "ast_hash": "79579638152c8305224bba7b02048afc",
+    "semantic_hash": ""
+  },
+  "src/features/publicSite/PATCH_32_INTEGRATION.md": {
+    "mtime": 1787001606.1251676,
+    "seen": 1793117024.041,
+    "ast_hash": "0c73137406d73e78079b99be1d9dbd26",
+    "semantic_hash": ""
+  },
+  "src/features/publicSite/PATCH_33_INTEGRATION.md": {
+    "mtime": 1787001606.1252873,
+    "seen": 1793117024.0410008,
+    "ast_hash": "e290d2db8d5a5de2e1adedfacdbb5b69",
+    "semantic_hash": ""
+  },
+  "src/features/reports/PATCH_35_INTEGRATION.md": {
+    "mtime": 1787001606.126699,
+    "seen": 1793117024.0410008,
+    "ast_hash": "58eb77b90be27fb9fe80a773c72cc617",
+    "semantic_hash": ""
+  },
+  "src/features/security/PATCH_20_INTEGRATION.md": {
+    "mtime": 1787001606.1278353,
+    "seen": 1793117024.041002,
+    "ast_hash": "24912cd264e730ca2442962df0109915",
+    "semantic_hash": ""
+  },
+  "src/features/security/PATCH_37_INTEGRATION.md": {
+    "mtime": 1787001606.1279469,
+    "seen": 1793117024.041002,
+    "ast_hash": "621358d6140c2c0d7aacb2bbfbbccf71",
+    "semantic_hash": ""
+  },
+  "supabase/README.md": {
+    "mtime": 1787001606.1320713,
+    "seen": 1793117024.041003,
+    "ast_hash": "56fa0fd9cb0881465a81481fdbbbf92b",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/assets/icons/body-part.png": {
+    "mtime": 1787001606.0264447,
+    "seen": 1793117024.041004,
+    "ast_hash": "d66ee0121958579f21c02886d6463932",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/assets/icons/equipment.png": {
+    "mtime": 1787001606.026656,
+    "seen": 1793117024.041004,
+    "ast_hash": "9be3db6c13547b7c0047bf8bcf196458",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/assets/icons/gym.png": {
+    "mtime": 1787001606.026975,
+    "seen": 1793117024.0410051,
+    "ast_hash": "3b60236561f786e9096c0564eb57dbd7",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/assets/icons/left-arrow.png": {
+    "mtime": 1787001606.0271628,
+    "seen": 1793117024.0410051,
+    "ast_hash": "a1cd3528ff2825b4c9be21ad5a735878",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/assets/icons/right-arrow.png": {
+    "mtime": 1787001606.0273664,
+    "seen": 1793117024.041006,
+    "ast_hash": "ea58ae634921cb7f6469245cb37a5423",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/assets/icons/target.png": {
+    "mtime": 1787001606.0275507,
+    "seen": 1793117024.041007,
+    "ast_hash": "b003c7935513b387077c6fedf9efa06a",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/assets/images/Logo (2).png": {
+    "mtime": 1787001606.0283284,
+    "seen": 1793117024.041007,
+    "ast_hash": "ab1177c2c0e2c9d35d54951227371912",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/assets/images/Logo-1.png": {
+    "mtime": 1787001606.0289083,
+    "seen": 1793117024.0410082,
+    "ast_hash": "4ed4c2a7d427a729c5ae5a06e64f93b4",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/assets/images/Logo.png": {
+    "mtime": 1787001606.0291688,
+    "seen": 1793117024.041009,
+    "ast_hash": "232aff3f259ea79fd15ed0a4d161c9ef",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/assets/images/banner.png": {
+    "mtime": 1787001606.0360441,
+    "seen": 1793117024.041009,
+    "ast_hash": "80f510cc1b51888f8db66dcbff2361d2",
+    "semantic_hash": ""
+  },
+  "Roadmap/checkers-gym-management-app-roadmap/checkers-gym-management-app/src/assets/images/banner1.png": {
+    "mtime": 1787001606.0377507,
+    "seen": 1793117024.04101,
+    "ast_hash": "ba78eef3a8e48d5ee3fcf86ce0488b5d",
+    "semantic_hash": ""
+  },
+  "public/logo192.png": {
+    "mtime": 1787001606.0692801,
+    "seen": 1793117024.0410109,
+    "ast_hash": "f19e48e6a4606b6cc6f770b0a8a986a5",
+    "semantic_hash": ""
+  },
+  "public/logo512.png": {
+    "mtime": 1787001606.0695696,
+    "seen": 1793117024.0410109,
+    "ast_hash": "c256a9e6d79e0b54e556dc5831726a6c",
+    "semantic_hash": ""
+  },
+  "public/maskable-512.png": {
+    "mtime": 1787001606.0700197,
+    "seen": 1793117024.041012,
+    "ast_hash": "c256a9e6d79e0b54e556dc5831726a6c",
+    "semantic_hash": ""
+  },
+  "src/assets/icons/body-part.png": {
+    "mtime": 1787001606.0768292,
+    "seen": 1793117024.041012,
+    "ast_hash": "d66ee0121958579f21c02886d6463932",
+    "semantic_hash": ""
+  },
+  "src/assets/icons/equipment.png": {
+    "mtime": 1787001606.0769866,
+    "seen": 1793117024.041013,
+    "ast_hash": "9be3db6c13547b7c0047bf8bcf196458",
+    "semantic_hash": ""
+  },
+  "src/assets/icons/gym.png": {
+    "mtime": 1787001606.0772407,
+    "seen": 1793117024.041014,
+    "ast_hash": "3b60236561f786e9096c0564eb57dbd7",
+    "semantic_hash": ""
+  },
+  "src/assets/icons/left-arrow.png": {
+    "mtime": 1787001606.0774229,
+    "seen": 1793117024.041014,
+    "ast_hash": "a1cd3528ff2825b4c9be21ad5a735878",
+    "semantic_hash": ""
+  },
+  "src/assets/icons/right-arrow.png": {
+    "mtime": 1787001606.0776145,
+    "seen": 1793117024.0410151,
+    "ast_hash": "ea58ae634921cb7f6469245cb37a5423",
+    "semantic_hash": ""
+  },
+  "src/assets/icons/target.png": {
+    "mtime": 1787001606.0777624,
+    "seen": 1793117024.041016,
+    "ast_hash": "b003c7935513b387077c6fedf9efa06a",
+    "semantic_hash": ""
+  },
+  "src/assets/images/Logo (2).png": {
+    "mtime": 1787001606.07812,
+    "seen": 1793117024.041016,
+    "ast_hash": "8f1c392c47ac735e4e460019646114d1",
+    "semantic_hash": ""
+  },
+  "src/assets/images/Logo-1.png": {
+    "mtime": 1787001606.0783563,
+    "seen": 1793117024.041017,
+    "ast_hash": "113207ee536a97467296bfd59ec56622",
+    "semantic_hash": ""
+  },
+  "src/assets/images/Logo.png": {
+    "mtime": 1787001606.0790904,
+    "seen": 1793117024.041018,
+    "ast_hash": "3c287aaeeabbcdcf66f513d316e53059",
+    "semantic_hash": ""
+  },
+  "src/assets/images/banner.png": {
+    "mtime": 1787001606.0833488,
+    "seen": 1793117024.041018,
+    "ast_hash": "80f510cc1b51888f8db66dcbff2361d2",
+    "semantic_hash": ""
+  },
+  "src/assets/images/banner1.png": {
+    "mtime": 1787001606.084008,
+    "seen": 1793117024.041019,
+    "ast_hash": "4634ad6ade976f86080bad5824fc1997",
+    "semantic_hash": ""
+  }
+}
