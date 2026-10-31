@@ -1,17 +1,17 @@
-# Graph Report - checkers-gym-management  (2026-10-27)
+# Graph Report - checkers-gym-management  (2026-10-31)
 
 ## Corpus Check
 - 342 files · ~421,385 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 7 file(s) not represented in the graph (top: (none) 2, .ico 2, .css 2)
+- Unclassified: 8 file(s) not represented in the graph (top: (none) 3, .ico 2, .css 2)
 
 ## Summary
-- 2486 nodes · 7002 edges · 156 communities (151 shown, 5 thin omitted)
+- 2483 nodes · 6999 edges · 147 communities (143 shown, 4 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 27 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `5b8215ca`
+- Built from commit: `89a7b79d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -22,35 +22,33 @@
 - AdminInsightsPage.js
 - src/features/dashboard/DashboardPage.js
 - AdminReportsPage.js
-- ref_mui_icons_material
+- StaffNutritionPage.js
 - src/services/gymService.js
-- ensureSupabase
+- src/features/exercises/pages/HomePage.js
 - AdminAccessHardwarePage.js
-- publicSiteContent.js
-- ref_mui_material
-- StaffNotificationsPage.js
-- checkers-gym-management-app/src/utils/fetchData.js
+- paths.js
 - ref_react
+- StaffNotificationsPage.js
+- checkers-gym-management-app/src/App.js
+- securityAccess.js
 - StaffWorkoutProgramsPage.js
 - useAuth
 - StaffAccessControlPage.js
 - AdminMarketingPage.js
 - StaffToolsPage.js
 - AdminSecurityPage.js
-- AdminBranchesPage.js
 - ClassSchedulePage.js
+- AppErrorBoundary
 - AdminCrmPage.js
 - AdminAccessControlPage.js
 - AppRouter.js
 - AdminPosPage.js
 - Checkers Gym Management App
 - razorpay-webhook/index.ts
-- checkers-gym-management-app/src/features/admin/AdminPage.js
-- ref_react_router_dom
-- src/features/admin/AdminPage.js
+- src/components/layout/Navbar.js
+- MemberDetailPage.js
 - package.json
 - RfidCredentialRegistryCard.js
-- MemberDetailPage.js
 - VendorControllerCommandCard.js
 - StaffHomePage.js
 - Gym Management App - Master Implementation README
@@ -58,17 +56,13 @@
 - AdminAutomationsPage.js
 - checkers-gym-management-app/package.json
 - Checkers Gym Management App
-- StaffBookingsPage.js
 - ref_https
 - RouteFallbackPage.js
 - UtilityToolsPage.js
 - dependencies
-- paths.js
 - ThemeModeProvider.js
-- access.js
 - dependencies
 - public/manifest.json
-- src/index.js
 - Patch 18 integration notes
 - scannerWorkflowHelpers.js
 - Patch 19 integration — multi-branch operations
@@ -123,8 +117,6 @@
 - Patch 35 - Reporting and Analytics Polish
 - Patch 20 integration notes
 - Patch 37 integration notes
-- fetchWorkoutAssignments
-- sendBillingInvoiceEmail
 - gsclaude/sync-architecture.sh
 - Codebase Blueprint & Structural Graph
 - 12. Suggested feature-to-file mapping
@@ -167,7 +159,6 @@
 - Patch 40 - Production Readiness Final Polish
 - browserslist
 - browserslist
-- ReportComparisonCard.js
 - service-worker.js
 - PATCH_26_INTEGRATION.md
 
@@ -186,87 +177,87 @@
 ## Surprising Connections (you probably didn't know these)
 - `What this patch wires automatically` --references--> `StaffRoute()`  [INFERRED]
   src/features/security/PATCH_37_INTEGRATION.md → src/routes/StaffRoute.js
-- `Includes` --references--> `AppErrorBoundary`  [INFERRED]
-  src/features/errors/PATCH_34_INTEGRATION.md → src/features/errors/AppErrorBoundary.js
 - `Includes` --references--> `ErrorStatePanel()`  [INFERRED]
   src/features/errors/PATCH_34_INTEGRATION.md → src/features/errors/ErrorStatePanel.js
+- `Includes` --references--> `AppErrorBoundary`  [INFERRED]
+  src/features/errors/PATCH_34_INTEGRATION.md → src/features/errors/AppErrorBoundary.js
+- `ExerciseDetailPage()` --calls--> `fetchData()`  [EXTRACTED]
+  src/features/exercises/pages/ExerciseDetailPage.js → src/utils/fetchData.js
 - `ForgotPasswordPage()` --calls--> `useAuth()`  [EXTRACTED]
   src/features/auth/ForgotPasswordPage.js → src/context/AuthContext.js
-- `ResetPasswordPage()` --calls--> `useAuth()`  [EXTRACTED]
-  src/features/auth/ResetPasswordPage.js → src/context/AuthContext.js
 
 ## Import Cycles
 - None detected.
 
-## Communities (156 total, 5 thin omitted)
+## Communities (147 total, 4 thin omitted)
 
 ### Community 0 - "AdminProductionReadinessPage.js"
 Cohesion: 0.05
-Nodes (89): ref_prop_types, AsyncScreenState(), actionShape, severityConfig, StateFeedbackCard(), getErrorMessage(), AdminOperationsPage(), emptySnapshot (+81 more)
+Nodes (92): ref_prop_types, AdminProductionReadinessPage, AsyncScreenState(), actionShape, severityConfig, StateFeedbackCard(), defaultNotFoundTips, defaultRouteFallbackTips (+84 more)
 
 ### Community 1 - "AdminFinancePage.js"
-Cohesion: 0.06
-Nodes (82): AdminPlansPage, BillingPage, BILLING_PROFILE_METHOD_OPTIONS, buildBillingSummary(), buildSortKey(), buildStaffBillingStats(), calculateInvoiceDraftTotals(), createClientKey() (+74 more)
+Cohesion: 0.07
+Nodes (83): AdminPlansPage, BILLING_PROFILE_METHOD_OPTIONS, buildBillingSummary(), buildSortKey(), buildStaffBillingStats(), calculateInvoiceDraftTotals(), createClientKey(), createEmptyBillingProfile() (+75 more)
 
 ### Community 2 - "blogClient.js"
 Cohesion: 0.08
-Nodes (69): AdminBlogManagementPage, BlogPage, BlogPostPage, StaffBlogEditorPage, getBlogPostPath(), AdminBlogManagementPage(), fromEditorForm(), toEditorForm() (+61 more)
+Nodes (68): AdminBlogManagementPage, BlogPostPage, StaffBlogEditorPage, getBlogPostPath(), AdminBlogManagementPage(), fromEditorForm(), toEditorForm(), ALLOWED_STATUSES (+60 more)
 
 ### Community 3 - "AdminInsightsPage.js"
 Cohesion: 0.07
-Nodes (53): ref_supabase_supabase_js, appEnv, env, isSupabaseEnvReady, AdminInsightsPage(), emptyForecastForm, emptyTrainerForm, riskChipColor() (+45 more)
+Nodes (54): ref_supabase_supabase_js, appEnv, env, isSupabaseEnvReady, AdminInsightsPage(), emptyForecastForm, emptyTrainerForm, riskChipColor() (+46 more)
 
 ### Community 4 - "src/features/dashboard/DashboardPage.js"
-Cohesion: 0.10
+Cohesion: 0.11
 Nodes (56): DashboardAlertsCard(), metricLabel(), ProgressSnapshotCard(), UpcomingClassesCard(), alertTemplate(), BOOKING_STATUS_META, buildDashboardAlerts(), buildProgressSummary() (+48 more)
 
 ### Community 5 - "AdminReportsPage.js"
-Cohesion: 0.09
-Nodes (62): AdminReportsPage(), chartOptions, doughnutOptions, formatAttainment(), formatComparisonCardValue(), formatComparisonDelta(), sectionCardSx, addDays() (+54 more)
+Cohesion: 0.11
+Nodes (52): AdminReportsPage(), chartOptions, doughnutOptions, formatAttainment(), formatComparisonCardValue(), formatComparisonDelta(), sectionCardSx, ReportInsightPanel() (+44 more)
 
-### Community 6 - "ref_mui_icons_material"
-Cohesion: 0.10
-Nodes (53): ref_mui_icons_material, formatAverage(), NutritionSummaryCard(), actionShape, ErrorPageShell(), defaultNotFoundTips, defaultRouteFallbackTips, formatMetric() (+45 more)
+### Community 6 - "StaffNutritionPage.js"
+Cohesion: 0.13
+Nodes (48): formatAverage(), NutritionSummaryCard(), formatMetric(), MealLogsCard(), formatValue(), NutritionCheckinsCard(), ASSIGNMENT_STATUS_META, buildNutritionAssignmentSummary() (+40 more)
 
 ### Community 7 - "src/services/gymService.js"
-Cohesion: 0.12
-Nodes (54): addDaysToIsoTimestamp(), bookClassSession(), cancelClassBooking(), closeStaffClientAssignment(), createPosSale(), fetchNotificationTargets(), fetchNutritionTemplates(), fetchStaffDirectory() (+46 more)
-
-### Community 8 - "ensureSupabase"
 Cohesion: 0.08
-Nodes (53): MemberDetailPage(), archiveCrmLead(), buildProfilePayload(), createMemberNote(), createOrUpdatePlan(), deleteMemberNote(), deletePlan(), deleteWorkout() (+45 more)
+Nodes (103): addDaysToIsoTimestamp(), archiveCrmLead(), bookClassSession(), buildProfilePayload(), closeStaffClientAssignment(), createPosSale(), deleteFinanceTarget(), deleteReportPreset() (+95 more)
+
+### Community 8 - "src/features/exercises/pages/HomePage.js"
+Cohesion: 0.23
+Nodes (14): isRapidApiEnvReady, src_assets_images_banner, src_assets_images_banner1, Exercises(), SearchExercises(), sampleBodyParts, sampleExercises, sampleVideos (+6 more)
 
 ### Community 9 - "AdminAccessHardwarePage.js"
 Cohesion: 0.08
 Nodes (49): AdminAccessHardwarePage, assertConfigured(), claimRelayBridgeCommands(), claimVendorControllerCommands(), completeRelayBridgeCommand(), completeVendorControllerCommand(), getAccessHardwareSnapshot(), getDeviceConfigTextValue() (+41 more)
 
-### Community 10 - "publicSiteContent.js"
-Cohesion: 0.09
-Nodes (36): ContactPage, EventsPage, FeedbackPage, GalleryPage, GymMapPage, TestimonialsPage, EventsPage(), FeedbackPage() (+28 more)
+### Community 10 - "paths.js"
+Cohesion: 0.07
+Nodes (39): ContactPage, FeedbackPage, GalleryPage, GymMapPage, PATHS, useReducedMotionPreference(), EventsPage(), FeedbackPage() (+31 more)
 
-### Community 11 - "ref_mui_material"
-Cohesion: 0.09
-Nodes (32): ref_mui_material, ExerciseDetailPage, isRapidApiEnvReady, src_assets_icons_body_part, src_assets_icons_equipment, src_assets_icons_gym, src_assets_icons_left_arrow, src_assets_icons_right_arrow (+24 more)
+### Community 11 - "ref_react"
+Cohesion: 0.07
+Nodes (30): ref_mui_icons_material, ref_mui_material, ref_react, ref_react_dom, ref_react_router_dom, roadmap_checkers_gym_management_app_roadmap_checkers_gym_management_app_src_assets_images_logo, roadmap_checkers_gym_management_app_roadmap_checkers_gym_management_app_src_assets_images_logo_1, root (+22 more)
 
 ### Community 12 - "StaffNotificationsPage.js"
 Cohesion: 0.12
 Nodes (40): NotificationsSummaryCard(), ReminderPreviewTable(), ReminderRuleEditorCard(), applyNotificationTemplate(), buildNotificationAudienceLabel(), buildNotificationSummary(), buildReminderPreviewSummary(), buildReminderSummary() (+32 more)
 
-### Community 13 - "checkers-gym-management-app/src/utils/fetchData.js"
-Cohesion: 0.08
-Nodes (29): ref_react_horizontal_scrolling_menu, ref_react_loader_spinner, roadmap_checkers_gym_management_app_roadmap_checkers_gym_management_app_src_assets_icons_body_part, roadmap_checkers_gym_management_app_roadmap_checkers_gym_management_app_src_assets_icons_equipment, roadmap_checkers_gym_management_app_roadmap_checkers_gym_management_app_src_assets_icons_gym, roadmap_checkers_gym_management_app_roadmap_checkers_gym_management_app_src_assets_icons_left_arrow, roadmap_checkers_gym_management_app_roadmap_checkers_gym_management_app_src_assets_icons_right_arrow, roadmap_checkers_gym_management_app_roadmap_checkers_gym_management_app_src_assets_icons_target (+21 more)
+### Community 13 - "checkers-gym-management-app/src/App.js"
+Cohesion: 0.05
+Nodes (70): ref_react_horizontal_scrolling_menu, ref_react_loader_spinner, App(), roadmap_checkers_gym_management_app_roadmap_checkers_gym_management_app_src_assets_icons_body_part, roadmap_checkers_gym_management_app_roadmap_checkers_gym_management_app_src_assets_icons_equipment, roadmap_checkers_gym_management_app_roadmap_checkers_gym_management_app_src_assets_icons_gym, roadmap_checkers_gym_management_app_roadmap_checkers_gym_management_app_src_assets_icons_left_arrow, roadmap_checkers_gym_management_app_roadmap_checkers_gym_management_app_src_assets_icons_right_arrow (+62 more)
 
-### Community 14 - "ref_react"
-Cohesion: 0.11
-Nodes (23): ref_react, ref_react_dom, App(), roadmap_checkers_gym_management_app_roadmap_checkers_gym_management_app_src_assets_images_logo, roadmap_checkers_gym_management_app_roadmap_checkers_gym_management_app_src_assets_images_logo_1, LoadingScreen(), SetupNotice(), HeroBanner() (+15 more)
+### Community 14 - "securityAccess.js"
+Cohesion: 0.23
+Nodes (13): SecurityRestrictionPage, describeRestriction(), evaluateSecurityGate(), FULL_BYPASS_PATHS, getPermissionKeyForPath(), getPortalAccessField(), isFullSecurityBypassPath(), isPermissionBypassPath() (+5 more)
 
 ### Community 15 - "StaffWorkoutProgramsPage.js"
 Cohesion: 0.15
-Nodes (36): MemberWorkoutPlanPage, WorkoutPlanSummaryCard(), buildWorkoutFormFromDay(), createEmptyWorkoutEntry(), createEmptyWorkoutForm(), MemberWorkoutPlanPage(), StaffWorkoutProgramsPage(), ASSIGNMENT_STATUS_META (+28 more)
+Nodes (36): WorkoutPlanSummaryCard(), buildWorkoutFormFromDay(), createEmptyWorkoutEntry(), createEmptyWorkoutForm(), MemberWorkoutPlanPage(), StaffWorkoutProgramsPage(), ASSIGNMENT_STATUS_META, buildWorkoutProgrammingStats() (+28 more)
 
 ### Community 16 - "useAuth"
-Cohesion: 0.14
-Nodes (30): getPostAuthPath(), hasRole(), isStaffRole(), HeroBanner(), AuthContext, AuthProvider(), buildResetPasswordRedirectUrl(), useAuth() (+22 more)
+Cohesion: 0.12
+Nodes (33): AccountPage, AuthPage, ResetPasswordPage, authOnlyPaths, canRoleAccessPath(), getPostAuthPath(), getSafeAuthRedirectPath(), guestOnlyPaths (+25 more)
 
 ### Community 17 - "StaffAccessControlPage.js"
 Cohesion: 0.16
@@ -282,15 +273,15 @@ Nodes (32): ASSIGNMENT_STATUS_META, assignmentStatusMeta(), buildStaffToolsStats
 
 ### Community 20 - "AdminSecurityPage.js"
 Cohesion: 0.17
-Nodes (29): AdminSecurityPage(), emptyFlagForm, emptyIncidentForm, emptyOverrideForm, formatDate(), statusChipSx(), AuditEventTable(), eventChipSx (+21 more)
+Nodes (30): AdminSecurityPage, AdminSecurityPage(), emptyFlagForm, emptyIncidentForm, emptyOverrideForm, formatDate(), statusChipSx(), AuditEventTable() (+22 more)
 
-### Community 21 - "AdminBranchesPage.js"
-Cohesion: 0.19
-Nodes (26): EmptyStateCard(), AdminBranchesPage(), emptyBranchForm, emptyMemberAssignment, emptyStaffAssignment, formatDate(), statusChipSx(), assignMemberHomeBranch() (+18 more)
+### Community 21 - "ClassSchedulePage.js"
+Cohesion: 0.08
+Nodes (72): EmptyStateCard(), MetricCard(), SetupNotice(), BOOKING_STATUS_META, buildBookingPageStats(), buildRosterStats(), buildScheduleBookingStats(), describeCapacity() (+64 more)
 
-### Community 22 - "ClassSchedulePage.js"
-Cohesion: 0.21
-Nodes (28): buildScheduleBookingStats(), getAvailabilityChipSx(), getAvailabilityMeta(), getMemberBookingAction(), buildClassScheduleStats(), buildRoomOptions(), buildTrainerOptions(), createEmptySessionForm() (+20 more)
+### Community 22 - "AppErrorBoundary"
+Cohesion: 0.20
+Nodes (5): AppErrorBoundary, Apply, Includes, Notes, Patch 34 - Error Handling and Fallback Pages
 
 ### Community 23 - "AdminCrmPage.js"
 Cohesion: 0.17
@@ -301,12 +292,12 @@ Cohesion: 0.15
 Nodes (25): react-qr-code, AdminAccessControlPage, acceptActiveWaiver(), assertConfigured(), getAccessControlSnapshot(), getCurrentUser(), getMyAccessStatus(), issueAccessPass() (+17 more)
 
 ### Community 25 - "AppRouter.js"
-Cohesion: 0.07
-Nodes (28): AdminCrmPage, AdminFinancePage, AdminOperationsPage, AdminPosPage, AdminProductionReadinessPage, AdminReportsPage, AdminSecurityPage, AttendancePage (+20 more)
+Cohesion: 0.06
+Nodes (33): App(), AppProviders(), AdminCrmPage, AdminFinancePage, AdminOperationsPage, AdminReportsPage, AppRouter(), AttendancePage (+25 more)
 
 ### Community 26 - "AdminPosPage.js"
-Cohesion: 0.23
-Nodes (27): AdminPosPage(), cardSx, buildPosSummary(), buildSaleDraftTotals(), createAdjustmentForm(), createInventoryForm(), createSaleForm(), createSaleLine() (+19 more)
+Cohesion: 0.21
+Nodes (29): AdminPosPage, StaffPosPage, AdminPosPage(), cardSx, buildPosSummary(), buildSaleDraftTotals(), createAdjustmentForm(), createInventoryForm() (+21 more)
 
 ### Community 27 - "Checkers Gym Management App"
 Cohesion: 0.07
@@ -316,17 +307,13 @@ Nodes (28): 1) Install dependencies, 2) Create a Supabase project, 3) Run the SQ
 Cohesion: 0.08
 Nodes (11): ref_npm_resend_2_0_0, ref_npm_supabase, ALLOWED_APP_ROLES, ALLOWED_MEMBERSHIP_STATUSES, corsHeaders, encoder, hmacSha256Hex(), Json (+3 more)
 
-### Community 29 - "checkers-gym-management-app/src/features/admin/AdminPage.js"
-Cohesion: 0.19
-Nodes (23): EmptyStateCard(), MetricCard(), AdminPage(), currency(), emptyMemberForm, emptyPlanForm, DashboardPage(), emptyWorkoutForm (+15 more)
+### Community 30 - "src/components/layout/Navbar.js"
+Cohesion: 0.12
+Nodes (19): AppShell(), getRoleBadgeLabel(), src_assets_images_logo, Footer(), InstallAppPrompt(), isStandaloneDisplay(), getItemKey(), getUnreadLabel() (+11 more)
 
-### Community 30 - "ref_react_router_dom"
-Cohesion: 0.13
-Nodes (19): ref_react_router_dom, AppShell(), getRoleBadgeLabel(), src_assets_images_logo, Footer(), InstallAppPrompt(), isStandaloneDisplay(), getItemKey() (+11 more)
-
-### Community 31 - "src/features/admin/AdminPage.js"
-Cohesion: 0.16
-Nodes (22): AdminPage, getAdminMemberDetailPath(), ACCESS_FILTER_OPTIONS, APP_ROLE_OPTIONS, buildAdminStats(), dateToTimestamp(), describeAccessState(), filterMembers() (+14 more)
+### Community 31 - "MemberDetailPage.js"
+Cohesion: 0.10
+Nodes (50): AdminPage, getAdminMemberDetailPath(), AccountPage(), ACCESS_FILTER_OPTIONS, APP_ROLE_OPTIONS, buildAdminStats(), dateToTimestamp(), describeAccessState() (+42 more)
 
 ### Community 32 - "package.json"
 Cohesion: 0.08
@@ -336,17 +323,13 @@ Nodes (25): @emotion/react, @emotion/styled, eslint, eslint-config-airbnb, eslin
 Cohesion: 0.14
 Nodes (24): extractSingleRpcResult(), listRecentMemberHardwareCredentials(), revokeMemberHardwareCredential(), saveMemberHardwareCredential(), formatAccessRefreshLabel(), credentialStatusChipColorMap, credentialTypeOptions, emptyCredentialForm (+16 more)
 
-### Community 34 - "MemberDetailPage.js"
-Cohesion: 0.23
-Nodes (17): AccountPage, MembershipProfilePage, LoadingScreen(), SetupNotice(), AccountPage(), buildMemberFormValues(), CURRENT_LIABILITY_WAIVER_VERSION, formatDateTimeValue() (+9 more)
-
 ### Community 35 - "VendorControllerCommandCard.js"
 Cohesion: 0.25
 Nodes (21): listRecentVendorControllerCommands(), queueVendorControllerCommand(), commandStatusChipColorMap, emptyVendorForm, formatDateTime(), formatPayloadPreview(), parseJsonInput(), stringifyJson() (+13 more)
 
 ### Community 36 - "StaffHomePage.js"
-Cohesion: 0.26
-Nodes (20): buildAttendanceSummary(), buildStaffAttendanceStats(), calculateVisitDurationMinutes(), dateFormatter, dateTimeFormatter, formatAttendanceDate(), formatAttendanceDateTime(), formatVisitDuration() (+12 more)
+Cohesion: 0.18
+Nodes (28): StaffHomePage, buildAttendanceSummary(), buildStaffAttendanceStats(), calculateVisitDurationMinutes(), dateFormatter, dateTimeFormatter, formatAttendanceDate(), formatAttendanceDateTime() (+20 more)
 
 ### Community 37 - "Gym Management App - Master Implementation README"
 Cohesion: 0.09
@@ -368,37 +351,25 @@ Nodes (20): @emotion/react, @emotion/styled, eslint, eslint-config-airbnb, eslin
 Cohesion: 0.10
 Nodes (20): 1) Install dependencies, 2) Create a Supabase project, 3) Run the SQL schema, 4) Add your environment variables, 5) Create your first admin user, 6) Deploy the admin edge function, 7) Run locally, Admin features (+12 more)
 
-### Community 42 - "StaffBookingsPage.js"
-Cohesion: 0.22
-Nodes (17): BookingsPage, StaffBookingsPage, MetricCard(), BOOKING_STATUS_META, buildBookingPageStats(), buildRosterStats(), describeCapacity(), formatWaitlistLabel() (+9 more)
-
 ### Community 43 - "ref_https"
 Cohesion: 0.10
 Nodes (7): ref_https, corsHeaders, corsHeaders, admin, admin, admin, corsHeaders
 
 ### Community 44 - "RouteFallbackPage.js"
-Cohesion: 0.14
-Nodes (12): AppErrorBoundary, ErrorStatePanel(), getActionVariant(), getIconColor(), renderAction(), Apply, Includes, Notes (+4 more)
+Cohesion: 0.36
+Nodes (7): ErrorStatePanel(), getActionVariant(), getIconColor(), renderAction(), buildSafeErrorDetails(), reloadPage(), RouteFallbackPage()
 
 ### Community 45 - "UtilityToolsPage.js"
-Cohesion: 0.26
-Nodes (18): activityLevelOptions, buildTrainingSplit(), buildUtilitySuggestions(), calculateBmiResult(), calculateCalorieResult(), calorieGoalOptions, createInitialBmiForm(), createInitialCalorieForm() (+10 more)
+Cohesion: 0.24
+Nodes (19): UtilityToolsPage, activityLevelOptions, buildTrainingSplit(), buildUtilitySuggestions(), calculateBmiResult(), calculateCalorieResult(), calorieGoalOptions, createInitialBmiForm() (+11 more)
 
 ### Community 46 - "dependencies"
 Cohesion: 0.11
 Nodes (18): dependencies, chart.js, @emotion/react, @emotion/styled, jspdf, jspdf-autotable, @mui/icons-material, @mui/material (+10 more)
 
-### Community 47 - "paths.js"
-Cohesion: 0.13
-Nodes (7): ForgotPasswordPage, NotFoundPage, PATHS, ForgotPasswordPage(), buildMissingPath(), fallbackCards, NotFoundPage()
-
 ### Community 48 - "ThemeModeProvider.js"
-Cohesion: 0.22
-Nodes (15): ThemeModeToggle(), createAppTheme(), darkPalette, getBackdropGradient(), getMetaThemeColor(), getPalette(), lightPalette, applyThemeMetadata() (+7 more)
-
-### Community 49 - "access.js"
-Cohesion: 0.20
-Nodes (12): AuthPage, authOnlyPaths, canRoleAccessPath(), getSafeAuthRedirectPath(), guestOnlyPaths, isAdminPath(), isStaffPath(), roleHomePathMap (+4 more)
+Cohesion: 0.28
+Nodes (13): createAppTheme(), darkPalette, getBackdropGradient(), getMetaThemeColor(), getPalette(), lightPalette, applyThemeMetadata(), getInitialMode() (+5 more)
 
 ### Community 50 - "dependencies"
 Cohesion: 0.17
@@ -407,10 +378,6 @@ Nodes (12): dependencies, @emotion/react, @emotion/styled, @mui/icons-material, 
 ### Community 51 - "public/manifest.json"
 Cohesion: 0.18
 Nodes (10): background_color, description, display, icons, name, orientation, scope, short_name (+2 more)
-
-### Community 52 - "src/index.js"
-Cohesion: 0.31
-Nodes (5): App(), AppProviders(), AppRouter(), root, registerAppServiceWorker()
 
 ### Community 53 - "Patch 18 integration notes"
 Cohesion: 0.22
@@ -628,14 +595,6 @@ Nodes (5): 1) Wire the admin security route, 2) Add a quick link from the admin 
 Cohesion: 0.33
 Nodes (5): Audit logging added by this patch, Database step, Patch 37 integration notes, Recommended follow-up, What this patch wires automatically
 
-### Community 107 - "fetchWorkoutAssignments"
-Cohesion: 0.33
-Nodes (6): fetchWorkoutAssignments(), fetchWorkoutPrograms(), saveWorkoutAssignment(), saveWorkoutProgram(), sortNestedWorkoutAssignment(), sortNestedWorkoutProgram()
-
-### Community 108 - "sendBillingInvoiceEmail"
-Cohesion: 0.33
-Nodes (6): generateDueMembershipInvoices(), generateDueMembershipInvoicesWithEmail(), invokeAdminMemberAction(), issueMembershipBundleInvoice(), parseFunctionError(), sendBillingInvoiceEmail()
-
 ### Community 109 - "gsclaude/sync-architecture.sh"
 Cohesion: 0.70
 Nodes (3): edge(), node(), sync-architecture.sh script
@@ -805,24 +764,24 @@ Cohesion: 0.67
 Nodes (3): browserslist, development, production
 
 ## Knowledge Gaps
-- **724 isolated node(s):** `name`, `version`, `private`, `@emotion/react`, `@emotion/react` (+719 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 854 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **5 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **724 isolated node(s):** `1. High-Level Design (HLD) Topology`, `2. Current Target Directory Tree`, `3. Low-Level Design (LLD) & SOLID Class Schemas`, `1. Starting a New Folder / Project`, `2. Starting with an Existing Project` (+719 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 851 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `useAuth()` connect `useAuth` to `AdminFinancePage.js`, `blogClient.js`, `src/features/dashboard/DashboardPage.js`, `AdminReportsPage.js`, `ref_mui_icons_material`, `ensureSupabase`, `ref_mui_material`, `StaffNotificationsPage.js`, `StaffWorkoutProgramsPage.js`, `StaffToolsPage.js`, `AdminSecurityPage.js`, `AdminBranchesPage.js`, `ClassSchedulePage.js`, `AdminCrmPage.js`, `AppRouter.js`, `AdminPosPage.js`, `ref_react_router_dom`, `src/features/admin/AdminPage.js`, `MemberDetailPage.js`, `StaffHomePage.js`, `StaffBookingsPage.js`, `paths.js`, `access.js`?**
-  _High betweenness centrality (0.026) - this node is a cross-community bridge._
-- **Why does `dependencies` connect `dependencies` to `package.json`?**
-  _High betweenness centrality (0.019) - this node is a cross-community bridge._
+- **Why does `PATHS` connect `paths.js` to `AdminProductionReadinessPage.js`, `AdminFinancePage.js`, `blogClient.js`, `src/features/dashboard/DashboardPage.js`, `AdminReportsPage.js`, `StaffNutritionPage.js`, `src/features/exercises/pages/HomePage.js`, `AdminAccessHardwarePage.js`, `ref_react`, `StaffNotificationsPage.js`, `securityAccess.js`, `StaffWorkoutProgramsPage.js`, `useAuth`, `StaffToolsPage.js`, `ClassSchedulePage.js`, `AdminCrmPage.js`, `AdminAccessControlPage.js`, `AppRouter.js`, `AdminPosPage.js`, `src/components/layout/Navbar.js`, `MemberDetailPage.js`, `StaffHomePage.js`, `RouteFallbackPage.js`, `UtilityToolsPage.js`?**
+  _High betweenness centrality (0.016) - this node is a cross-community bridge._
+- **Why does `useAuth()` connect `useAuth` to `AdminFinancePage.js`, `blogClient.js`, `StaffHomePage.js`, `src/features/dashboard/DashboardPage.js`, `StaffNutritionPage.js`, `AdminReportsPage.js`, `src/features/exercises/pages/HomePage.js`, `ref_react`, `StaffNotificationsPage.js`, `securityAccess.js`, `StaffWorkoutProgramsPage.js`, `StaffToolsPage.js`, `AdminSecurityPage.js`, `ClassSchedulePage.js`, `AdminCrmPage.js`, `AdminPosPage.js`, `src/components/layout/Navbar.js`, `MemberDetailPage.js`?**
+  _High betweenness centrality (0.016) - this node is a cross-community bridge._
 - **Why does `chart.js` connect `package.json` to `AdminFinancePage.js`, `AdminReportsPage.js`?**
-  _High betweenness centrality (0.017) - this node is a cross-community bridge._
-- **What connects `name`, `version`, `private` to the rest of the system?**
+  _High betweenness centrality (0.014) - this node is a cross-community bridge._
+- **What connects `1. High-Level Design (HLD) Topology`, `2. Current Target Directory Tree`, `3. Low-Level Design (LLD) & SOLID Class Schemas` to the rest of the system?**
   _724 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `AdminProductionReadinessPage.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.053548966756513924 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05020850708924104 - nodes in this community are weakly interconnected._
 - **Should `AdminFinancePage.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.06404862085086489 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06886446886446887 - nodes in this community are weakly interconnected._
 - **Should `blogClient.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.07825507825507826 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07997265892002735 - nodes in this community are weakly interconnected._
