@@ -1,4 +1,5 @@
 import { PATHS } from '../../app/paths';
+import { getTonedChipSx } from '../../utils/statusColors';
 
 const normaliseDateValue = (value) => {
   if (!value) {
@@ -260,21 +261,16 @@ export const buildDashboardAlerts = ({
 };
 
 const BOOKING_STATUS_META = {
-  booked: { label: 'Booked', background: '#ecfdf3', color: '#047857' },
-  waitlist: { label: 'Waitlist', background: '#fff7ed', color: '#c2410c' },
-  cancelled: { label: 'Cancelled', background: '#fef2f2', color: '#b91c1c' },
-  attended: { label: 'Attended', background: '#eef2ff', color: '#4338ca' },
-  missed: { label: 'Missed', background: '#f8fafc', color: '#475569' },
+  booked: { label: 'Booked', tone: 'success' },
+  waitlist: { label: 'Waitlist', tone: 'warning' },
+  cancelled: { label: 'Cancelled', tone: 'error' },
+  attended: { label: 'Attended', tone: 'info' },
+  missed: { label: 'Missed', tone: null },
 };
 
 export const getBookingStatusMeta = (status) => BOOKING_STATUS_META[status] || BOOKING_STATUS_META.booked;
 
-export const getBookingStatusChipSx = (status) => {
-  const meta = getBookingStatusMeta(status);
-
-  return {
-    bgcolor: meta.background,
-    color: meta.color,
-    fontWeight: 700,
-  };
-};
+export const getBookingStatusChipSx = (status) => (theme) => getTonedChipSx(
+  theme,
+  getBookingStatusMeta(status).tone,
+);

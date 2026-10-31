@@ -41,6 +41,7 @@ import {
 } from './piRelayBridgeHelpers';
 import RfidCredentialRegistryCard from './RfidCredentialRegistryCard';
 import VendorControllerCommandCard from './VendorControllerCommandCard';
+import { normalizeAccessError } from './accessStabilizationHelpers';
 
 const deviceTypeOptions = [
   { value: 'scanner', label: 'Scanner' },
@@ -268,7 +269,7 @@ export default function AdminAccessHardwarePage() {
       setRecentEvents(eventRows || []);
       setRelayCommands(relayRows || []);
     } catch (fetchError) {
-      setError(fetchError.message || 'Failed to load access hardware data.');
+      setError(normalizeAccessError(fetchError, 'Failed to load access hardware data.'));
     } finally {
       setLoading(false);
     }
@@ -440,7 +441,7 @@ export default function AdminAccessHardwarePage() {
       setSuccessMessage('Access hardware device saved.');
       await loadPage();
     } catch (saveError) {
-      setError(saveError.message || 'Failed to save the access hardware device.');
+      setError(normalizeAccessError(saveError, 'Failed to save the access hardware device.'));
     } finally {
       setSavingDevice(false);
     }
@@ -466,7 +467,7 @@ export default function AdminAccessHardwarePage() {
       setSuccessMessage('Heartbeat recorded for the selected device.');
       await loadPage();
     } catch (heartbeatError) {
-      setError(heartbeatError.message || 'Failed to send the test heartbeat.');
+      setError(normalizeAccessError(heartbeatError, 'Failed to send the test heartbeat.'));
     } finally {
       setSendingHeartbeat(false);
     }
@@ -501,7 +502,7 @@ export default function AdminAccessHardwarePage() {
       setSuccessMessage(buildRelayCompletionMessage(result, selectedRelayDevice) || 'Relay command queued.');
       await loadPage();
     } catch (relayError) {
-      setError(relayError.message || 'Failed to queue the relay bridge command.');
+      setError(normalizeAccessError(relayError, 'Failed to queue the relay bridge command.'));
     } finally {
       setQueueingRelay(false);
     }

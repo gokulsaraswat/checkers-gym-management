@@ -85,7 +85,7 @@ const FeedbackPage = () => {
     <PublicPageShell
       eyebrow="Public website"
       title="Feedback and suggestion page"
-      description="Patch 31 adds a public-safe feedback route so suggestions, service issues, first-visit notes, and website comments can be collected without sending visitors into private member dashboards."
+      description="Share suggestions, service issues, first-visit notes, or website comments. No account needed — every response reaches the team directly."
       chips={['Feedback intake', 'Local draft save', 'Public-safe form']}
       actions={[
         { label: 'Contact the team', to: PATHS.contact },

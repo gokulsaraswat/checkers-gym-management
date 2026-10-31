@@ -1,19 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Box, Button, Stack, TextField, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 
-import { exerciseOptions, fetchData, isRapidApiConfigured } from '../utils/fetchData';
+import { exerciseOptions, FALLBACK_EXERCISE_MESSAGE, fetchDataWithStatus } from '../utils/fetchData';
 import HorizontalScrollbar from './HorizontalScrollbar';
 
 const SearchExercises = ({ setExercises, bodyPart, setBodyPart }) => {
+  const theme = useTheme();
   const [search, setSearch] = useState('');
   const [bodyParts, setBodyParts] = useState([]);
   const [error, setError] = useState('');
+  const [isFallbackData, setIsFallbackData] = useState(false);
 
   useEffect(() => {
     const fetchExercisesData = async () => {
       try {
-        const bodyPartsData = await fetchData('https://exercisedb.p.rapidapi.com/exercises/bodyPartList', exerciseOptions);
+        const { data: bodyPartsData, isFallback } = await fetchDataWithStatus('https://exercisedb.p.rapidapi.com/exercises/bodyPartList', exerciseOptions);
         setBodyParts(['all', ...bodyPartsData]);
+        setIsFallbackData(isFallback);
       } catch (fetchError) {
         setError('Unable to load body part filters.');
       }
@@ -23,28 +27,41 @@ const SearchExercises = ({ setExercises, bodyPart, setBodyPart }) => {
   }, []);
 
   const handleSearch = async () => {
-    if (search) {
-      const exercisesData = await fetchData('https://exercisedb.p.rapidapi.com/exercises', exerciseOptions);
+    const searchTerm = search.trim();
 
-      const searchedExercises = exercisesData.filter(
-        (item) => item.name.toLowerCase().includes(search)
-               || item.target.toLowerCase().includes(search)
-               || item.equipment.toLowerCase().includes(search)
-               || item.bodyPart.toLowerCase().includes(search),
-      );
+    if (!searchTerm) {
+      // Clearing the box restores the current body-part list instead of leaving stale results.
+      const listUrl = bodyPart === 'all'
+        ? 'https://exercisedb.p.rapidapi.com/exercises'
+        : `https://exercisedb.p.rapidapi.com/exercises/bodyPart/${bodyPart}`;
+      const { data: defaultExercises, isFallback: defaultIsFallback } = await fetchDataWithStatus(listUrl, exerciseOptions);
 
-      window.scrollTo({ top: 1800, left: 100, behavior: 'smooth' });
-
-      setSearch('');
-      setExercises(searchedExercises);
+      setIsFallbackData(defaultIsFallback);
+      setExercises(defaultExercises);
+      return;
     }
+
+    const { data: exercisesData, isFallback } = await fetchDataWithStatus('https://exercisedb.p.rapidapi.com/exercises', exerciseOptions);
+    setIsFallbackData(isFallback);
+
+    const searchedExercises = exercisesData.filter(
+      (item) => item.name.toLowerCase().includes(searchTerm)
+             || item.target.toLowerCase().includes(searchTerm)
+             || item.equipment.toLowerCase().includes(searchTerm)
+             || item.bodyPart.toLowerCase().includes(searchTerm),
+    );
+
+    window.scrollTo({ top: 1800, left: 100, behavior: 'smooth' });
+
+    setSearch('');
+    setExercises(searchedExercises);
   };
 
   return (
     <Stack alignItems="center" mt="37px" justifyContent="center" p="20px">
-      {!isRapidApiConfigured ? (
+      {isFallbackData ? (
         <Alert severity="info" sx={{ mb: 3, width: '100%', maxWidth: '1170px', borderRadius: 3 }}>
-          The live exercise API is not connected, so search is using the built-in demo library.
+          {FALLBACK_EXERCISE_MESSAGE}
         </Alert>
       ) : null}
 
@@ -67,7 +84,7 @@ const SearchExercises = ({ setExercises, bodyPart, setBodyPart }) => {
           sx={{
             input: { fontWeight: '700', border: 'none', borderRadius: '4px' },
             width: { lg: '1170px', xs: '350px' },
-            backgroundColor: '#fff',
+            backgroundColor: theme.palette.background.paper,
             borderRadius: '40px',
           }}
           value={search}

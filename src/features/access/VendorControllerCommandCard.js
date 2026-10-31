@@ -61,7 +61,7 @@ const emptyVendorForm = {
   controller_identifier: '',
   door_identifier: '',
   reason: 'Front desk vendor-controller test command',
-  payload_json: '{\n  "source": "admin-vendor-controller"\n}',
+  payload_json: '{\n  "connectorNote": "front-desk controller test"\n}',
   dry_run: true,
 };
 

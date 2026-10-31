@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Alert, Box } from '@mui/material';
 
-import { exerciseOptions, fetchData, youtubeOptions } from '../../../utils/fetchData';
+import { exerciseOptions, FALLBACK_EXERCISE_MESSAGE, fetchDataWithStatus, youtubeOptions } from '../../../utils/fetchData';
 import Detail from '../../../components/Detail';
 import ExerciseVideos from '../../../components/ExerciseVideos';
 import SimilarExercises from '../../../components/SimilarExercises';
@@ -14,6 +14,7 @@ const ExerciseDetailPage = () => {
   const [targetMuscleExercises, setTargetMuscleExercises] = useState(null);
   const [equipmentExercises, setEquipmentExercises] = useState(null);
   const [error, setError] = useState('');
+  const [isFallbackData, setIsFallbackData] = useState(false);
   const { id } = useParams();
 
   useEffect(() => {
@@ -26,22 +27,23 @@ const ExerciseDetailPage = () => {
         const exerciseDbUrl = 'https://exercisedb.p.rapidapi.com';
         const youtubeSearchUrl = 'https://youtube-search-and-download.p.rapidapi.com';
 
-        const exerciseDetailData = await fetchData(`${exerciseDbUrl}/exercises/exercise/${id}`, exerciseOptions);
+        const { data: exerciseDetailData, isFallback: detailIsFallback } = await fetchDataWithStatus(`${exerciseDbUrl}/exercises/exercise/${id}`, exerciseOptions);
         setExerciseDetail(exerciseDetailData);
+        setIsFallbackData(detailIsFallback);
 
-        const exerciseVideosData = await fetchData(
+        const { data: exerciseVideosData } = await fetchDataWithStatus(
           `${youtubeSearchUrl}/search?query=${exerciseDetailData.name} exercise`,
           youtubeOptions,
         );
         setExerciseVideos(exerciseVideosData.contents || []);
 
-        const targetMuscleExercisesData = await fetchData(
+        const { data: targetMuscleExercisesData } = await fetchDataWithStatus(
           `${exerciseDbUrl}/exercises/target/${exerciseDetailData.target}`,
           exerciseOptions,
         );
         setTargetMuscleExercises(targetMuscleExercisesData || []);
 
-        const equipmentExercisesData = await fetchData(
+        const { data: equipmentExercisesData } = await fetchDataWithStatus(
           `${exerciseDbUrl}/exercises/equipment/${exerciseDetailData.equipment}`,
           exerciseOptions,
         );
@@ -60,6 +62,11 @@ const ExerciseDetailPage = () => {
 
   return (
     <Box sx={{ mt: { lg: '96px', xs: '60px' } }}>
+      {isFallbackData ? (
+        <Alert severity="info" sx={{ mb: 3, borderRadius: 3 }}>
+          {FALLBACK_EXERCISE_MESSAGE}
+        </Alert>
+      ) : null}
       {error ? (
         <Alert severity="warning" sx={{ mb: 3, borderRadius: 3 }}>
           {error}

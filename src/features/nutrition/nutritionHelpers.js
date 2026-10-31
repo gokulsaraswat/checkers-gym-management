@@ -1,3 +1,5 @@
+import { getTonedChipSx } from '../../utils/statusColors';
+
 const createClientKey = (prefix = 'nutrition') => {
   if (globalThis.crypto?.randomUUID) {
     return `${prefix}-${globalThis.crypto.randomUUID()}`;
@@ -38,24 +40,20 @@ export const SCORE_OPTIONS = [
 ];
 
 const TEMPLATE_STATUS_META = {
-  draft: { label: 'Draft', background: '#eff6ff', color: '#1d4ed8' },
-  active: { label: 'Active', background: '#ecfdf3', color: '#047857' },
-  archived: { label: 'Archived', background: '#f8fafc', color: '#475569' },
+  draft: { label: 'Draft', tone: 'info' },
+  active: { label: 'Active', tone: 'success' },
+  archived: { label: 'Archived', tone: null },
 };
 
 const ASSIGNMENT_STATUS_META = {
-  planned: { label: 'Planned', background: '#eff6ff', color: '#1d4ed8' },
-  active: { label: 'Active', background: '#ecfdf3', color: '#047857' },
-  paused: { label: 'Paused', background: '#fff7ed', color: '#c2410c' },
-  completed: { label: 'Completed', background: '#eef2ff', color: '#4338ca' },
-  cancelled: { label: 'Cancelled', background: '#fef2f2', color: '#b91c1c' },
+  planned: { label: 'Planned', tone: 'info' },
+  active: { label: 'Active', tone: 'success' },
+  paused: { label: 'Paused', tone: 'warning' },
+  completed: { label: 'Completed', tone: 'success' },
+  cancelled: { label: 'Cancelled', tone: null },
 };
 
-const getMetaSx = (meta) => ({
-  bgcolor: meta.background,
-  color: meta.color,
-  fontWeight: 700,
-});
+const getMetaSx = (meta) => (theme) => getTonedChipSx(theme, meta.tone);
 
 export const getNutritionTemplateStatusMeta = (status) => (
   TEMPLATE_STATUS_META[status] || TEMPLATE_STATUS_META.draft

@@ -959,7 +959,7 @@ export default function AdminMarketingPage() {
 
       <Divider sx={{ my: 3 }} />
       <Typography variant="caption" color="text.secondary">
-        Patch 25 is intentionally additive. It creates the marketing data model and admin workspace but does not automatically send campaigns through third-party channels yet.
+        This workspace manages campaign planning and tracking. It does not send campaigns through third-party channels yet — export or trigger those from your provider.
       </Typography>
     </Box>
   );

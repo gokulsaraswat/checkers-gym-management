@@ -26,6 +26,7 @@ import SetupNotice from '../../components/common/SetupNotice';
 import EmptyStateCard from '../../components/common/EmptyStateCard';
 import { useAuth } from '../../context/AuthContext';
 import BranchSummaryCards from './BranchSummaryCards';
+import useDebouncedValue from '../../utils/useDebouncedValue';
 import {
   assignMemberHomeBranch,
   assignStaffToBranch,
@@ -104,6 +105,7 @@ const AdminBranchesPage = () => {
   const [staffAssignment, setStaffAssignment] = useState(emptyStaffAssignment);
   const [memberAssignment, setMemberAssignment] = useState(emptyMemberAssignment);
   const [memberSearch, setMemberSearch] = useState('');
+  const debouncedMemberSearch = useDebouncedValue(memberSearch, 300);
   const [feedback, setFeedback] = useState({ severity: 'success', message: '' });
   const [busyAction, setBusyAction] = useState('');
 
@@ -131,7 +133,7 @@ const AdminBranchesPage = () => {
     setMembers(nextMembers);
   }, []);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (preferredBranchId = '') => {
     setLoading(true);
 
     try {
@@ -146,28 +148,30 @@ const AdminBranchesPage = () => {
       setMemberCandidates(nextMemberCandidates);
 
       const fallbackBranchId = nextBranches[0]?.id || '';
-      setSelectedBranchId((current) => current || fallbackBranchId);
-
-      if (fallbackBranchId) {
-        const activeBranch = nextBranches.find((branch) => branch.id === (selectedBranchId || fallbackBranchId)) || nextBranches[0];
-        setBranchForm({
-          ...emptyBranchForm,
-          ...activeBranch,
-          capacity_limit: activeBranch?.capacity_limit ?? '',
-          opened_on: activeBranch?.opened_on || '',
-        });
-        await loadBranchDetail(activeBranch.id, memberSearch);
-      }
+      // The branch-detail effect below reacts to this id, so no detail fetch is needed here.
+      setSelectedBranchId((current) => preferredBranchId || current || fallbackBranchId);
     } catch (error) {
       setFeedback({ severity: 'error', message: error.message || 'Unable to load branch operations.' });
     } finally {
       setLoading(false);
     }
-  }, [loadBranchDetail, memberSearch, selectedBranchId]);
+  }, []);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Keep the summary cards, staff roster, and member table in step with the selected
+  // branch (and member search) instead of waiting for a manual refresh.
+  useEffect(() => {
+    if (!selectedBranchId) {
+      return;
+    }
+
+    loadBranchDetail(selectedBranchId, debouncedMemberSearch).catch((error) => {
+      setFeedback({ severity: 'error', message: error.message || 'Unable to load the branch workspace.' });
+    });
+  }, [debouncedMemberSearch, loadBranchDetail, selectedBranchId]);
 
   useEffect(() => {
     if (!selectedBranch) {
@@ -207,8 +211,7 @@ const AdminBranchesPage = () => {
       setBusyAction('save-branch');
       const savedBranch = await saveBranch(branchForm);
       setFeedback({ severity: 'success', message: branchForm.id ? 'Branch updated successfully.' : 'Branch created successfully.' });
-      await loadData();
-      setSelectedBranchId(savedBranch.id);
+      await loadData(savedBranch.id);
     } catch (error) {
       setFeedback({ severity: 'error', message: error.message || 'Unable to save branch.' });
     } finally {

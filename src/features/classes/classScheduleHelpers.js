@@ -1,3 +1,5 @@
+import { getTonedChipSx } from '../../utils/statusColors';
+
 export const SESSION_TYPE_OPTIONS = [
   { value: 'group_class', label: 'Group class' },
   { value: 'personal_training', label: 'Personal training' },
@@ -101,22 +103,21 @@ export const getSessionStatusLabel = (value) => (
   SESSION_STATUS_OPTIONS.find((option) => option.value === value)?.label || 'Scheduled'
 );
 
-export const getSessionStatusChipSx = (value) => {
+export const getSessionStatusChipSx = (value) => (theme) => {
   if (value === 'completed') {
-    return { bgcolor: '#ecfdf3', color: '#027a48', fontWeight: 700 };
+    return getTonedChipSx(theme, 'success');
   }
 
   if (value === 'cancelled') {
-    return { bgcolor: '#fef3f2', color: '#b42318', fontWeight: 700 };
+    return getTonedChipSx(theme, 'error');
   }
 
-  return { bgcolor: '#fff7ed', color: '#b54708', fontWeight: 700 };
+  return getTonedChipSx(theme, 'warning');
 };
 
-export const getVisibilityChipSx = (value) => (
-  value === 'staff_only'
-    ? { bgcolor: '#eff8ff', color: '#175cd3', fontWeight: 700 }
-    : { bgcolor: '#fff0f0', color: '#ff2625', fontWeight: 700 }
+export const getVisibilityChipSx = (value) => (theme) => getTonedChipSx(
+  theme,
+  value === 'staff_only' ? 'info' : 'primary',
 );
 
 export const getVisibilityLabel = (value) => (

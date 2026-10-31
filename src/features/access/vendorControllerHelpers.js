@@ -172,28 +172,23 @@ export function buildVendorControllerPayload({
     doorIdentifier: normalizeText(doorIdentifier) || getVendorControllerDoorIdentifier(device, accessPoint) || null,
   };
 
-  const mergedPayload = {
-    ...payload,
-    ...(extraPayload || {}),
-  };
+  const extras = { ...(extraPayload || {}) };
 
-  const sourceValue = normalizeText(mergedPayload.source);
   const controllerValue = normalizeText(
-    mergedPayload.controllerIdentifier
-      || mergedPayload.controller_id
+    extras.controllerIdentifier
+      || extras.controller_id
       || payload.controllerIdentifier,
   );
   const doorValue = normalizeText(
-    mergedPayload.doorIdentifier
-      || mergedPayload.door_id
+    extras.doorIdentifier
+      || extras.door_id
       || payload.doorIdentifier,
   );
 
   return {
-    ...mergedPayload,
-    source: sourceValue || payload.source,
-    dryRun: Boolean(mergedPayload.dryRun),
-    commandType: normalizeVendorCommandType(mergedPayload.commandType || payload.commandType),
+    ...extras,
+    // Constructed tracking fields are applied last so free-form connector JSON cannot overwrite the audit trail.
+    ...payload,
     controllerIdentifier: controllerValue || null,
     doorIdentifier: doorValue || null,
   };

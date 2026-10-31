@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -229,12 +229,17 @@ const StaffToolsPage = () => {
     loadDirectories();
   }, [loadDirectories]);
 
+  const hasLoadedWorkspaceRef = useRef(false);
+
+  // Only the first workspace load blocks the page; assignment/commission filter
+  // changes refresh in the background instead of flashing <LoadingScreen/>.
   useEffect(() => {
     if (!targetStaffId) {
       return;
     }
 
-    loadWorkspace(true);
+    loadWorkspace(!hasLoadedWorkspaceRef.current);
+    hasLoadedWorkspaceRef.current = true;
   }, [loadWorkspace, targetStaffId]);
 
   useEffect(() => {
@@ -744,6 +749,8 @@ const StaffToolsPage = () => {
                         <Grid item xs={12} sm={6}>
                           <TextField
                             type="number"
+                            inputProps={{ min: '0', step: '0.01' }}
+                            error={Number(compensationForm.monthly_retainer || 0) < 0}
                             label="Monthly retainer"
                             value={compensationForm.monthly_retainer}
                             onChange={(event) => setCompensationForm((currentValue) => ({
@@ -757,6 +764,8 @@ const StaffToolsPage = () => {
                         <Grid item xs={12} sm={6}>
                           <TextField
                             type="number"
+                            inputProps={{ min: '0', step: '0.01' }}
+                            error={Number(compensationForm.per_session_bonus || 0) < 0}
                             label="Per-session bonus"
                             value={compensationForm.per_session_bonus}
                             onChange={(event) => setCompensationForm((currentValue) => ({
@@ -770,6 +779,9 @@ const StaffToolsPage = () => {
                         <Grid item xs={12} sm={6}>
                           <TextField
                             type="number"
+                            inputProps={{ min: '0', max: '100', step: '0.1' }}
+                            error={Number(compensationForm.commission_rate_membership || 0) < 0 || Number(compensationForm.commission_rate_membership || 0) > 100}
+                            helperText="Percentage between 0 and 100."
                             label="Membership commission %"
                             value={compensationForm.commission_rate_membership}
                             onChange={(event) => setCompensationForm((currentValue) => ({
@@ -783,6 +795,9 @@ const StaffToolsPage = () => {
                         <Grid item xs={12} sm={6}>
                           <TextField
                             type="number"
+                            inputProps={{ min: '0', max: '100', step: '0.1' }}
+                            error={Number(compensationForm.commission_rate_pt || 0) < 0 || Number(compensationForm.commission_rate_pt || 0) > 100}
+                            helperText="Percentage between 0 and 100."
                             label="PT commission %"
                             value={compensationForm.commission_rate_pt}
                             onChange={(event) => setCompensationForm((currentValue) => ({
@@ -1197,6 +1212,8 @@ const StaffToolsPage = () => {
                             <Grid item xs={12} md={5}>
                               <TextField
                                 type="number"
+                                inputProps={{ min: '0.01', step: '0.01' }}
+                                error={commissionEntryForm.amount !== '' && !(Number(commissionEntryForm.amount) > 0)}
                                 label="Amount"
                                 value={commissionEntryForm.amount}
                                 onChange={(event) => setCommissionEntryForm((currentValue) => ({

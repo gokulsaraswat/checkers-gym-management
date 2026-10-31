@@ -45,7 +45,7 @@ const AdminPaymentsPage = () => {
     provider: 'razorpay',
     config_name: 'Primary Razorpay',
     is_active: true,
-    public_metadata: { notes: 'Configured via Patch 17 replacement bundle' },
+    public_metadata: { notes: 'Configured from the admin payments workspace' },
   });
   const [form, setForm] = useState(defaultForm);
 

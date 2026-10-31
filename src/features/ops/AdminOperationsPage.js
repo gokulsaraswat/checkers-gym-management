@@ -296,7 +296,7 @@ export default function AdminOperationsPage() {
         runStatus: 'completed',
         runSource: 'manual',
         backupLocation: `manual://${safeLocationKey}`,
-        notes: 'Manual verification recorded from the Patch 39 admin ops workspace.',
+        notes: 'Manual verification recorded from the admin ops workspace.',
       });
 
       setFeedback({
@@ -379,7 +379,7 @@ export default function AdminOperationsPage() {
         onRetry={() => hydrate()}
         loadingLabel="Loading ops toolkit…"
         empty={isEmpty}
-        title="Run the Patch 39 migration to enable ops tooling"
+        title="Run the latest database migration to enable ops tooling"
         description="The workspace is ready, but the backup, export, and health-check tables or seed records are still empty."
         emptyActionLabel="Seed defaults"
         onEmptyAction={handleSeedDefaults}

@@ -7,19 +7,16 @@ import {
   Typography,
 } from '@mui/material';
 
+import { getTonedChipSx } from '../../../utils/statusColors';
 import { formatProgressDate } from '../progressHelpers';
 
 const KIND_META = {
-  snapshot: { label: 'Snapshot', background: '#eef2ff', color: '#4338ca' },
-  measurement: { label: 'Measurement', background: '#ecfeff', color: '#0f766e' },
-  record: { label: 'Personal record', background: '#ecfdf3', color: '#047857' },
+  snapshot: { label: 'Snapshot', tone: 'info' },
+  measurement: { label: 'Measurement', tone: 'success' },
+  record: { label: 'Personal record', tone: 'success' },
 };
 
-const getKindMeta = (kind) => KIND_META[kind] || {
-  label: 'Activity',
-  background: '#f8fafc',
-  color: '#475569',
-};
+const getKindMeta = (kind) => KIND_META[kind] || { label: 'Activity', tone: null };
 
 const ProgressTimelineCard = ({
   title = 'Recent progress activity',
@@ -28,7 +25,7 @@ const ProgressTimelineCard = ({
   emptyStateText = 'No progress activity yet.',
   limit = 10,
 }) => (
-  <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff', height: '100%' }}>
+  <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, bgcolor: 'background.paper', height: '100%' }}>
     <Stack spacing={3}>
       <Stack spacing={0.5}>
         <Typography color="#ff2625" fontWeight={700}>
@@ -60,7 +57,7 @@ const ProgressTimelineCard = ({
                     mt: 1,
                     borderRadius: '999px',
                     flexShrink: 0,
-                    bgcolor: kindMeta.color,
+                    bgcolor: kindMeta.tone ? `${kindMeta.tone}.main` : 'text.disabled',
                   }}
                 />
                 <Paper variant="outlined" sx={{ flex: 1, p: 2, borderRadius: 3, boxShadow: 'none' }}>
@@ -77,7 +74,7 @@ const ProgressTimelineCard = ({
                       <Chip
                         size="small"
                         label={kindMeta.label}
-                        sx={{ bgcolor: kindMeta.background, color: kindMeta.color, fontWeight: 700 }}
+                        sx={(theme) => getTonedChipSx(theme, kindMeta.tone)}
                       />
                     </Stack>
                     <Typography variant="body2" color="text.secondary">

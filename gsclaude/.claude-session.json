@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "updated": "2026-09-10",
+  "sys": {
+    "mode": "Personal Project",
+    "scale": "Midscale — feature-sliced SPA monolith on a managed BaaS",
+    "stack": [
+      "React 18",
+      "CRA (react-scripts 5)",
+      "MUI v5 + Emotion",
+      "react-router-dom 6",
+      "Supabase (Postgres + RPC + Edge Functions)",
+      "chart.js",
+      "jspdf",
+      "xlsx"
+    ],
+    "architectural_pattern": "Feature-sliced vertical modules under src/features/<domain>/, each owning its own Page components, presentational Cards, a <domain>Client.js data-access boundary, and a <domain>Helpers.js pure-logic layer. Cross-cutting concerns live in src/theme, src/components/common, src/utils, src/app."
+  },
+  "ui_state": {
+    "design_tokens": "src/theme/themeFactory.js (palette, customShadows.elevated/soft), src/theme/responsiveTokens.js, mode via src/theme/ThemeModeProvider.js",
+    "motion_library": "none installed — framer-motion planned for src/theme/motion.js, gated on the existing useReducedMotionPreference hook",
+    "active_component": "src/features/access/StaffAccessControlPage.js"
+  },
+  "sprint": {
+    "goal": "Correctness-first overhaul of the admin/staff panels, then dark-mode token cleanup, user-facing copy cleanup, and a motion/design layer. Additive only — no schema edits, no breaking prop changes.",
+    "bugs": [
+      "RESOLVED access: clear-scan-buffer disabled logic inverted (verifying && !buffer) let staff wipe verifyResult mid-flight — QR page and RFID card",
+      "RESOLVED access: every successful scan ran a full loadPage(), flickering the console and disabling unrelated selects; now a logs-only refresh",
+      "RESOLVED access: wedge-scanner focus lost after touching the Access Point / Scanner / Relay selects; added onClose refocus and a 'Ready to scan' armed indicator",
+      "RESOLVED access: Enter-key handler bypassed the button's disabled gate, double-firing on scanner firmware repeat",
+      "RESOLVED access: RfidNfcConsoleCard never refreshed its own heartbeat/device data after a scan; loadCardData now takes { showCardLoader } and runs in background mode",
+      "RESOLVED access: buildVendorControllerPayload merged free-form connector JSON over protected tracking fields; the default payload's 'source' key silently corrupted the audit trail. Protected keys now applied last; default key renamed to connectorNote",
+      "RESOLVED access: AdminAccessHardwarePage surfaced raw error.message in 4 catches instead of normalizeAccessError",
+      "RESOLVED tooling: sync-architecture.sh emitted 598 duplicate import edges (edge() wrote straight to $GRAPH, so the trailing sort -u | head was dead code); also a false-positive empty PyLayer from node_modules .py files, and it required being copied to the repo root to run",
+      "OPEN security: flagSearch + incident filters sit in loadPage's deps while `if (loading) return <LoadingScreen/>` gates the page — typing one character unmounts the search input",
+      "OPEN security: no required-field validation on override/incident/flag forms; no confirm on override delete or portal-access disable; audit log has a hard 80-row cap and hides actionKey/entityType/branchId filters",
+      "OPEN blog: shouldUseFallback() treats network/permission failures as 'Supabase unconfigured' and silently reroutes writes to localStorage, reporting a false 'saved'",
+      "OPEN branches: AdminBranchesPage has no effect keyed on selectedBranchId, so detail panes show the previous branch until a manual refresh; new-branch create also loads a stale id",
+      "OPEN reports: expenseTotal fetched by reportYear but re-filtered by independent start/end pickers; invoice/payment fetches have no server-side date filter and a fixed 600/800 cap; no startDate <= endDate check",
+      "OPEN pos: sale quantity has no client-side current_stock cap; buildSaleDraftTotals clamps to 0 so an over-discount silently completes a free sale",
+      "OPEN billing: sortBillingInvoices is descending but buildBillingSummary uses dueInvoices[0] as the next-billing fallback, picking the furthest-out invoice; negative unit_price/tax/discount unvalidated; manual Paid/Overdue status silently recalculated",
+      "OPEN plans: negative price clamped to 0 server-side instead of rejected; bundle-issue member selector filters by role but not is_active",
+      "OPEN crm: 'Mark lost' never captures lost_reason; unused parseCommaTags import",
+      "OPEN staff: commission amounts and compensation rates unvalidated, inconsistent with saveOperatingExpense in the same service",
+      "OPEN notifications: no debounce on activity search (full LoadingScreen per keystroke); Preview/Run reminder reads the last *saved* rule, silently testing stale config against an edited draft",
+      "OPEN exercises: fetchData falls back to sample data silently; only the missing-key case is surfaced, not a failed live call. Clear-search leaves stale results"
+    ],
+    "done": [
+      "Access Desk correctness pass (7 fixes) — StaffAccessControlPage.js, RfidNfcConsoleCard.js, vendorControllerHelpers.js, VendorControllerCommandCard.js, AdminAccessHardwarePage.js",
+      "gsclaude kit vendored into the overhaul worktree; sync-architecture.sh dedup + path + empty-layer fixes; .project-architecture.md generated"
+    ],
+    "todo_next": [
+      "Extract the shared filter-refresh pattern: split mount-only effect from a filter effect calling the loader with showPageLoader:false, plus a 300ms debounce on free-text search. Apply to Security, StaffBilling, StaffTools, StaffNotifications",
+      "Add src/utils/statusColors.js — getStatusChipSx(theme, status) returning alpha-blended theme tokens; replace hardcoded hex in attendance, progress, bookings, access, exercises",
+      "Fix blogClient shouldUseFallback to gate on !hasSupabase() only",
+      "Strip 'Patch NN' labels from user-facing copy across exercises, publicSite, access, ops, marketing",
+      "Add framer-motion + src/theme/motion.js + MotionCard, reusing customShadows and useReducedMotionPreference",
+      "Footer redesign, public-site polish, Contact map embed with placeholder locationEmbedConfig",
+      "Full admin walkthrough as admin@gmail.com, then npm run lint"
+    ]
+  },
+  "context_window": {
+    "files_loaded": [
+      "src/features/access/StaffAccessControlPage.js",
+      "src/features/access/RfidNfcConsoleCard.js",
+      "src/features/access/vendorControllerHelpers.js",
+      "src/features/access/VendorControllerCommandCard.js",
+      "src/features/access/AdminAccessHardwarePage.js",
+      "src/features/security/AdminSecurityPage.js",
+      "gsclaude/sync-architecture.sh"
+    ],
+    "pending_lld_updates": [
+      "Document the loader contract once the shared filter-refresh pattern is extracted: loadX({ showPageLoader = true }) is the single entry point; mount effects call it bare, filter effects pass false.",
+      "Document getStatusChipSx(theme, status) as the only sanctioned source of status chip colour.",
+      "Record that <domain>Client.js is the sole Supabase boundary per feature and that local-mock fallback is permitted only when Supabase is unconfigured, never on request failure."
+    ]
+  }
+}

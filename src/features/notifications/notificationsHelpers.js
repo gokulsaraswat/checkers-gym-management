@@ -1,3 +1,5 @@
+import { getTonedChipSx } from '../../utils/statusColors';
+
 export const NOTIFICATION_TYPE_OPTIONS = [
   { value: 'info', label: 'General update' },
   { value: 'billing', label: 'Billing reminder' },
@@ -209,16 +211,16 @@ export const DEFAULT_REMINDER_RULES = [
 ];
 
 const notificationTypeMeta = {
-  info: { label: 'Info', background: '#eff6ff', color: '#1d4ed8' },
-  billing: { label: 'Billing', background: '#fff7ed', color: '#c2410c' },
-  class: { label: 'Class', background: '#ecfeff', color: '#0f766e' },
-  workout: { label: 'Workout', background: '#f5f3ff', color: '#6d28d9' },
-  nutrition: { label: 'Nutrition', background: '#ecfdf3', color: '#047857' },
-  progress: { label: 'Progress', background: '#eef2ff', color: '#4338ca' },
-  attendance: { label: 'Attendance', background: '#fef3c7', color: '#92400e' },
-  success: { label: 'Success', background: '#ecfdf3', color: '#047857' },
-  warning: { label: 'Warning', background: '#fff7ed', color: '#c2410c' },
-  error: { label: 'Urgent', background: '#fef2f2', color: '#b91c1c' },
+  info: { label: 'Info', tone: 'info' },
+  billing: { label: 'Billing', tone: 'warning' },
+  class: { label: 'Class', tone: 'success' },
+  workout: { label: 'Workout', tone: 'secondary' },
+  nutrition: { label: 'Nutrition', tone: 'success' },
+  progress: { label: 'Progress', tone: 'info' },
+  attendance: { label: 'Attendance', tone: 'warning' },
+  success: { label: 'Success', tone: 'success' },
+  warning: { label: 'Warning', tone: 'warning' },
+  error: { label: 'Urgent', tone: 'error' },
   system: { label: 'System', background: '#f8fafc', color: '#475569' },
   marketing: { label: 'Offer', background: '#fdf2f8', color: '#be185d' },
 };
@@ -258,14 +260,10 @@ export const getNotificationTypeMeta = (type) => notificationTypeMeta[type] || n
 
 export const getNotificationTypeLabel = (type) => getNotificationTypeMeta(type).label;
 
-export const getNotificationTypeChipSx = (type) => {
-  const meta = getNotificationTypeMeta(type);
-  return {
-    bgcolor: meta.background,
-    color: meta.color,
-    fontWeight: 700,
-  };
-};
+export const getNotificationTypeChipSx = (type) => (theme) => getTonedChipSx(
+  theme,
+  getNotificationTypeMeta(type).tone,
+);
 
 export const formatNotificationDate = (value) => {
   if (!value) {
@@ -448,8 +446,7 @@ export const getNotificationReadLabel = (notification = {}) => (
   notification?.is_read ? 'Read' : 'Unread'
 );
 
-export const getNotificationReadChipSx = (notification = {}) => (
-  notification?.is_read
-    ? { bgcolor: '#f8fafc', color: '#475569', fontWeight: 700 }
-    : { bgcolor: '#fff1f2', color: '#be123c', fontWeight: 700 }
+export const getNotificationReadChipSx = (notification = {}) => (theme) => getTonedChipSx(
+  theme,
+  notification?.is_read ? null : 'primary',
 );

@@ -1,3 +1,5 @@
+import { getTonedChipSx } from '../../utils/statusColors';
+
 export const LEAD_STAGE_OPTIONS = [
   { value: 'new', label: 'New' },
   { value: 'contacted', label: 'Contacted' },
@@ -163,23 +165,21 @@ export const getInteractionTypeLabel = (value) => (
   LEAD_INTERACTION_TYPE_OPTIONS.find((option) => option.value === value)?.label || 'Update'
 );
 
-export const getLeadStageChipSx = (value) => {
-  const palette = {
-    new: { bgcolor: '#ecfeff', color: '#155e75' },
-    contacted: { bgcolor: '#eff6ff', color: '#1d4ed8' },
-    trial_scheduled: { bgcolor: '#f5f3ff', color: '#6d28d9' },
-    trial_completed: { bgcolor: '#eef2ff', color: '#4338ca' },
-    qualified: { bgcolor: '#fff7ed', color: '#c2410c' },
-    won: { bgcolor: '#ecfdf5', color: '#047857' },
-    lost: { bgcolor: '#fef2f2', color: '#b91c1c' },
-    dormant: { bgcolor: '#f3f4f6', color: '#374151' },
-  };
-
-  return {
-    fontWeight: 700,
-    ...(palette[value] || palette.dormant),
-  };
+const LEAD_STAGE_TONES = {
+  new: 'info',
+  contacted: 'info',
+  trial_scheduled: 'secondary',
+  trial_completed: 'secondary',
+  qualified: 'warning',
+  won: 'success',
+  lost: 'error',
+  dormant: null,
 };
+
+export const getLeadStageChipSx = (value) => (theme) => getTonedChipSx(
+  theme,
+  LEAD_STAGE_TONES[value] ?? null,
+);
 
 export const getFollowUpStatus = (lead) => {
   if (!lead?.next_follow_up_at) {
@@ -219,19 +219,19 @@ export const getFollowUpLabel = (lead) => {
   return 'No follow-up';
 };
 
-export const getFollowUpChipSx = (lead) => {
+export const getFollowUpChipSx = (lead) => (theme) => {
   const status = getFollowUpStatus(lead);
 
   if (status === 'overdue') {
-    return { bgcolor: '#fef2f2', color: '#b91c1c', fontWeight: 700 };
+    return getTonedChipSx(theme, 'error');
   }
   if (status === 'today') {
-    return { bgcolor: '#fff7ed', color: '#c2410c', fontWeight: 700 };
+    return getTonedChipSx(theme, 'warning');
   }
   if (status === 'upcoming') {
-    return { bgcolor: '#eff6ff', color: '#1d4ed8', fontWeight: 700 };
+    return getTonedChipSx(theme, 'info');
   }
-  return { bgcolor: '#f3f4f6', color: '#374151', fontWeight: 700 };
+  return getTonedChipSx(theme, null);
 };
 
 export const filterLeads = (leads = [], filters = {}) => {

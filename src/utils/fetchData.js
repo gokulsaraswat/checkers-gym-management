@@ -62,9 +62,15 @@ const fallbackResponse = (url) => {
   return [];
 };
 
-export const fetchData = async (url, options) => {
+/**
+ * Fetch live exercise data, falling back to the bundled sample library.
+ *
+ * Returns `{ data, isFallback }` so callers can tell real API results apart from
+ * sample data — a silent fallback used to look identical to a successful call.
+ */
+export const fetchDataWithStatus = async (url, options) => {
   if (!isRapidApiConfigured) {
-    return fallbackResponse(url);
+    return { data: fallbackResponse(url), isFallback: true };
   }
 
   try {
@@ -74,8 +80,15 @@ export const fetchData = async (url, options) => {
       throw new Error(`Request failed with status ${res.status}`);
     }
 
-    return await res.json();
+    return { data: await res.json(), isFallback: false };
   } catch (error) {
-    return fallbackResponse(url);
+    return { data: fallbackResponse(url), isFallback: true };
   }
 };
+
+export const fetchData = async (url, options) => {
+  const { data } = await fetchDataWithStatus(url, options);
+  return data;
+};
+
+export const FALLBACK_EXERCISE_MESSAGE = 'Showing sample exercises — live exercise data is unavailable right now.';

@@ -5,6 +5,10 @@ import {
   Button,
   Checkbox,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   FormControlLabel,
   Grid,
@@ -68,7 +72,6 @@ import {
   LEAD_SOURCE_OPTIONS,
   LEAD_STAGE_OPTIONS,
   LEAD_STATUS_FILTER_OPTIONS,
-  parseCommaTags,
   sortInteractions,
   sortLeads,
 } from './crmHelpers';
@@ -99,6 +102,7 @@ const AdminCrmPage = () => {
   const [savingLead, setSavingLead] = useState(false);
   const [savingInteraction, setSavingInteraction] = useState(false);
   const [actingLeadId, setActingLeadId] = useState('');
+  const [lostDialog, setLostDialog] = useState({ lead: null, reason: '' });
   const [feedback, setFeedback] = useState({ type: '', message: '' });
 
   const [leads, setLeads] = useState([]);
@@ -286,14 +290,14 @@ const AdminCrmPage = () => {
     }
   };
 
-  const handleAdvanceStage = async (lead, nextStage) => {
+  const handleAdvanceStage = async (lead, nextStage, extras = {}) => {
     if (!nextStage) {
       return;
     }
 
     try {
       setActingLeadId(lead.id);
-      const savedLead = await updateCrmLeadStage(lead.id, nextStage, user?.id || null);
+      const savedLead = await updateCrmLeadStage(lead.id, nextStage, user?.id || null, extras);
       setLeads((current) => current.map((item) => (item.id === savedLead.id ? savedLead : item)));
       setSelectedLeadId(savedLead.id);
       setFeedback({
@@ -305,6 +309,17 @@ const AdminCrmPage = () => {
     } finally {
       setActingLeadId('');
     }
+  };
+
+  const handleConfirmMarkLost = async () => {
+    const lead = lostDialog.lead;
+
+    if (!lead) {
+      return;
+    }
+
+    setLostDialog({ lead: null, reason: '' });
+    await handleAdvanceStage(lead, 'lost', { lost_reason: lostDialog.reason.trim() || null });
   };
 
   const handleSaveInteraction = async (event) => {
@@ -752,7 +767,7 @@ const AdminCrmPage = () => {
                                 Mark won
                               </Button>
                               <Button
-                                onClick={() => handleAdvanceStage(selectedLead, 'lost')}
+                                onClick={() => setLostDialog({ lead: selectedLead, reason: selectedLead.lost_reason || '' })}
                                 disabled={actingLeadId === selectedLead.id}
                                 variant="outlined"
                                 color="warning"
@@ -880,6 +895,41 @@ const AdminCrmPage = () => {
           </Grid>
         </>
       )}
+
+      <Dialog
+        open={Boolean(lostDialog.lead)}
+        onClose={() => setLostDialog({ lead: null, reason: '' })}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Mark {lostDialog.lead?.full_name || 'this lead'} as lost</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            fullWidth
+            multiline
+            minRows={3}
+            margin="dense"
+            label="Reason (optional)"
+            placeholder="Price, joined a competitor, moved away, no response…"
+            value={lostDialog.reason}
+            onChange={(event) => setLostDialog((current) => ({ ...current, reason: event.target.value }))}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLostDialog({ lead: null, reason: '' })} sx={{ textTransform: 'none' }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmMarkLost}
+            variant="contained"
+            color="warning"
+            sx={{ textTransform: 'none' }}
+          >
+            Mark lost
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

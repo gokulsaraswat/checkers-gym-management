@@ -1,3 +1,5 @@
+import { getTonedChipSx } from '../../utils/statusColors';
+
 const createClientKey = (prefix = 'billing') => {
   if (globalThis.crypto?.randomUUID) {
     return `${prefix}-${globalThis.crypto.randomUUID()}`;
@@ -35,6 +37,15 @@ export const INVOICE_STATUS_OPTIONS = [
   { value: 'refunded', label: 'Refunded' },
 ];
 
+// saveBillingInvoice only honours these; paid / partial / overdue are always derived
+// from recorded payments and the due date, so offering them in the editor is misleading.
+export const INVOICE_SETTABLE_STATUS_OPTIONS = [
+  { value: 'draft', label: 'Draft' },
+  { value: 'open', label: 'Open (status follows payments)' },
+  { value: 'void', label: 'Void' },
+  { value: 'refunded', label: 'Refunded' },
+];
+
 export const PAYMENT_METHOD_OPTIONS = [
   { value: 'upi', label: 'UPI' },
   { value: 'card', label: 'Card' },
@@ -53,28 +64,24 @@ export const PAYMENT_STATUS_OPTIONS = [
 ];
 
 const INVOICE_STATUS_META = {
-  draft: { label: 'Draft', background: '#eff6ff', color: '#1d4ed8' },
-  open: { label: 'Open', background: '#fff7ed', color: '#c2410c' },
-  partial: { label: 'Partial', background: '#fef3c7', color: '#92400e' },
-  paid: { label: 'Paid', background: '#ecfdf3', color: '#047857' },
-  overdue: { label: 'Overdue', background: '#fef2f2', color: '#b91c1c' },
-  void: { label: 'Void', background: '#f8fafc', color: '#475569' },
-  refunded: { label: 'Refunded', background: '#eef2ff', color: '#4338ca' },
+  draft: { label: 'Draft', tone: 'info' },
+  open: { label: 'Open', tone: 'warning' },
+  partial: { label: 'Partial', tone: 'warning' },
+  paid: { label: 'Paid', tone: 'success' },
+  overdue: { label: 'Overdue', tone: 'error' },
+  void: { label: 'Void', tone: null },
+  refunded: { label: 'Refunded', tone: 'info' },
 };
 
 const PAYMENT_STATUS_META = {
-  pending: { label: 'Pending', background: '#eff6ff', color: '#1d4ed8' },
-  completed: { label: 'Completed', background: '#ecfdf3', color: '#047857' },
-  failed: { label: 'Failed', background: '#fef2f2', color: '#b91c1c' },
-  refunded: { label: 'Refunded', background: '#eef2ff', color: '#4338ca' },
-  cancelled: { label: 'Cancelled', background: '#f8fafc', color: '#475569' },
+  pending: { label: 'Pending', tone: 'info' },
+  completed: { label: 'Completed', tone: 'success' },
+  failed: { label: 'Failed', tone: 'error' },
+  refunded: { label: 'Refunded', tone: 'info' },
+  cancelled: { label: 'Cancelled', tone: null },
 };
 
-const getMetaSx = (meta) => ({
-  bgcolor: meta.background,
-  color: meta.color,
-  fontWeight: 700,
-});
+const getMetaSx = (meta) => (theme) => getTonedChipSx(theme, meta.tone);
 
 export const getInvoiceStatusMeta = (status) => (
   INVOICE_STATUS_META[status] || INVOICE_STATUS_META.open
@@ -168,6 +175,45 @@ export const sortBillingInvoices = (rows = []) => [...rows]
       buildSortKey(left?.due_date, left?.created_at),
     )
   ));
+
+/**
+ * Client-side guard for the invoice editor. Negative tax, discount, or unit prices
+ * would otherwise inflate or zero out the total without any warning.
+ */
+export const getInvoiceFormError = (invoiceForm = {}) => {
+  const items = invoiceForm.items || [];
+
+  if (!items.length) {
+    return 'Add at least one invoice line item.';
+  }
+
+  if (Number(invoiceForm.tax_amount || 0) < 0) {
+    return 'Tax amount cannot be negative.';
+  }
+
+  if (Number(invoiceForm.discount_amount || 0) < 0) {
+    return 'Discount amount cannot be negative.';
+  }
+
+  const badItemIndex = items.findIndex((item) => (
+    Number(item.unit_price || 0) < 0 || Number(item.quantity || 0) <= 0
+  ));
+
+  if (badItemIndex >= 0) {
+    return `Line item ${badItemIndex + 1} needs a quantity above 0 and a non-negative unit price.`;
+  }
+
+  const subtotal = items.reduce(
+    (sum, item) => sum + (Number(item.quantity || 0) * Number(item.unit_price || 0)),
+    0,
+  );
+
+  if (Number(invoiceForm.discount_amount || 0) > subtotal + Number(invoiceForm.tax_amount || 0)) {
+    return 'The discount is larger than the invoice value. Lower the discount before saving.';
+  }
+
+  return '';
+};
 
 export const createEmptyBillingProfile = (profile = {}) => ({
   user_id: profile.id || '',
@@ -313,6 +359,20 @@ export const buildBillingSummary = (profile = {}, billingProfile = null, invoice
     && (invoice.balance_due || 0) > 0
   ));
 
+  // sortBillingInvoices is a newest-first *display* sort, so dueInvoices[0] is the
+  // furthest-out invoice. The next renewal is the soonest due date instead.
+  const nextDueInvoice = dueInvoices.reduce((earliest, invoice) => {
+    if (!invoice?.due_date) {
+      return earliest;
+    }
+
+    if (!earliest?.due_date || invoice.due_date < earliest.due_date) {
+      return invoice;
+    }
+
+    return earliest;
+  }, null);
+
   const outstandingBalance = dueInvoices.reduce((sum, invoice) => sum + Number(invoice.balance_due || 0), 0);
   const completedPaymentsTotal = sortedPayments.reduce((sum, payment) => (
     payment.payment_status === 'completed' ? sum + Number(payment.amount || 0) : sum
@@ -334,7 +394,8 @@ export const buildBillingSummary = (profile = {}, billingProfile = null, invoice
     dueInvoiceCount: dueInvoices.length,
     overdueCount: overdueInvoices.length,
     completedPaymentsTotal,
-    nextBillingDate: profile?.next_billing_date || dueInvoices[0]?.due_date || null,
+    nextDueInvoice,
+    nextBillingDate: profile?.next_billing_date || nextDueInvoice?.due_date || null,
     activePlanName: profile?.plan?.name || null,
   };
 };

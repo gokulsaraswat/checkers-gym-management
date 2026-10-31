@@ -1,4 +1,5 @@
 import { PATHS } from '../../app/paths';
+import { getTonedChipSx } from '../../utils/statusColors';
 
 const createClientKey = (prefix = 'item') => {
   if (globalThis.crypto?.randomUUID) {
@@ -30,31 +31,27 @@ export const EXERCISE_DIFFICULTY_OPTIONS = [
 ];
 
 const PROGRAM_STATUS_META = {
-  draft: { label: 'Draft', background: '#eff6ff', color: '#1d4ed8' },
-  active: { label: 'Active', background: '#ecfdf3', color: '#047857' },
-  archived: { label: 'Archived', background: '#f8fafc', color: '#475569' },
+  draft: { label: 'Draft', tone: 'info' },
+  active: { label: 'Active', tone: 'success' },
+  archived: { label: 'Archived', tone: null },
 };
 
 const ASSIGNMENT_STATUS_META = {
-  planned: { label: 'Planned', background: '#eff6ff', color: '#1d4ed8' },
-  active: { label: 'Active', background: '#ecfdf3', color: '#047857' },
-  paused: { label: 'Paused', background: '#fff7ed', color: '#c2410c' },
-  completed: { label: 'Completed', background: '#eef2ff', color: '#4338ca' },
-  cancelled: { label: 'Cancelled', background: '#fef2f2', color: '#b91c1c' },
+  planned: { label: 'Planned', tone: 'info' },
+  active: { label: 'Active', tone: 'success' },
+  paused: { label: 'Paused', tone: 'warning' },
+  completed: { label: 'Completed', tone: 'info' },
+  cancelled: { label: 'Cancelled', tone: 'error' },
 };
 
 const DIFFICULTY_META = {
-  all_levels: { label: 'All levels', background: '#f8fafc', color: '#475569' },
-  beginner: { label: 'Beginner', background: '#ecfdf3', color: '#047857' },
-  intermediate: { label: 'Intermediate', background: '#fff7ed', color: '#c2410c' },
-  advanced: { label: 'Advanced', background: '#fef2f2', color: '#b91c1c' },
+  all_levels: { label: 'All levels', tone: null },
+  beginner: { label: 'Beginner', tone: 'success' },
+  intermediate: { label: 'Intermediate', tone: 'warning' },
+  advanced: { label: 'Advanced', tone: 'error' },
 };
 
-const getMetaSx = (meta) => ({
-  bgcolor: meta.background,
-  color: meta.color,
-  fontWeight: 700,
-});
+const getMetaSx = (meta) => (theme) => getTonedChipSx(theme, meta.tone);
 
 export const getWorkoutProgramStatusMeta = (status) => PROGRAM_STATUS_META[status] || PROGRAM_STATUS_META.draft;
 export const getWorkoutProgramStatusChipSx = (status) => getMetaSx(getWorkoutProgramStatusMeta(status));

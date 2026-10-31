@@ -24,7 +24,7 @@ const GymMapPage = () => (
   <PublicPageShell
     eyebrow="Public website"
     title="Gym map and optional 3D view"
-    description="Patch 31 adds a flexible orientation page for visitors. Use it as a simple facility map today, then plug in a live location embed or a 3D walkthrough later without redesigning the rest of the website."
+    description="Find your way around before your first visit. Every training zone, amenity, and entry point is laid out below, alongside the live location map."
     chips={['Facility orientation', 'Optional map embed', 'Optional 3D walkthrough']}
     actions={[
       { label: 'Plan a visit', to: PATHS.contact },

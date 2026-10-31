@@ -268,7 +268,7 @@ export const publicFaqs = [
   },
   {
     question: 'Can I replace the seeded media and copy?',
-    answer: 'Yes. Patch 31 keeps the public content centralized so old website copy, real branch photos, and actual contact details can be swapped in without redesigning every page.',
+    answer: 'Yes. Public content is centralized, so website copy, branch photos, and contact details can be swapped in without redesigning every page.',
   },
   {
     question: 'Does the map page support a real location or 3D walkthrough?',

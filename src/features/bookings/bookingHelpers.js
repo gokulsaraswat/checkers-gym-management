@@ -1,34 +1,12 @@
+import { getTonedChipSx } from '../../utils/statusColors';
+
 export const BOOKING_STATUS_META = {
-  booked: {
-    label: 'Booked',
-    background: '#ecfdf3',
-    color: '#047857',
-  },
-  waitlist: {
-    label: 'Waitlist',
-    background: '#eff6ff',
-    color: '#1d4ed8',
-  },
-  attended: {
-    label: 'Attended',
-    background: '#fef3c7',
-    color: '#92400e',
-  },
-  missed: {
-    label: 'Missed',
-    background: '#fef2f2',
-    color: '#b91c1c',
-  },
-  cancelled: {
-    label: 'Cancelled',
-    background: '#f8fafc',
-    color: '#475569',
-  },
-  none: {
-    label: 'Not booked',
-    background: '#f8fafc',
-    color: '#475569',
-  },
+  booked: { label: 'Booked', tone: 'success' },
+  waitlist: { label: 'Waitlist', tone: 'info' },
+  attended: { label: 'Attended', tone: 'warning' },
+  missed: { label: 'Missed', tone: 'error' },
+  cancelled: { label: 'Cancelled', tone: null },
+  none: { label: 'Not booked', tone: null },
 };
 
 const toDate = (value) => {
@@ -44,22 +22,17 @@ export const getBookingStatusLabel = (status) => (
   BOOKING_STATUS_META[status]?.label || 'Scheduled'
 );
 
-export const getBookingStatusChipSx = (status) => ({
-  bgcolor: BOOKING_STATUS_META[status]?.background || '#f8fafc',
-  color: BOOKING_STATUS_META[status]?.color || '#475569',
-  fontWeight: 700,
-});
+export const getBookingStatusChipSx = (status) => (theme) => getTonedChipSx(
+  theme,
+  BOOKING_STATUS_META[status]?.tone || null,
+);
 
 export const getAvailabilityMeta = (session = {}) => {
   const remainingSpots = Number(session.remaining_spots || 0);
   const waitlistCount = Number(session.waitlist_count || 0);
 
   if (session.my_booking_status === 'booked') {
-    return {
-      label: 'You are booked',
-      background: '#ecfdf3',
-      color: '#047857',
-    };
+    return { label: 'You are booked', tone: 'success' };
   }
 
   if (session.my_booking_status === 'waitlist') {
@@ -67,31 +40,27 @@ export const getAvailabilityMeta = (session = {}) => {
       label: session.my_waitlist_position
         ? `Waitlist #${session.my_waitlist_position}`
         : 'You are waitlisted',
-      background: '#eff6ff',
-      color: '#1d4ed8',
+      tone: 'info',
     };
   }
 
   if (remainingSpots > 0) {
     return {
       label: `${remainingSpots} spot${remainingSpots === 1 ? '' : 's'} left`,
-      background: '#f0fdf4',
-      color: '#166534',
+      tone: 'success',
     };
   }
 
   return {
     label: waitlistCount > 0 ? `${waitlistCount} on waitlist` : 'Class full',
-    background: '#fff7ed',
-    color: '#b45309',
+    tone: 'warning',
   };
 };
 
-export const getAvailabilityChipSx = (session = {}) => ({
-  bgcolor: getAvailabilityMeta(session).background,
-  color: getAvailabilityMeta(session).color,
-  fontWeight: 700,
-});
+export const getAvailabilityChipSx = (session = {}) => (theme) => getTonedChipSx(
+  theme,
+  getAvailabilityMeta(session).tone,
+);
 
 export const describeCapacity = (session = {}) => {
   const bookedCount = Number(session.booked_count || 0);

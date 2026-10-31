@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Pagination from '@mui/material/Pagination';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 
-import { exerciseOptions, fetchData, isRapidApiConfigured } from '../utils/fetchData';
+import { exerciseOptions, FALLBACK_EXERCISE_MESSAGE, fetchDataWithStatus } from '../utils/fetchData';
 import ExerciseCard from './ExerciseCard';
 import Loader from './Loader';
 
@@ -10,20 +10,20 @@ const Exercises = ({ exercises, setExercises, bodyPart }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [exercisesPerPage] = useState(6);
   const [error, setError] = useState('');
+  const [isFallbackData, setIsFallbackData] = useState(false);
 
   useEffect(() => {
     const fetchExercisesData = async () => {
-      let exercisesData = [];
-
       try {
         setError('');
 
-        if (bodyPart === 'all') {
-          exercisesData = await fetchData('https://exercisedb.p.rapidapi.com/exercises', exerciseOptions);
-        } else {
-          exercisesData = await fetchData(`https://exercisedb.p.rapidapi.com/exercises/bodyPart/${bodyPart}`, exerciseOptions);
-        }
+        const url = bodyPart === 'all'
+          ? 'https://exercisedb.p.rapidapi.com/exercises'
+          : `https://exercisedb.p.rapidapi.com/exercises/bodyPart/${bodyPart}`;
 
+        const { data: exercisesData, isFallback } = await fetchDataWithStatus(url, exerciseOptions);
+
+        setIsFallbackData(isFallback);
         setExercises(exercisesData);
       } catch (fetchError) {
         setError('Unable to load exercises right now.');
@@ -47,9 +47,9 @@ const Exercises = ({ exercises, setExercises, bodyPart }) => {
 
   return (
     <Box id="exercises" sx={{ mt: { lg: '109px' } }} mt="50px" p="20px">
-      {!isRapidApiConfigured ? (
+      {isFallbackData ? (
         <Alert severity="info" sx={{ mb: 3, borderRadius: 3 }}>
-          Showing demo exercises. Add a RapidAPI key to switch back to the live exercise database.
+          {FALLBACK_EXERCISE_MESSAGE}
         </Alert>
       ) : null}
 

@@ -20,7 +20,7 @@ const EventsPage = () => (
   <PublicPageShell
     eyebrow="Public website"
     title="Events, workshops, and competition-ready pages"
-    description="Patch 31 adds a dedicated home for community activity so the public website can promote open houses, technique workshops, challenge days, and small competitions without relying on the member dashboard."
+    description="Open houses, technique workshops, challenge days, and small competitions — everything happening at Checkers Gym, in one place."
     chips={['Community calendar', 'Workshops', 'Competitions']}
     actions={[
       { label: 'Contact the team', to: PATHS.contact },

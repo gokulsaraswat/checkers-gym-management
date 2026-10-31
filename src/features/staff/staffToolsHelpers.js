@@ -1,3 +1,5 @@
+import { getTonedChipSx } from '../../utils/statusColors';
+
 export const STAFF_ASSIGNMENT_ROLE_OPTIONS = [
   { value: 'coach', label: 'Coach' },
   { value: 'trainer', label: 'Trainer' },
@@ -52,17 +54,17 @@ export const STAFF_PAYOUT_CYCLE_OPTIONS = [
 ];
 
 const ASSIGNMENT_STATUS_META = {
-  active: { label: 'Active', background: '#ecfdf3', color: '#047857' },
-  paused: { label: 'Paused', background: '#fef3c7', color: '#92400e' },
-  completed: { label: 'Completed', background: '#eff6ff', color: '#1d4ed8' },
-  cancelled: { label: 'Cancelled', background: '#fef2f2', color: '#b91c1c' },
+  active: { label: 'Active', tone: 'success' },
+  paused: { label: 'Paused', tone: 'warning' },
+  completed: { label: 'Completed', tone: 'success' },
+  cancelled: { label: 'Cancelled', tone: null },
 };
 
 const COMMISSION_STATUS_META = {
-  pending: { label: 'Pending', background: '#eff6ff', color: '#1d4ed8' },
-  approved: { label: 'Approved', background: '#fef3c7', color: '#92400e' },
-  paid: { label: 'Paid', background: '#ecfdf3', color: '#047857' },
-  void: { label: 'Void', background: '#f8fafc', color: '#475569' },
+  pending: { label: 'Pending', tone: 'info' },
+  approved: { label: 'Approved', tone: 'warning' },
+  paid: { label: 'Paid', tone: 'success' },
+  void: { label: 'Void', tone: null },
 };
 
 const SHIFT_TYPE_LABELS = {
@@ -89,25 +91,17 @@ const commissionStatusMeta = (value) => COMMISSION_STATUS_META[value] || {
 
 export const getAssignmentStatusLabel = (value) => assignmentStatusMeta(value).label;
 
-export const getAssignmentStatusChipSx = (value) => {
-  const meta = assignmentStatusMeta(value);
-  return {
-    bgcolor: meta.background,
-    color: meta.color,
-    fontWeight: 700,
-  };
-};
+export const getAssignmentStatusChipSx = (value) => (theme) => getTonedChipSx(
+  theme,
+  assignmentStatusMeta(value).tone,
+);
 
 export const getCommissionStatusLabel = (value) => commissionStatusMeta(value).label;
 
-export const getCommissionStatusChipSx = (value) => {
-  const meta = commissionStatusMeta(value);
-  return {
-    bgcolor: meta.background,
-    color: meta.color,
-    fontWeight: 700,
-  };
-};
+export const getCommissionStatusChipSx = (value) => (theme) => getTonedChipSx(
+  theme,
+  commissionStatusMeta(value).tone,
+);
 
 export const getShiftTypeLabel = (value) => SHIFT_TYPE_LABELS[value] || 'Shift';
 

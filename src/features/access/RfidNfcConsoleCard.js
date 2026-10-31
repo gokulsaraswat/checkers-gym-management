@@ -149,8 +149,10 @@ export default function RfidNfcConsoleCard({ onActivityRecorded = null }) {
   const requestedReaderDeviceId = searchParams.get('readerDeviceId') || searchParams.get('deviceId') || '';
   const requestedRelayDeviceId = searchParams.get('relayDeviceId') || '';
 
-  const loadCardData = useCallback(async () => {
-    setLoading(true);
+  const loadCardData = useCallback(async ({ showCardLoader = true } = {}) => {
+    if (showCardLoader) {
+      setLoading(true);
+    }
     setError('');
 
     try {
@@ -167,7 +169,9 @@ export default function RfidNfcConsoleCard({ onActivityRecorded = null }) {
     } catch (fetchError) {
       setError(normalizeAccessError(fetchError, 'Failed to load RFID / NFC console data.'));
     } finally {
-      setLoading(false);
+      if (showCardLoader) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -469,6 +473,8 @@ export default function RfidNfcConsoleCard({ onActivityRecorded = null }) {
       setSuccessMessage(message);
       setCredentialInput('');
 
+      await loadCardData({ showCardLoader: false });
+
       if (typeof onActivityRecorded === 'function') {
         await onActivityRecorded();
       }
@@ -506,6 +512,8 @@ export default function RfidNfcConsoleCard({ onActivityRecorded = null }) {
       const relayResult = await queueRelayPulseForResult(verifyResult, scanState, 'staff_rfid_nfc_manual_relay_retry');
       setSuccessMessage(buildRelayCompletionMessage(relayResult, selectedRelayDevice) || 'Relay pulse queued.');
 
+      await loadCardData({ showCardLoader: false });
+
       if (typeof onActivityRecorded === 'function') {
         await onActivityRecorded();
       }
@@ -520,6 +528,12 @@ export default function RfidNfcConsoleCard({ onActivityRecorded = null }) {
     }
 
     event.preventDefault();
+
+    // Reader firmware can emit repeat Enter keystrokes; the button's disabled prop does not gate this path.
+    if (verifying || !scanState.token || !verificationAccessPointId) {
+      return;
+    }
+
     handleVerify();
   };
 
@@ -552,7 +566,7 @@ export default function RfidNfcConsoleCard({ onActivityRecorded = null }) {
                 {formatAccessRefreshLabel(lastLoadedAt, 'Waiting for the first RFID / NFC console sync.')}
               </Typography>
             </Box>
-            <Button variant="outlined" size="small" onClick={loadCardData} disabled={loading || verifying || queueingRelay}>
+            <Button variant="outlined" size="small" onClick={() => loadCardData()} disabled={loading || verifying || queueingRelay}>
               Refresh devices
             </Button>
           </Stack>
@@ -754,7 +768,7 @@ export default function RfidNfcConsoleCard({ onActivityRecorded = null }) {
                   credentialInputRef.current.focus();
                 }
               }}
-              disabled={verifying && !credentialInput}
+              disabled={verifying}
             >
               Clear credential buffer
             </Button>

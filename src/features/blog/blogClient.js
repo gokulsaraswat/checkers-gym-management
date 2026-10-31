@@ -11,28 +11,13 @@ import {
 const STORAGE_KEY = 'checkers_gym_blog_posts_v1';
 const TABLE_NAME = 'blog_posts';
 const ALLOWED_STATUSES = ['draft', 'pending_review', 'approved', 'published', 'rejected', 'archived'];
-const FALLBACK_PATTERNS = [
-  'not configured',
-  'does not exist',
-  'relation',
-  'blog_posts',
-  'schema cache',
-  'failed to fetch',
-  'network',
-  'permission denied',
-];
 
 const nowIso = () => new Date().toISOString();
 const hasSupabase = () => Boolean(isSupabaseConfigured && supabase);
 
-const shouldUseFallback = (error) => {
-  if (!hasSupabase()) {
-    return true;
-  }
-
-  const message = String(error?.message || '').toLowerCase();
-  return FALLBACK_PATTERNS.some((pattern) => message.includes(pattern));
-};
+// The local-storage mock exists only so the app is usable before Supabase is wired up.
+// Real request failures (network drops, RLS denials, missing tables) must surface as
+// errors rather than silently rerouting writes to localStorage and reporting success.
 
 const canUseLocalStorage = () => typeof window !== 'undefined' && Boolean(window.localStorage);
 
@@ -121,10 +106,6 @@ const ensureUniqueSlug = async (desiredSlug, currentId = null) => {
 
     return ensureUniqueSlugInPosts(desiredSlug, data || [], currentId);
   } catch (error) {
-    if (shouldUseFallback(error)) {
-      return ensureUniqueSlugInPosts(desiredSlug, readMockPosts(), currentId);
-    }
-
     throw new Error(error.message || 'Unable to validate the blog slug.');
   }
 };
@@ -254,13 +235,6 @@ export const fetchPublicBlogPosts = async ({ query = '', limit = 24 } = {}) => {
       onlyPublished: true,
     }).slice(0, limit);
   } catch (error) {
-    if (shouldUseFallback(error)) {
-      return filterBlogPosts(readMockPosts(), {
-        query,
-        onlyPublished: true,
-      }).slice(0, limit);
-    }
-
     throw new Error(error.message || 'Unable to load blog posts.');
   }
 };
@@ -310,10 +284,6 @@ export const fetchBlogPostBySlug = async (
     const match = Array.isArray(data) ? data[0] || null : data || null;
     return allowPost(match ? normalizeBlogPost(match) : null);
   } catch (error) {
-    if (shouldUseFallback(error)) {
-      return allowPost(readMockPosts().find((post) => post.slug === slug) || null);
-    }
-
     throw new Error(error.message || 'Unable to load the blog article.');
   }
 };
@@ -359,10 +329,6 @@ export const fetchWorkspaceBlogPosts = async ({
 
     return workspaceFilter((data || []).map((post) => normalizeBlogPost(post)));
   } catch (error) {
-    if (shouldUseFallback(error)) {
-      return workspaceFilter(readMockPosts());
-    }
-
     throw new Error(error.message || 'Unable to load the blog workspace.');
   }
 };
@@ -443,10 +409,6 @@ export const saveBlogPost = async (post = {}, actor = {}) => {
     const saved = Array.isArray(data) ? data[0] || null : data || null;
     return normalizeBlogPost(saved || payload);
   } catch (error) {
-    if (shouldUseFallback(error)) {
-      return saveMockPost(payload);
-    }
-
     throw new Error(error.message || 'Unable to save the blog post.');
   }
 };
@@ -484,22 +446,6 @@ export const deleteBlogPost = async (postId, { actorRole = 'staff', actorUserId 
       throw error;
     }
   } catch (error) {
-    if (shouldUseFallback(error)) {
-      const currentPosts = readMockPosts();
-      const targetPost = currentPosts.find((post) => post.id === postId);
-
-      if (!targetPost) {
-        return;
-      }
-
-      if (!canDeleteMockPost(targetPost, { actorRole, actorUserId })) {
-        throw new Error('Only admins or the original author can delete this draft.');
-      }
-
-      writeMockPosts(currentPosts.filter((post) => post.id !== postId));
-      return;
-    }
-
     throw new Error(error.message || 'Unable to delete the blog post.');
   }
 };

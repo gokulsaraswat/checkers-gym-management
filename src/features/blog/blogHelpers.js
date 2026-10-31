@@ -1,3 +1,5 @@
+import { getTonedChipSx } from '../../utils/statusColors';
+
 const BLOG_STATUS_LABELS = {
   draft: 'Draft',
   pending_review: 'Pending review',
@@ -306,22 +308,18 @@ export const buildBlogDraft = ({ name = 'Checkers Gym Team', role = 'staff' } = 
 
 export const getBlogStatusLabel = (status = 'draft') => BLOG_STATUS_LABELS[status] || BLOG_STATUS_LABELS.draft;
 
-export const getBlogStatusChipSx = (status = 'draft') => {
-  switch (status) {
-    case 'published':
-      return { bgcolor: '#dcfce7', color: '#166534', fontWeight: 700 };
-    case 'approved':
-      return { bgcolor: '#dbeafe', color: '#1d4ed8', fontWeight: 700 };
-    case 'pending_review':
-      return { bgcolor: '#fef3c7', color: '#b45309', fontWeight: 700 };
-    case 'rejected':
-      return { bgcolor: '#fee2e2', color: '#b91c1c', fontWeight: 700 };
-    case 'archived':
-      return { bgcolor: '#e5e7eb', color: '#374151', fontWeight: 700 };
-    default:
-      return { bgcolor: '#f3f4f6', color: '#374151', fontWeight: 700 };
-  }
+const BLOG_STATUS_TONES = {
+  published: 'success',
+  approved: 'info',
+  pending_review: 'warning',
+  rejected: 'error',
+  archived: null,
 };
+
+export const getBlogStatusChipSx = (status = 'draft') => (theme) => getTonedChipSx(
+  theme,
+  BLOG_STATUS_TONES[status] || null,
+);
 
 export const formatBlogDate = (value) => {
   if (!value) {

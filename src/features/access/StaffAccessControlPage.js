@@ -139,6 +139,7 @@ export default function StaffAccessControlPage() {
   const [manualReason, setManualReason] = useState('');
   const [loading, setLoading] = useState(true);
   const [lastLoadedAt, setLastLoadedAt] = useState('');
+  const [scannerArmed, setScannerArmed] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [queueingRelay, setQueueingRelay] = useState(false);
   const [savingManualDecision, setSavingManualDecision] = useState(false);
@@ -171,6 +172,16 @@ export default function StaffAccessControlPage() {
       setError(normalizeAccessError(fetchError, 'Failed to load access control data.'));
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const refreshLogs = useCallback(async () => {
+    try {
+      const logs = await listRecentAccessEvents(18);
+      setRecentLogs(logs || []);
+      setLastLoadedAt(new Date().toISOString());
+    } catch (fetchError) {
+      setError(normalizeAccessError(fetchError, 'Failed to refresh recent access events.'));
     }
   }, []);
 
@@ -468,7 +479,7 @@ export default function StaffAccessControlPage() {
       setVerifyResult(result);
       setSuccessMessage(message);
       setScannerInput('');
-      await loadPage();
+      await refreshLogs();
 
       if (relayQueueErrorMessage) {
         setError(relayQueueErrorMessage);
@@ -500,7 +511,7 @@ export default function StaffAccessControlPage() {
       setSuccessMessage('Manual access decision recorded.');
       setMemberId('');
       setManualReason('');
-      await loadPage();
+      await refreshLogs();
     } catch (manualError) {
       setError(normalizeAccessError(manualError, 'Failed to record the manual access decision.'));
     } finally {
@@ -525,7 +536,7 @@ export default function StaffAccessControlPage() {
     try {
       const relayResult = await queueRelayPulseForResult(verifyResult, null, 'staff_manual_relay_retry');
       setSuccessMessage(buildRelayCompletionMessage(relayResult, selectedRelayDevice) || 'Relay pulse queued.');
-      await loadPage();
+      await refreshLogs();
     } catch (relayError) {
       setError(normalizeAccessError(relayError, 'Failed to queue the relay pulse.'));
     }
@@ -537,7 +548,19 @@ export default function StaffAccessControlPage() {
     }
 
     event.preventDefault();
+
+    // Scanner firmware can emit repeat Enter keystrokes; the button's disabled prop does not gate this path.
+    if (verifying || !scanState.token || !verificationAccessPointId) {
+      return;
+    }
+
     handleVerify();
+  };
+
+  const focusScannerInput = () => {
+    if (scannerInputRef.current) {
+      scannerInputRef.current.focus();
+    }
   };
 
   const selectedDeviceLabel = selectedScannerDevice
@@ -604,6 +627,7 @@ export default function StaffAccessControlPage() {
                           label="Access point"
                           value={accessPointId}
                           onChange={(event) => setAccessPointId(event.target.value)}
+                          onClose={focusScannerInput}
                           disabled={loading}
                         >
                           {accessPoints.map((point) => (
@@ -622,6 +646,7 @@ export default function StaffAccessControlPage() {
                           label="Scanner device"
                           value={scannerDeviceId}
                           onChange={(event) => setScannerDeviceId(event.target.value)}
+                          onClose={focusScannerInput}
                           disabled={loading || !scannerDevices.length}
                         >
                           <MenuItem value="">Software verification only</MenuItem>
@@ -648,6 +673,7 @@ export default function StaffAccessControlPage() {
                               setRelayPulseMs(String(getRelayDefaultPulseMs(nextRelayDevice)));
                             }
                           }}
+                          onClose={focusScannerInput}
                           disabled={loading || !relayCandidateDevices.length}
                         >
                           <MenuItem value="">No relay pulse</MenuItem>
@@ -714,6 +740,20 @@ export default function StaffAccessControlPage() {
                     />
                   </Stack>
 
+                  <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                    <Chip
+                      size="small"
+                      color={scannerArmed ? 'success' : 'default'}
+                      variant={scannerArmed ? 'filled' : 'outlined'}
+                      label={scannerArmed ? 'Ready to scan' : 'Scanner not armed'}
+                    />
+                    {!scannerArmed ? (
+                      <Button size="small" onClick={focusScannerInput}>
+                        Arm scanner
+                      </Button>
+                    ) : null}
+                  </Stack>
+
                   <TextField
                     inputRef={scannerInputRef}
                     label="Scanned QR payload"
@@ -721,6 +761,8 @@ export default function StaffAccessControlPage() {
                     value={scannerInput}
                     onChange={(event) => setScannerInput(event.target.value)}
                     onKeyDown={handleScannerInputKeyDown}
+                    onFocus={() => setScannerArmed(true)}
+                    onBlur={() => setScannerArmed(false)}
                     multiline
                     minRows={3}
                     fullWidth
@@ -754,7 +796,7 @@ export default function StaffAccessControlPage() {
                           scannerInputRef.current.focus();
                         }
                       }}
-                      disabled={verifying && !scannerInput}
+                      disabled={verifying}
                     >
                       Clear scan buffer
                     </Button>
@@ -781,7 +823,7 @@ export default function StaffAccessControlPage() {
               </CardContent>
             </Card>
 
-            <RfidNfcConsoleCard onActivityRecorded={loadPage} />
+            <RfidNfcConsoleCard onActivityRecorded={refreshLogs} />
 
             <Card>
               <CardContent>
@@ -909,7 +951,7 @@ export default function StaffAccessControlPage() {
                   ) : null}
                   {!relayDevices.length ? (
                     <Alert severity="info">
-                      No relay targets are registered yet. Patch 27.2 expects a bridge-mode relay or controller device before door pulses can be queued.
+                      No relay targets are registered yet. Register a bridge-mode relay or controller device before door pulses can be queued.
                     </Alert>
                   ) : null}
                 </Stack>

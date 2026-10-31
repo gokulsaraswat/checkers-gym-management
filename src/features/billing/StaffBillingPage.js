@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -56,6 +56,8 @@ import {
   getPaymentMethodLabel,
   getPaymentStatusChipSx,
   getPaymentStatusMeta,
+  getInvoiceFormError,
+  INVOICE_SETTABLE_STATUS_OPTIONS,
   INVOICE_STATUS_OPTIONS,
   INVOICE_TYPE_OPTIONS,
   normaliseInvoiceForForm,
@@ -147,8 +149,13 @@ const StaffBillingPage = () => {
     }
   }, [filters.invoiceType, filters.memberId, filters.status, isConfigured]);
 
+  const hasLoadedOnceRef = useRef(false);
+
+  // Only the first load blocks the page. Filter changes refresh in the background so
+  // the filter controls are never unmounted mid-interaction.
   useEffect(() => {
-    loadPage(true);
+    loadPage(!hasLoadedOnceRef.current);
+    hasLoadedOnceRef.current = true;
   }, [loadPage]);
 
   useEffect(() => {
@@ -257,6 +264,13 @@ const StaffBillingPage = () => {
   const handleSaveInvoice = async (event) => {
     event.preventDefault();
     setFeedback({ type: '', message: '' });
+
+    const invoiceValidationError = getInvoiceFormError(invoiceForm);
+
+    if (invoiceValidationError) {
+      setFeedback({ type: 'error', message: invoiceValidationError });
+      return;
+    }
 
     try {
       setSavingInvoice(true);
@@ -558,11 +572,12 @@ const StaffBillingPage = () => {
                   <TextField
                     select
                     label="Status"
-                    value={invoiceForm.status}
+                    value={INVOICE_SETTABLE_STATUS_OPTIONS.some((option) => option.value === invoiceForm.status) ? invoiceForm.status : 'open'}
                     onChange={handleInvoiceFieldChange('status')}
                     fullWidth
+                    helperText="Paid, partially paid, and overdue are derived from recorded payments and the due date."
                   >
-                    {INVOICE_STATUS_OPTIONS.map((option) => (
+                    {INVOICE_SETTABLE_STATUS_OPTIONS.map((option) => (
                       <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
                     ))}
                   </TextField>
@@ -590,16 +605,22 @@ const StaffBillingPage = () => {
                 <Grid item xs={12} md={6}>
                   <TextField
                     label="Tax amount"
+                    type="number"
+                    inputProps={{ min: '0', step: '0.01' }}
                     value={invoiceForm.tax_amount}
                     onChange={handleInvoiceFieldChange('tax_amount')}
+                    error={Number(invoiceForm.tax_amount || 0) < 0}
                     fullWidth
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <TextField
                     label="Discount amount"
+                    type="number"
+                    inputProps={{ min: '0', step: '0.01' }}
                     value={invoiceForm.discount_amount}
                     onChange={handleInvoiceFieldChange('discount_amount')}
+                    error={Number(invoiceForm.discount_amount || 0) < 0}
                     fullWidth
                   />
                 </Grid>
@@ -637,6 +658,8 @@ const StaffBillingPage = () => {
                       <Grid item xs={12} md={2}>
                         <TextField
                           label="Qty"
+                          type="number"
+                          inputProps={{ min: '1', step: '1' }}
                           value={item.quantity}
                           onChange={handleInvoiceItemChange(index, 'quantity')}
                           fullWidth
@@ -645,8 +668,11 @@ const StaffBillingPage = () => {
                       <Grid item xs={12} md={3}>
                         <TextField
                           label="Unit price"
+                          type="number"
+                          inputProps={{ min: '0', step: '0.01' }}
                           value={item.unit_price}
                           onChange={handleInvoiceItemChange(index, 'unit_price')}
+                          error={Number(item.unit_price || 0) < 0}
                           fullWidth
                         />
                       </Grid>

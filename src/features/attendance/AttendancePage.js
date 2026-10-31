@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTheme } from '@mui/material/styles';
 import {
   Alert,
   Box,
@@ -45,6 +46,7 @@ import {
 } from './attendanceHelpers';
 
 const AttendancePage = () => {
+  const theme = useTheme();
   const {
     user,
     profile,
@@ -135,7 +137,7 @@ const AttendancePage = () => {
       <SetupNotice title="Attendance tools need Supabase setup" />
 
       <Stack spacing={1.5} mb={4}>
-        <Typography color="#ff2625" fontWeight={700}>
+        <Typography color="primary.main" fontWeight={700}>
           Attendance
         </Typography>
         <Typography variant="h3" fontWeight={800} sx={{ fontSize: { xs: '32px', md: '44px' } }}>
@@ -196,7 +198,7 @@ const AttendancePage = () => {
 
           <Grid container spacing={3}>
             <Grid item xs={12} lg={5}>
-              <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff', height: '100%' }}>
+              <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, bgcolor: 'background.paper', height: '100%' }}>
                 <Stack spacing={2.5}>
                   <Stack direction="row" spacing={1.25} alignItems="center" flexWrap="wrap" useFlexGap>
                     <Typography variant="h5" fontWeight={800}>
@@ -204,7 +206,7 @@ const AttendancePage = () => {
                     </Typography>
                     <Chip
                       label={summary.openVisit ? getAttendanceStatusLabel(summary.openVisit.attendance_status) : 'Checked out'}
-                      sx={getAttendanceStatusChipSx(summary.openVisit?.attendance_status || 'checked_out')}
+                      sx={getAttendanceStatusChipSx(summary.openVisit?.attendance_status || 'checked_out', theme)}
                     />
                   </Stack>
 
@@ -247,7 +249,7 @@ const AttendancePage = () => {
                       startIcon={<Logout />}
                       onClick={handleSelfCheckOut}
                       disabled={actionLoading}
-                      sx={{ textTransform: 'none', borderRadius: 999, bgcolor: '#ff2625', '&:hover': { bgcolor: '#df1d1d' } }}
+                      sx={{ textTransform: 'none', borderRadius: 999 }}
                     >
                       {actionLoading ? 'Checking out...' : 'Check out now'}
                     </Button>
@@ -257,7 +259,7 @@ const AttendancePage = () => {
                       startIcon={<Login />}
                       onClick={handleSelfCheckIn}
                       disabled={actionLoading || !attendanceEligible}
-                      sx={{ textTransform: 'none', borderRadius: 999, bgcolor: '#ff2625', '&:hover': { bgcolor: '#df1d1d' } }}
+                      sx={{ textTransform: 'none', borderRadius: 999 }}
                     >
                       {actionLoading ? 'Checking in...' : 'Check in now'}
                     </Button>
@@ -273,7 +275,7 @@ const AttendancePage = () => {
             </Grid>
 
             <Grid item xs={12} lg={7}>
-              <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, background: '#fff', height: '100%' }}>
+              <Paper className="surface-card" sx={{ p: 3, borderRadius: 4, bgcolor: 'background.paper', height: '100%' }}>
                 <Stack spacing={2.5}>
                   <Stack spacing={0.5}>
                     <Typography variant="h5" fontWeight={800}>
@@ -313,7 +315,7 @@ const AttendancePage = () => {
                                 <Chip
                                   size="small"
                                   label={getAttendanceStatusLabel(visit.attendance_status)}
-                                  sx={getAttendanceStatusChipSx(visit.attendance_status)}
+                                  sx={getAttendanceStatusChipSx(visit.attendance_status, theme)}
                                 />
                               </TableCell>
                             </TableRow>
