@@ -1572,9 +1572,9 @@
     "semantic_hash": ""
   },
   ".project-architecture.md": {
-    "mtime": 1793460137.8500118,
-    "seen": 1793460143.866275,
-    "ast_hash": "9b5b445c8453af066257f91da4e2e343",
+    "mtime": 1793460694.7633257,
+    "seen": 1793460699.058033,
+    "ast_hash": "764dde789c12ac97a9b83457af193d67",
     "semantic_hash": ""
   },
   ".prompts.md": {
@@ -2301,6 +2301,12 @@
     "mtime": 1793457855.3088853,
     "seen": 1793460143.866293,
     "ast_hash": "1f450ae872bfd18870c92df1fc1d6b36",
+    "semantic_hash": ""
+  },
+  "docs/OVERHAUL-STATUS.md": {
+    "mtime": 1793460608.9138215,
+    "seen": 1793460699.058049,
+    "ast_hash": "e987ce5368342862cdeb226fd13b1430",
     "semantic_hash": ""
   }
 }
